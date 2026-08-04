@@ -1,7 +1,7 @@
 {
   "name": "MathMatrix Pro++",
   "short_name": "MathMatrix",
-  "description": "Magic square puzzle game for kids — 3x3, 4x4, 5x5, 6x6, 8x8, 10x10 and 3³ Multiply Magic",
+  "description": "Magic square puzzle game for kids - 3x3, 4x4, 5x5 with progressive unlocks",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -27,5 +27,12 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://kidsmathsmatrixpuzzle.github.io/manifest.json"
+    }
+  ],
+  "prefer_related_applications": false
 }
