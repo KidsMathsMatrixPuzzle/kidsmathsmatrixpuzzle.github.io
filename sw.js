@@ -5,7 +5,7 @@ const CACHE_VERSION = 'mathmatrix-v131';
 
 const ASSETS = [
   './',
-  './KidsMathsMatrixPuzzle.html',
+  './index.html',
   './MultiplyMagic3.html',
   './sound-lab.html',
   './bgm-monkeys.mp3',
@@ -62,7 +62,7 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() => caches.match(req).then((c) => c || caches.match('./KidsMathsMatrixPuzzle.html')))
+        .catch(() => caches.match(req).then((c) => c || caches.match('./index.html')))
     );
     return;
   }
