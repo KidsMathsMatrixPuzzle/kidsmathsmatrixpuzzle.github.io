@@ -16,6 +16,36 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0d0d0d">
+<!-- TEMP DIAGNOSTIC (beta-202): Raja's 4-player store tap still does nothing on
+     his real device even after the touch-action fix, and the tap-details capture
+     added in beta-201 never showed up in SaNa's bubble either — meaning the click
+     may never be reaching ANY document-level JS at all on his phone. The one thing
+     that would explain silence from EVERY handler at once is an uncaught error
+     earlier in the same <script> block aborting execution before the pal4 (or
+     even earlier) event listeners ever get registered. There is no error handler
+     anywhere in this file to see that. This one is registered before any other
+     script runs, so it catches a syntax or runtime error anywhere below it,
+     including ones headless desktop Chrome never hits. It writes to a fixed
+     on-page banner (not a console, which he can't see) so the NEXT screenshot
+     tells us the real cause instead of another guess. Remove once the cause is
+     confirmed and fixed. -->
+<script>
+window.onerror = function(msg, src, line, col, err){
+  try{
+    var b = document.getElementById('__errBanner');
+    if (!b){
+      b = document.createElement('div');
+      b.id = '__errBanner';
+      b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;'
+        + 'background:#c0392b;color:#fff;font:11px/1.4 monospace;padding:6px 8px;'
+        + 'white-space:pre-wrap;word-break:break-word;max-height:45vh;overflow:auto;';
+      (document.body || document.documentElement).appendChild(b);
+    }
+    b.textContent += '⚠ ' + msg + '  @' + String(src || '').split('/').pop() + ':' + line + ':' + col + '\n';
+  }catch(e){}
+  return false;
+};
+</script>
 <!-- Raja, after three rounds landing on the same wall: "install"/"download" can
      only ever fall back to the same manual instructions without a real manifest
      — so, deliberately, build the real thing now. manifest.json is its OWN
@@ -1171,6 +1201,12 @@ body{ background:var(--gr) !important; color:var(--bink) !important; }
 /* ── SANA: the brand, reacting ── */
 .sana{ display:flex; align-items:center; gap:10px; width:100%; max-width:560px;
   margin:10px auto 2px; padding:0 10px; box-sizing:border-box; }
+/* The face and its name, as one column. flex:none so the pair never squeezes
+   the speech bubble, and the width is the FACE's width so a long name could
+   never widen the column and push the bubble narrower. */
+.sanaWho{ flex:none; display:flex; flex-direction:column; align-items:center; gap:1px; }
+.sanaName{ font-size:10px; font-weight:900; letter-spacing:.5px; line-height:1;
+  color:#FCA5A5; }
 .sanaFace{ width:50px; height:50px; flex:none; border-radius:50%; display:grid; place-items:center;
   font-size:28px; background:linear-gradient(160deg,#FFD675,var(--gold)); box-shadow:var(--clay);
   position:relative; animation:sanaBob 3s var(--spring) infinite; }
@@ -1473,15 +1509,41 @@ body{ background:var(--gr) !important; padding:0 !important; margin:0 !important
 .tabBtn .tabIco{ font-size:16px !important; margin:0 !important; }
 
 /* SaNa — fixed height, two lines maximum, never pushes the board */
-.sana{ flex:none; margin:0 0 6px !important; padding:0 !important; max-width:none !important; gap:8px !important; }
+/* Raja: "ensure it everywhere the font and box size should not affected to
+   near one areas in any layers." Measured, and he was right to ask: the bigger
+   bubble (beta-184) pushed Sudoku's clock and counter below the fold on three
+   of four tested phone sizes — 340x780 by 3px, 360x740 by 7px, 360x800 by
+   10px — where before they sat comfortably above the tab bar with no scroll
+   at all. Not an overlap (normal-flow layout cannot overlap; a taller box
+   simply pushes what follows it further down) but exactly the kind of
+   knock-on effect he was asking to rule out: SaNa's own whitespace eating into
+   a budget another screen depends on.
+   Reclaimed from margin, which is pure gap and costs nothing to read, so the
+   font-size increase that was actually the point of beta-184 stays untouched. */
+.sana{ flex:none; margin:0 !important; padding:0 !important; max-width:none !important; gap:8px !important; }
 .sanaFace{ width:36px !important; height:36px !important; font-size:20px !important; }
+/* RED, on Raja's instruction — but a DEEP red, and not the one the speech
+   bubble already uses for the same word. The bubble's #9A3412 is legible there
+   because it sits on a cream bubble; against the bare tan of the app background
+   the very same red measures about 3.3:1, well under readable. Red on tan has
+   little room: the two are close in brightness, so the only way for red to
+   stay red AND be read is to go dark. This measures 5:1.
+   (The rule above it, for the dark theme, goes the other way and uses a LIGHT
+   red — the same instruction, opposite direction, because the ground is
+   opposite.) */
+.sanaName{ color:#7A1512 !important; font-size:9.5px !important; }
 /* three lines, not two: the hints now name every offset, and clipping a hint
    mid-sentence is worse than giving up ~14px of board height */
 /* 64ch caps the reading line. A phone held sideways is 844px wide and ran
    SaNa's greeting to 145 characters on one line — twice a readable measure.
    Capping the bubble rather than the whole shell keeps the big landscape
    board, which is the reason to turn the phone in the first place. */
-.sanaBub{ padding:6px 10px !important; font-size:11px !important; line-height:1.35 !important;
+/* Raja, on the puzzle list AND on Pallanguzhi: "SaNa tips box and font to
+   increase, look too tiny." Right on both counts — this rule applies to every
+   screen unconditionally, so the whole app was reading the mascot at 11px.
+   Up to 13.5px, with the box given the extra room that size actually needs
+   rather than cramming a bigger font into the old padding. */
+.sanaBub{ padding:5px 12px !important; font-size:13.5px !important; line-height:1.3 !important;
   border-radius:13px !important; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
   overflow:hidden; max-width:64ch; }
 .sanaBub::before{ top:14px !important; }
@@ -1893,9 +1955,24 @@ body{ background:var(--gr) !important; padding:0 !important; margin:0 !important
   box-shadow:0 2px 0 rgba(94,64,32,.28); }
 
 /* ── PLAY: the board is the flexible region ── */
-.solvedCounter{ flex:none; font-size:9.5px !important; padding:4px 10px !important; margin:0 0 5px !important; }
+/* Target and the progress line share one row now, left and right, roughly
+   2:3 — the target text is short ("Target : 24"), the progress sentence is
+   the long one and needs the extra room. Both grow: the progress line was the
+   actual complaint, 9px stacked under a 12.5px target, and both now read at a
+   real size without costing the board any extra height, since this is still
+   ONE row rather than two. */
+.targetRow{ display:flex; align-items:stretch; gap:6px; margin:0 0 6px; }
+/* NOT display:flex. Its own text is "🏆 <b>0/2</b> different targets…" — an
+   inline <b> mixed with plain text — and turning the element itself into a
+   flex container splits that into separate anonymous flex items instead of
+   one wrapping run of text, so "0/2" jumped to its own line ahead of the
+   words that are meant to precede it. Sizing as a flex ITEM inside .targetRow
+   (below) is all this needs; its own content stays ordinary text-align:center
+   block layout, which wraps a sentence the way a sentence is supposed to. */
+.solvedCounter{ flex:3 1 0; min-width:0; font-size:11.5px !important; padding:5px 9px !important;
+  margin:0 !important; display:block !important; }
 .instCard{ display:none !important; }               /* SaNa speaks it instead */
-.targetPill{ font-size:12.5px !important; padding:6px 13px !important; margin:0 !important; }
+.targetPill{ flex:2 1 0; min-width:0; font-size:13.5px !important; padding:6px 10px !important; margin:0 !important; }
 #learnRow,#learnHint,#rotateHint,#msg{ display:none !important; }
 .playTop{ flex:none; display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:5px; }
 .boardContainer{ flex:1 !important; min-height:0 !important; display:grid !important;
@@ -2000,7 +2077,11 @@ body.hideKeys #keypad{ display:none !important; }
 body.hideKeys .keysChip{ display:block; }
 /* the beta banner belongs on Home, not stealing height from the board */
 body.onPlay .betaFlag{ display:none !important; }
-body.onPlay .solvedCounter{ font-size:9px !important; padding:3px 9px !important; margin-bottom:4px !important; }
+/* This is the rule that was actually rendering live: a later !important on the
+   same specificity wins on source order, and this one used to shrink the
+   progress sentence to 9px regardless of the 11.5px set above it. Matched to
+   that rule now instead of fighting it. */
+body.onPlay .solvedCounter{ font-size:11.5px !important; padding:5px 9px !important; margin-bottom:0 !important; }
 #binaryPanel{ flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
 
 /* ── LEARN: rows that open sheets, so the screen itself never scrolls ── */
@@ -2241,6 +2322,523 @@ body.sudokuMode #sudokuPanel{ display:block !important;
   background:#FFF6E7; border:2px solid #8A5E31; color:#5E3D1C;
   font-size:13px; font-weight:900; box-shadow:0 2px 0 rgba(94,64,32,.28); }
 #sudTime{ font-variant-numeric:tabular-nums; letter-spacing:.3px; }
+
+/* ══ PALLANGUZHI — the 2×7 board ═══════════════════════════════════════
+   Raja's own game, played in his family, and the first thing here that is not
+   a puzzle to be solved but a GAME between two people sharing one phone. It
+   hides the same grid furniture as the other card games, by the same body
+   class, rather than inventing a fifth mechanism. */
+body.palMode #barWatch,
+body.palMode #boardWrap,
+body.palMode #playRow,
+body.palMode #keypad,
+body.palMode #rotateHint,
+body.palMode #learnRow,
+body.palMode #learnHint,
+body.palMode .keysChip,
+body.palMode .targetPill,
+body.palMode .solvedCounter{ display:none !important; }
+#palPanel{ width:100%; max-width:560px; margin:0 auto; }
+/* the 4-player variant hides the same furniture, by the same mechanism */
+body.pal4Mode #barWatch,
+body.pal4Mode #boardWrap,
+body.pal4Mode #playRow,
+body.pal4Mode #keypad,
+body.pal4Mode #rotateHint,
+body.pal4Mode #learnRow,
+body.pal4Mode #learnHint,
+body.pal4Mode .keysChip,
+body.pal4Mode .targetPill,
+body.pal4Mode .solvedCounter{ display:none !important; }
+#pal4Panel{ width:100%; max-width:560px; margin:0 auto; }
+body.pal4Mode #pal4Panel{ display:flex !important; flex-direction:column;
+  flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden;
+  -webkit-overflow-scrolling:touch; padding:6px 10px 10px; box-sizing:border-box; }
+body.palMode #palPanel{ display:flex !important; flex-direction:column;
+  flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden;
+  -webkit-overflow-scrolling:touch; }
+/* auto margins rather than justify-content:center — centred flex content that
+   grows taller than its scroll container has its TOP clipped and cannot be
+   scrolled back to, which is the standard trap here. Auto margins centre while
+   there is slack and collapse to nothing once there is not. */
+.palWrap{ width:100%; margin:auto 0; }
+
+.palSay{ background:rgba(255,246,231,.72); border-radius:18px; padding:10px 12px;
+  margin:6px 0 0; font-size:14px; font-weight:800; color:#33220F; line-height:1.4;
+  text-align:center; }
+/* Above everything, where Raja drew it — this is a decision taken BEFORE a
+   board is played, not one of the controls you reach for during it. Gold, so it
+   reads as the thing to settle first. */
+.palChoose{ display:block; width:100%; box-sizing:border-box; margin:0 0 9px;
+  padding:11px 12px; border-radius:14px; cursor:pointer; font-family:inherit;
+  background:linear-gradient(180deg, #FFD166 0%, #F0A828 100%);
+  border:2px solid #8A5E31; color:#3A2611;
+  font-size:14px; font-weight:900; letter-spacing:.2px; }
+.palChoose:active{ transform:translateY(2px); }
+
+/* A player's strip: the name they type, and their store. Raja asked for the
+   name box to be BLANK and typed in by the player, and to persist for the
+   whole game — so it is a real input, not a label pretending to be one. */
+.palSide{ display:flex; align-items:center; gap:8px; margin:6px 0; flex-wrap:wrap; }
+.palSide.p2{ flex-direction:row-reverse; }
+/* Raja: "need pop alert who next to start play to touch pocket — add one tab to
+   pop start pick for play near player tab."
+   Two children share one phone and sit at opposite ends of it, so a single line
+   of text in the middle does not tell either of them that it is THEIR go. This
+   is a tab at the player's own end that appears only on their turn, and pops
+   when it does. It takes a whole line of its own rather than squeezing in
+   beside the name and the store, which on a 360px phone would leave all three
+   too narrow to read. */
+.palTurn{ display:none; width:100%; text-align:center; box-sizing:border-box;
+  padding:7px 10px; border-radius:12px;
+  background:linear-gradient(180deg, #FFD166 0%, #F0A828 100%);
+  border:2px solid #8A5E31; color:#3A2611;
+  font-size:13px; font-weight:900; letter-spacing:.2px; }
+.palSide.turn .palTurn{ display:block; animation:palPop .42s cubic-bezier(.34,1.56,.64,1) 1; }
+@keyframes palPop{ 0%{ transform:scale(.82); opacity:0 } 60%{ transform:scale(1.05) } 100%{ transform:scale(1); opacity:1 } }
+/* EACH PLAYER HAS A COLOUR, and it is the colour of their own row of cups —
+   green along the bottom, blue along the top. Raja asked for the name boxes to
+   differ and for the Choose Player bar to wear the starter's colour, because
+   "sometime unable remember who finished, who should start" after the game has
+   been put down for a while. A colour is read at a glance; a sentence has to be
+   found and re-read, and it is the wrong thing to be hunting for when you come
+   back to a board mid-game. Reusing the ring colours already on the cups means
+   there is nothing new to learn: your box matches your row. */
+.palName{ flex:1 1 auto; min-width:0; height:38px; border-radius:12px;
+  border:2px solid #8A5E31; background:#FFF6E7; color:#33220F;
+  font-family:inherit; font-size:14px; font-weight:800; padding:0 10px;
+  text-align:center; }
+.palName::placeholder{ color:#A98C63; font-weight:700; }
+.palName:focus{ outline:3px solid #F7B32B; outline-offset:-1px; }
+/* Raja: "choose player tab color changed but manual naming tab background
+   unchanged — that should be same as what choose player tab shows. Option text
+   color only changed, that's not important, keep black enough."
+
+   Two corrections in that. First, the name box had been left as a near-white
+   tint (#E6F7EC / #E7F0FE) with only a coloured BORDER doing the identifying —
+   next to the choose-player bar's solid coloured fill, it read as barely
+   coloured at all. It now uses the EXACT SAME colour as the light end of that
+   bar's gradient, so it is not merely "a similar green" but the identical
+   value — the two really do match.
+   Second, the text: rather than a bespoke tone per player, it takes the same
+   near-black the choose-player bar already proved legible with — dark enough
+   to read as black at a glance, which was the whole ask, and the placeholder
+   uses the identical colour rather than a lighter one, since a name box
+   nobody has typed into yet is the one most likely to be misread as broken. */
+/* No permanent colour any more — see the JS beside the .turn toggle for why. The
+   box stays the plain cream of the base .palName rule until it is that side's
+   turn to move, at which point it takes the exact colour of the choose-player
+   bar. Exactly one side ever carries it, so the other is always, genuinely,
+   white — his words. */
+#palSide1.turn .palName{ background:#9BE8B8; border-color:#14532D; color:#0B3A20; }
+#palSide1.turn .palName::placeholder{ color:#0B3A20; }
+#palSide2.turn .palName{ background:#A8CBFF; border-color:#12325E; color:#0A2748; }
+#palSide2.turn .palName::placeholder{ color:#0A2748; }
+/* and the Choose Player bar wears the colour of whoever it names */
+.palChoose.forP1{ background:linear-gradient(180deg, #9BE8B8 0%, #2E9E5B 100%);
+  border-color:#14532D; color:#0B3A20; }
+.palChoose.forP2{ background:linear-gradient(180deg, #A8CBFF 0%, #3B82F6 100%);
+  border-color:#12325E; color:#0A2748; }
+
+/* Raja: "reserve box should be 35 for each, so place square box inside oval and
+   the number should show 35 each other". An oval with a square counter in it. */
+.palStore{ flex:none; display:flex; align-items:center; justify-content:center;
+  gap:7px; min-width:104px; height:46px; padding:0 12px;
+  border-radius:999px; border:3px solid #8A5E31;
+  background:radial-gradient(ellipse at 50% 35%, #6B4A25 0%, #4A3117 100%);
+  box-shadow:inset 0 3px 9px rgba(0,0,0,.45); }
+/* A store still holding its 35 is the thing to tap, so it says so: the same
+   pulse the cup of four uses, because it is the same kind of instruction —
+   here is something waiting for you, and nothing happens until you take it. */
+.palStore.toDeal{ cursor:pointer; animation:palPasu 1.15s ease-in-out infinite; }
+.palStore.toDeal:active{ transform:translateY(2px); }
+.palStoreNum{ min-width:34px; height:30px; display:grid; place-items:center;
+  border-radius:7px; background:#FFF6E7; border:2px solid #8A5E31;
+  color:#33220F; font-size:15px; font-weight:900;
+  font-variant-numeric:tabular-nums; }
+.palStoreCap{ font-size:10px; font-weight:900; letter-spacing:.4px;
+  color:#F3D9A9; text-transform:uppercase; }
+/* In Tamil "சேமிப்பு" is half again as wide as "STORE", and that was enough to
+   push the store chip and the name box past the width of the row — so they
+   WRAPPED, the store dropping onto a line of its own and the whole player strip
+   growing by 40px. Nothing was truncated and the board still fitted above the
+   tab bar, which is why the checks were happy and only the screenshot showed
+   it. Raja predicted exactly this when he narrowed the feature: Tamil is bigger,
+   and every layout here is measured to the pixel.
+   The chip gives back the room instead of the words: it sizes to its content
+   rather than holding a 104px floor, with a smaller caption and tighter
+   padding. English is untouched — its label was never near that floor. */
+body.langTa .palStore{ min-width:0; padding:0 9px; gap:5px; }
+body.langTa .palStoreCap{ font-size:9px; letter-spacing:0; text-transform:none; }
+body.langTa .palName{ font-size:13px; }
+body.langTa .palTurn{ font-size:12.5px; }
+
+/* The board proper: two rows of seven, in one wooden slab. */
+/* Raja: "red V marked left and right should be cut, and place dotted dash line
+   between two pocket rows, to feel original wooden pallanguzhi is in flip to
+   open."
+
+   A real pallanguzhi board is a hinged wooden box: two halves of seven, joined
+   along the middle, folded shut to carry and opened out to play. Two things say
+   that at a glance — the SEAM the halves meet along, and the NOTCH at each end
+   of it where they come apart.
+
+   The notches are a real CLIP, not two triangles painted over the edge in the
+   page's colour. The tan behind this board is a decorative gradient layer
+   rather than a flat fill, so anything trying to imitate it would be a near
+   miss that drifts as the layer changes. clip-path removes the board there
+   instead, so whatever is behind shows through exactly, the 3px border is cut
+   through with it, and the cut is real enough that a finger landing in the
+   notch misses the board entirely.
+
+   The rounded corners survive the clip because the polygon does not reach into
+   them — those corners are already transparent, so there is nothing there for
+   the polygon to square off. */
+.palBoard{ position:relative;
+  display:grid; grid-template-columns:repeat(7, 1fr); gap:6px;
+  padding:9px; border-radius:20px; border:3px solid #6B4A25;
+  background:linear-gradient(180deg, #8A6A3C 0%, #74562F 100%);
+  box-shadow:inset 0 2px 10px rgba(0,0,0,.3);
+  clip-path:polygon(
+    0 0, 100% 0,
+    100% calc(50% - 10px), calc(100% - 12px) 50%, 100% calc(50% + 10px),
+    100% 100%, 0 100%,
+    0 calc(50% + 10px), 12px 50%, 0 calc(50% - 10px)); }
+/* The hinge line itself, running the length of the board through the 6px gap
+   between the two rows. It sits UNDER the cups — they are opaque, so the dashes
+   show in the gaps between them exactly as the seam of a real board does, and
+   never cross a hollow. */
+.palBoard::before{ content:''; position:absolute; left:6px; right:6px; top:50%;
+  transform:translateY(-1px); z-index:0; pointer-events:none;
+  border-top:2px dashed rgba(46,29,12,.62); }
+/* ROUND. They were ovals for a while — seven cups across a 360px phone leaves
+   about forty pixels each, and stretching them downwards was a way to fit both
+   a countable pile of seeds and a numeral into that width while also filling a
+   screen that was otherwise half empty. Raja looked at it and said to make them
+   circles, which is what a pallanguzhi board actually has. So the height is
+   pinned to the width again and the SEEDS give way instead: dots are drawn only
+   up to four, which is the range where counting them matters and the range the
+   bonus lives in, and above that the numeral carries it alone. --palCupH is
+   measured and set by palFit(). */
+.palCup{ position:relative; height:var(--palCupH, 44px); border:0; padding:0;
+  border-radius:50%; cursor:default; font-family:inherit;
+  background:radial-gradient(ellipse at 50% 30%, #5C3F20 0%, #3A2611 100%);
+  box-shadow:inset 0 4px 10px rgba(0,0,0,.55);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:3px; overflow:hidden; }
+.palCount{ font-size:var(--palNum, 15px); font-weight:900; line-height:1;
+  color:#FFE9C4; font-variant-numeric:tabular-nums;
+  text-shadow:0 1px 3px rgba(0,0,0,.8); }
+.palCup.empty .palCount{ color:#8A6A3C; }
+/* The seeds themselves, so a young player can COUNT rather than read a
+   numeral. Past eight they stop being countable at a glance and the number
+   carries it alone. */
+.palSeeds{ display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
+  gap:2px; max-width:78%; }
+.palSeeds:empty{ display:none; }
+.palSeed{ width:var(--palDot, 5px); height:var(--palDot, 5px); border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #FFF3D4, #C89A54); }
+/* Whose row it is. Raja's rule hangs on ownership — only the owner may take a
+   cup of four — so the board has to SAY which row is whose at a glance. */
+.palCup.mine1{ box-shadow:inset 0 4px 10px rgba(0,0,0,.55), 0 0 0 2px #4ade80; }
+.palCup.mine2{ box-shadow:inset 0 4px 10px rgba(0,0,0,.55), 0 0 0 2px #60a5fa; }
+.palCup.pickable{ cursor:pointer; }
+.palCup.pickable:active{ transform:translateY(2px); }
+.palCup.sowing{ box-shadow:inset 0 4px 10px rgba(0,0,0,.55), 0 0 0 3px #F7B32B; }
+/* A cup that has just reached four: the whole bonus. It has to be noticeable
+   without being claimed FOR the player — noticing it is the game. */
+.palCup.pasu{ animation:palPasu 1s ease-in-out infinite;
+  cursor:pointer; }
+@keyframes palPasu{
+  0%,100%{ box-shadow:inset 0 4px 10px rgba(0,0,0,.55), 0 0 0 3px #FFD166, 0 0 10px 2px rgba(255,209,102,.55); }
+  50%    { box-shadow:inset 0 4px 10px rgba(0,0,0,.55), 0 0 0 5px #FFE9A8, 0 0 18px 6px rgba(255,209,102,.85); }
+}
+/* A savings pocket has to look different from every other cup, because it obeys
+   different rules: it cannot be lifted, cannot be captured, and charges its own
+   size to anyone sowing past it. A green rim and its price on the rim. */
+.palCup.pillai{ box-shadow:inset 0 4px 10px rgba(0,0,0,.55), 0 0 0 3px #34D399; }
+/* Raja circled the pillai cups on the 4-player board asking where their own
+   special mark was -- there wasn't one visible. .palCup is round
+   (border-radius:50%) AND clips its own content (overflow:hidden), and this
+   badge sat at top:-2px/right:-2px -- just outside the circle's own edge,
+   so the circular clip cut it away almost entirely. Same bug here on the
+   2-player board (same CSS shape, same offset), just never reported before
+   now. Positive offsets keep it inside the visible circle instead of
+   past its rim. */
+.palCup.pillai::after{ content:'🔒' attr(data-pillai); position:absolute;
+  top:2px; right:2px; font-size:9px; font-weight:900; line-height:1;
+  padding:2px 3px; border-radius:7px; background:#065F46; color:#D1FAE5;
+  border:1px solid #34D399; }
+/* Raja: same "green ring = looks like Player C's colour" confusion the
+   4-player board had (beta-208), just never applied here -- a fixed green
+   pillai ring happened to be identical to Player 1's OWN theme colour
+   (mine1, #4ade80), so Player 2's savings pocket read as if it belonged
+   to Player 1. Each cup already carries mine1/mine2 (owner(i)===0/1) for
+   its own ring, so the same classes work here too -- Player 1 stays green
+   (no visual change, it was already that colour), Player 2 gets its own
+   blue instead of the shared fixed green. */
+.palCup.pillai.mine2{ box-shadow:inset 0 4px 10px rgba(0,0,0,.55), 0 0 0 3px #60a5fa; }
+.palCup.pillai.mine2::after{ background:#12325E; border-color:#60a5fa; }
+.palCup.won{ animation:palWon .6s ease-in-out 1; }
+@keyframes palWon{ 50%{ transform:scale(1.18); } }
+
+.palFoot{ display:flex; align-items:center; justify-content:center; gap:9px;
+  flex-wrap:wrap; margin:10px 0 4px; }
+.palStat{ display:inline-flex; align-items:center; justify-content:center;
+  min-height:34px; padding:0 11px; border-radius:11px;
+  background:#FFF6E7; border:2px solid #8A5E31; color:#5E3D1C;
+  font-size:12px; font-weight:900; font-variant-numeric:tabular-nums; }
+
+/* ══ PALLANGUZHI · 4 PLAYERS — UI ONLY ═══════════════════════════════════
+   Raja proposed a four-player version of his own game and asked for the
+   layout first, rules after — the same order the two-player board itself
+   was built in (design, then UI, then rules across many builds). This is
+   that first step: the square frame he sketched, real elements in the real
+   app rather than a mockup file, but every seed count is a fixed "5" and
+   Choose Player only moves a cosmetic highlight. Nothing here sows, wins, or
+   remembers a reserve — that is deliberately for the next pass, once the
+   two open questions (which cup a capture points at with four sides instead
+   of two; whether this fits on the same panel Choose Player already tracks)
+   are settled.
+
+   THE FRAME is a 9x9 CSS grid. Only the border ring holds cups — 7 per side,
+   28 in all, exactly Raja's sketch — the four corners are empty turns in the
+   ring, and the interior 7x7 well is open floor for SaNa and the four
+   name/store cards. Grid placement, not flexbox, because a square frame is a
+   genuinely 2-D shape: cups need an explicit row AND column, not just a
+   position in a line. */
+.pal4Frame{ position:relative; width:100%; max-width:380px; aspect-ratio:1/1; margin:0 auto;
+  display:grid; grid-template-columns:repeat(9,1fr); grid-template-rows:repeat(9,1fr);
+  gap:3px; padding:8px; border-radius:20px;
+  background:linear-gradient(160deg,#8A6A3C 0%,#6B4E28 100%);
+  box-shadow:inset 0 3px 12px rgba(0,0,0,.35); }
+/* touch-action:manipulation matters HERE specifically, unlike the 2-player
+   board's own cups/store: #pal4Panel scrolls (#palPanel never does — the
+   whole reason this differs from a working pattern elsewhere in the app),
+   so a tap on anything inside it sits in a genuinely ambiguous "is this a
+   scroll or a tap" zone until this says otherwise. Raja: "unable to start
+   game by pressing seed filled pocket... when touch pocket just blinking"
+   — the .toDeal glow animation keeps pulsing regardless of the tap, which
+   reads as "something happened" even when the click event itself was the
+   one being delayed or dropped. */
+.pal4Cup{ position:relative; border:0; padding:0; font-family:inherit; cursor:default;
+  touch-action:manipulation;
+  border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:2px; overflow:hidden; font-size:13px; font-weight:900;
+  color:#FFE9C4; background:radial-gradient(ellipse at 50% 32%,#5C3F20 0%,#3A2611 100%);
+  box-shadow:inset 0 3px 7px rgba(0,0,0,.55); }
+.pal4Corner{ border-radius:8px; background:rgba(0,0,0,.18); }
+/* Four sides, four colours — the same green/blue this app already uses for
+   Player 1/2, extended with the same family's orange and purple (Sudoku's
+   own Hard/Master colours, reused here in a different context the way this
+   app already reuses hues across puzzles). */
+.pal4Cup.sideA{ box-shadow:inset 0 3px 7px rgba(0,0,0,.55), 0 0 0 2px #F59E0B; }   /* top    */
+.pal4Cup.sideB{ box-shadow:inset 0 3px 7px rgba(0,0,0,.55), 0 0 0 2px #60a5fa; }   /* right  */
+.pal4Cup.sideC{ box-shadow:inset 0 3px 7px rgba(0,0,0,.55), 0 0 0 2px #4ade80; }   /* bottom */
+.pal4Cup.sideD{ box-shadow:inset 0 3px 7px rgba(0,0,0,.55), 0 0 0 2px #A78BFA; }   /* left   */
+.pal4Cup.active{ animation:pal4Pulse 1.1s ease-in-out infinite; }
+@keyframes pal4Pulse{ 50%{ transform:scale(1.08); } }
+
+/* THE GAME ITSELF — same rendering language as the 2-player board's own
+   .palCup/.palSeeds/.palCount, just laid onto the ring instead of two rows.
+   Raja: "go through for integration of code for same as existing 2 player
+   game rules and procedures... the seed fill sequence will circulate by as
+   same methode of existing game." */
+.pal4Count{ font-size:11px; font-weight:900; line-height:1; color:#FFE9C4;
+  font-variant-numeric:tabular-nums; text-shadow:0 1px 3px rgba(0,0,0,.8); }
+.pal4Cup.empty .pal4Count{ color:#8A6A3C; }
+.pal4Seeds{ display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
+  gap:1px; max-width:78%; }
+.pal4Seeds:empty{ display:none; }
+.pal4Seed{ width:4px; height:4px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #FFF3D4, #C89A54); }
+.pal4Cup.pickable{ cursor:pointer; }
+.pal4Cup.pickable:active{ transform:translateY(1px); }
+.pal4Cup.sowing{ box-shadow:inset 0 3px 7px rgba(0,0,0,.55), 0 0 0 3px #F7B32B; }
+.pal4Cup.pasu{ animation:pal4PasuGlow 1s ease-in-out infinite; cursor:pointer; }
+@keyframes pal4PasuGlow{
+  0%,100%{ box-shadow:inset 0 3px 7px rgba(0,0,0,.55), 0 0 0 3px #FFD166, 0 0 10px 2px rgba(255,209,102,.55); }
+  50%    { box-shadow:inset 0 3px 7px rgba(0,0,0,.55), 0 0 0 5px #FFE9A8, 0 0 18px 6px rgba(255,209,102,.85); }
+}
+.pal4Cup.pillai{ box-shadow:inset 0 3px 7px rgba(0,0,0,.55), 0 0 0 3px #34D399; }
+/* Raja circled the pillai cups asking where their own special mark was —
+   there wasn't one visible. .pal4Cup is round (border-radius:50%) AND clips
+   its own content (overflow:hidden), and this badge sat at top:-2px/
+   right:-2px — just outside the circle's own edge, so the circular clip
+   cut it away almost entirely. Same bug exists on the 2-player board's own
+   pillai badge (identical shape, identical offset), fixed there too.
+   Positive offsets keep it inside the visible circle instead of past its
+   rim. */
+.pal4Cup.pillai::after{ content:'🔒'; position:absolute; top:2px; right:2px;
+  font-size:7px; font-weight:900; line-height:1; padding:1px 2px; border-radius:6px;
+  background:#065F46; color:#D1FAE5; border:1px solid #34D399; }
+/* Raja: a fixed green ring on every pillai cup, regardless of whose row it
+   sits in, happened to look identical to Player C's own theme colour — a
+   pillai locked in Player A's row read as if it belonged to C. The ring
+   now carries each row's OWN theme colour instead, so at a glance across a
+   full board you can tell not just THAT a cup is locked, but whose savings
+   it is and how many each player currently has, without reading names. */
+.pal4Cup.pillai.sideA{ box-shadow:inset 0 3px 7px rgba(0,0,0,.55), 0 0 0 3px #F7B32B; }
+.pal4Cup.pillai.sideA::after{ background:#7C4A03; border-color:#F7B32B; }
+.pal4Cup.pillai.sideB{ box-shadow:inset 0 3px 7px rgba(0,0,0,.55), 0 0 0 3px #3B82F6; }
+.pal4Cup.pillai.sideB::after{ background:#12325E; border-color:#3B82F6; }
+.pal4Cup.pillai.sideD{ box-shadow:inset 0 3px 7px rgba(0,0,0,.55), 0 0 0 3px #A78BFA; }
+.pal4Cup.pillai.sideD::after{ background:#4C1D95; border-color:#A78BFA; }
+.pal4Cup.won{ animation:pal4Won .6s ease-in-out 1; }
+@keyframes pal4Won{ 50%{ transform:scale(1.18); } }
+
+.pal4Well{ grid-column:2/9; grid-row:2/9; border-radius:14px; position:relative;
+  background:radial-gradient(ellipse at 50% 45%, rgba(255,255,255,.05), rgba(0,0,0,.12)); }
+
+/* The four name+store cards float IN the well, each pulled to the edge
+   nearest its own row of cups, so ownership reads at a glance without
+   leaving the board to look for it. */
+.pal4Card{ position:absolute; display:flex; flex-direction:column; align-items:center; gap:2px; }
+/* Raja circled it exactly: these bled into the cup columns on both sides. The
+   cause was not the text at all — it is an <input>, and an unstyled <input>
+   takes its BROWSER-NATIVE default width (about 170-200px, from the implicit
+   size=20) regardless of what its parent declares. The parent card was set to
+   76px, but nothing ever told the input itself to respect that, and a flex
+   column with align-items:center does not shrink a child down to the
+   column's own width — it just centres the child at whatever width the child
+   wants, which is why the overflow was symmetrical, spilling into the cup
+   ring equally on both sides. width:100% plus box-sizing:border-box makes the
+   input actually fill its 76px card instead of ignoring it; overflow+ellipsis
+   is the second line of defence, in case a typed name is still too long for
+   that width to hold comfortably. */
+.pal4CardName{ width:100%; box-sizing:border-box; padding:4px 6px; border-radius:8px;
+  font-size:14px; font-weight:900; overflow:hidden; text-overflow:ellipsis;
+  white-space:nowrap; background:none; border:1.5px solid transparent; font-family:inherit;
+  text-align:center; cursor:default; }
+.pal4CardName::placeholder{ font-weight:700; }
+/* Same bug class as .pal4CardName in beta-189, same fix: a flex CHILD of a
+   flex-column parent with align-items:center is never shrunk to the
+   parent's width — it is centred at whatever width its own content wants,
+   which is exactly how "STORE" bled past the well's edge the moment the
+   longer Tamil "சேமிப்பு" met the bigger font size this pass asked for.
+   max-width:100% + box-sizing:border-box makes the pill actually respect
+   its 76px card; overflow:hidden + ellipsis on the Cap label is the same
+   second line of defence used there, in case a translation is ever wider
+   still. */
+.pal4CardStore{ display:flex; align-items:center; gap:3px; padding:10px 5px; border-radius:999px;
+  background:#4A3117; max-width:100%; box-sizing:border-box; overflow:hidden; touch-action:manipulation; }
+/* Raja's real device keeps missing this box on tap (logged landing on totally
+   unrelated elements below it) -- measured, its own tappable box was only
+   ~24px tall, well under the 44x44 CSS px minimum touch target Material/HIG
+   both call for. First attempt grew an invisible ::before hit area, but
+   .pal4CardStore's own overflow:hidden (needed to stop long Tamil text
+   bleeding past the card, added earlier this session) clips ANY descendant
+   that tries to extend past its box, pseudo-elements included -- so that
+   never actually worked. Real vertical padding instead: it can't be
+   clipped by the box's own overflow, and only height changes (2px -> 10px
+   top/bottom), so none of the width-based overflow fixes already fought
+   for here are touched. ~40px tall now, close to the 44px target. */
+.pal4CardStore.toDeal{ cursor:pointer; animation:pal4PasuGlow 1.15s ease-in-out infinite; }
+.pal4CardStore.toDeal:active{ transform:translateY(1px); }
+.pal4CardStoreNum{ min-width:26px; height:20px; border-radius:5px; background:#FFF6E7;
+  border:1.5px solid #8A5E31; display:grid; place-items:center; font-size:12px; font-weight:900;
+  color:#33220F; flex:0 0 auto; }
+.pal4CardStoreCap{ font-size:8.5px; font-weight:900; color:#F3D9A9; letter-spacing:.3px;
+  min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pal4A{ top:4px; left:50%; transform:translateX(-50%); width:80px; }
+.pal4A .pal4CardName{ background:#FDE1A8; color:#5A3A0A; border-color:#92400E; }
+.pal4B{ right:0; top:50%; transform:translateY(-50%); width:80px; }
+.pal4B .pal4CardName{ background:#A8CBFF; color:#0A2748; border-color:#12325E; }
+.pal4C{ bottom:4px; left:50%; transform:translateX(-50%); width:80px; }
+.pal4C .pal4CardName{ background:#9BE8B8; color:#0B3A20; border-color:#14532D; }
+.pal4D{ left:0; top:50%; transform:translateY(-50%); width:80px; }
+.pal4D .pal4CardName{ background:#DCC8FB; color:#3B0764; border-color:#5B21B6; }
+.pal4Card.active .pal4CardName{ box-shadow:0 0 0 3px rgba(255,255,255,.55); }
+
+/* SaNa, centred in the well, her name under her, and a plain arrow doing the
+   "facing" work — a rotated or mirrored emoji reads as crooked, not as
+   looking anywhere; a small unambiguous pointer beside her says it directly,
+   and it is its own element so it is never dragged along by any animation on
+   her own face. */
+.pal4SanaMid{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  display:flex; flex-direction:column; align-items:center; gap:2px; }
+.pal4SanaFace{ width:15vw; height:15vw; min-width:38px; min-height:38px; max-width:50px; max-height:50px;
+  border-radius:50%; background:linear-gradient(160deg,#FFD675,#F0A828); box-shadow:0 3px 10px rgba(0,0,0,.35);
+  display:grid; place-items:center; font-size:min(6.5vw, 24px); position:relative; }
+.pal4SanaName{ font-size:9px; font-weight:900; color:#7A1512; background:rgba(255,246,231,.85);
+  padding:1px 7px; border-radius:7px; }
+.pal4Look{ position:absolute; top:50%; width:0; height:0; border-top:8px solid transparent;
+  border-bottom:8px solid transparent; transition:top .35s ease, left .35s ease; }
+/* one arrow element, repositioned and re-pointed per side by JS toggling
+   these four data-driven classes rather than four separate arrows */
+.pal4Look.lookA{ top:-14px; left:50%; transform:translateX(-50%) rotate(-90deg); }
+.pal4Look.lookB{ top:50%; left:100%; margin-left:6px; transform:translateY(-50%); }
+.pal4Look.lookC{ top:100%; left:50%; margin-top:6px; transform:translateX(-50%) rotate(90deg); }
+.pal4Look.lookD{ top:50%; left:0; margin-left:-15px; transform:translateY(-50%) rotate(180deg); }
+.pal4Look{ border-left:11px solid #F0A828; }
+
+/* NOT the same ceiling as CardName/CardStore/Tick. Those are bounded by a
+   hard collision (touching SaNa) or a self-overflow (ellipsis engaging) —
+   pal4Say has neither, since its bubble just grows taller and the panel
+   already scrolls. That absence of a hard wall is exactly what let the
+   first attempt at "maximum" here (19px) push the tick-box row and Choose
+   Player button below the fold on open in Tamil at smaller phones — both
+   individually fine (no overflow, no collision) and yet a real control
+   made invisible without scrolling, which no overflow/collision check
+   was set up to catch. The real ceiling is functional, not geometric:
+   the largest size that still leaves the tick row and Choose Player
+   visible on open, unscrolled, at the worst case (340x780, Tamil). */
+.pal4Say{ background:rgba(255,246,231,.72); border-radius:16px; padding:8px 13px; margin:6px 0 0;
+  font-size:12.5px; font-weight:800; text-align:center; color:#33220F; }
+.pal4Choose{ display:block; width:100%; box-sizing:border-box; margin:10px 0; padding:9px 12px;
+  border-radius:14px; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:900;
+  text-align:center; background:linear-gradient(180deg,#FDE68A 0%,#F59E0B 100%); color:#5A3A0A;
+  border:2px solid #92400E; touch-action:manipulation; }
+/* Shared by both boards' Live-Round chip -- informational, not tappable,
+   so it drops slideBtn's pointer cursor while keeping its pill look. */
+.roundChip{ display:block; width:fit-content; margin:8px auto 0; cursor:default; }
+.pal4Foot{ display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:10px; }
+
+/* ══ WHO IS PLAYING — four tick boxes ═══════════════════════════════════
+   Raja: "one more tab to add for select sub level, either 2 player or 3 or
+   four — if two player select, the fill sequence will enable to those rows
+   only, like 3 players and four players. The select will done by four tick
+   box that decide who are to enable the run fill seed sequence."
+
+   The board itself does not change shape — it is still the same square, all
+   28 cups drawn — only which of the four sides is IN the game changes. A
+   side left unticked sits there dimmed: no seed count, no turn, taken out of
+   Choose Player's rotation entirely, exactly what "enable to those rows
+   only" asks for. Two ticked is a two-player game played out on the
+   four-sided board; three or four fill in from there. */
+.pal4Select{ display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
+  margin:8px 0; padding:8px 10px; border-radius:14px; background:rgba(255,246,231,.55); }
+/* Raja: "reduce the tab and font size it's too big keep it all in single
+   row." Same lesson as pal4Say: "no self-overflow, no scroll-budget
+   breach" is not the same guarantee as "still lays out the way it's meant
+   to" — four chips in a flex row wrap onto a second line long before
+   anything actually overflows a box, and the scroll-budget search that
+   found 18/19/29 never asked about wrapping at all. Direct-tested for
+   "stays on one line" instead, in both languages, at every width from
+   340 to 412px — the realistic phone range, not just the single 340px
+   edge case. Padding and gap needed to tighten alongside font-size: the
+   ORIGINAL pre-beta-196 sizing (13px/14px/19px) already wrapped at
+   360-375px because its padding/gap alone ate the row's width, which
+   the font-size search never touched. */
+.pal4SelectLabel{ font-size:10px; font-weight:900; color:#5E3D1C; margin-right:2px; }
+.pal4Tick{ display:flex; align-items:center; gap:3px; padding:3px 7px 3px 5px; border-radius:999px;
+  border:2px solid #8A5E31; background:#FFF6E7; cursor:pointer; font-size:14px; font-weight:900;
+  color:#5E3D1C; user-select:none; touch-action:manipulation; }
+.pal4Tick input{ width:19px; height:19px; margin:0; accent-color:#8A5E31; cursor:pointer; }
+/* the box takes the SAME colour as the side it enables, so ticking one and
+   watching its row light up is one visual idea, not two to learn separately */
+.pal4Tick.sideA.on{ background:#FDE1A8; border-color:#92400E; }
+.pal4Tick.sideB.on{ background:#A8CBFF; border-color:#12325E; }
+.pal4Tick.sideC.on{ background:#9BE8B8; border-color:#14532D; }
+.pal4Tick.sideD.on{ background:#DCC8FB; border-color:#5B21B6; }
+/* An unticked side is taken OUT of the game, and has to read that way at a
+   glance: its cups go flat and colourless rather than merely a bit dimmer,
+   the same distance a "spent" key or a solved cell already signals "done
+   with this" elsewhere in this app. */
+.pal4Cup.off{ opacity:.32; filter:grayscale(1); box-shadow:inset 0 3px 7px rgba(0,0,0,.55) !important;
+  pointer-events:none; cursor:default; }
+.pal4Card.off{ opacity:.32; filter:grayscale(1); }
+.pal4Card.off .pal4CardName{ pointer-events:none; }
 
 /* Slide Magic hides the same grid furniture the other card games do — there
    is no magic square to build, no target to preview, nothing to Watch. Same
@@ -3174,10 +3772,26 @@ body{ background:#C9A87C !important; }
 
 <!-- ══ PLAY ══ -->
 <section class="screen" data-screen="scPlay">
+<!-- Raja: "observed below the target text in tab for the games up to Sir
+     Ramanujan matrix is seen too tiny — so can merge the target box and below
+     box for increasing the height, and split into a left box for the target
+     and a right box for level appreciation notes." He is right about the
+     cause: these were two stacked FULL-WIDTH strips, and the bottom one — the
+     progress sentence — was squeezed down to 9px by an onPlay-specific rule
+     several layers deep. Side by side in one taller row, each keeps its own
+     coloured chip (nothing about ownership or per-size colouring changes) but
+     neither has to share the row's height with a second line stacked below
+     it, so both can afford to be read at a real size.
+     Both elements keep their original ids unchanged — every script that reads
+     or hides them (refreshCounter(), the per-mode display:none rules for
+     Sudoku/Slide/Gate/Binary/Pallanguzhi) keeps working without a line of JS
+     touched; only their shared parent and their own sizing move. -->
+<div class="targetRow">
 <div class="targetPill" id="targetPill">🎯 Target : <span id="targetVal">?</span></div>
 
 <!-- Merged progress + rule, per-size, set by refreshCounter() -->
 <div class="solvedCounter" id="solvedCounter">🏆 0/2 different targets · solve 2 to open the next →</div>
+</div>
 
 <div class="instCard" id="instCard"></div>
 
@@ -3276,6 +3890,161 @@ body{ background:#C9A87C !important; }
          NOT for competitive." So it counts up quietly and is never compared to
          anything — no best time, no par, no pressure to beat it. -->
     <span class="sudStat" id="sudTime">Time 0:00</span>
+  </div>
+</div>
+
+<!-- 🫘 PALLANGUZHI — Raja's own game, played in his family. Its own panel for
+     the same reason as Sudoku's: there is no magic square, no target, and the
+     grid-puzzle click handler would not know what to do with it.
+     It is also the first thing here that is a GAME BETWEEN TWO PEOPLE rather
+     than a puzzle with an answer, so the screen has to say whose turn it is at
+     every moment — two children sharing one phone cannot be asked to remember.
+     Raja: "Player name will change to Player 1, Player 2", and "add one empty
+     box near player, but should be blank, can enter manually by player and same
+     persist until game is cleared" — hence real inputs with placeholders. -->
+<div id="palPanel" style="display:none;">
+  <!-- The tips are OUTSIDE .palWrap on purpose. .palWrap is centred in the
+       leftover height (auto margins, so the board sits in the middle of the
+       screen rather than jammed under the app bar) — and while that is right
+       for the board, it meant the tips centred WITH it, floating in the
+       middle of a blank gap instead of sitting under SaNa where a player's eye
+       already is. Raja: "the tips shows top of choose player should shift to
+       below SaNa monkey suggestion field." As a sibling before the wrap, it is
+       pinned at the very top of the panel — directly under SaNa's bubble —
+       and .palWrap still centres itself in whatever height is left below it. -->
+  <div class="palSay" id="palSay">Tap Start to fill the board.</div>
+ <div class="palWrap">
+  <!-- Raja: "add choose player tab, hence always opening is force to player one.
+       Of course who start the pick initial have get some favour to them, by
+       choosing which pocket to pick initial — example if picked 2nd pocket it
+       will fill his seeds in his own pocket and pull opponent seeds."
+       He is describing the first-move advantage, and he is right that it is
+       real: the opener picks the cup whose reach ends where they want it. So
+       who opens stops being a rule the app imposes and becomes a decision the
+       two players make, which is also his own answer to the sixth of the rule
+       questions still sitting with his family. -->
+  <button class="palChoose" id="palChoose" type="button">👤 Choose player</button>
+
+  <!-- Same Live Round chip the 4-player board got, same spot relative to
+       Choose Player -- informational only, no click handler. -->
+  <span class="slideBtn roundChip" id="palRoundChip">Round 1</span>
+
+  <div class="palSide p2" id="palSide2">
+    <input class="palName" id="palName2" type="text" maxlength="14"
+           placeholder="Player 2" autocomplete="off" spellcheck="false">
+    <div class="palStore"><span class="palStoreCap">Store</span><span class="palStoreNum" id="palStore2">35</span></div>
+  </div>
+
+  <div class="palBoard" id="palBoard"></div>
+
+  <div class="palSide p1" id="palSide1">
+    <input class="palName" id="palName1" type="text" maxlength="14"
+           placeholder="Player 1" autocomplete="off" spellcheck="false">
+    <div class="palStore"><span class="palStoreCap">Store</span><span class="palStoreNum" id="palStore1">35</span></div>
+  </div>
+
+  <div class="palFoot">
+    <button class="slideBtn" id="palNew" type="button">🔄 New game</button>
+    <button class="slideBtn" id="palRules" type="button">📖 How to play</button>
+    <span class="palStat" id="palOnBoard">70 seeds on the board</span>
+  </div>
+ </div>
+</div>
+
+<!-- 🫘 PALLANGUZHI · 4 PLAYERS — Raja's own proposal, "same as above, instant
+     two players can opt for four players, all other terms are similar." UI
+     only for this pass — see the long comment on .pal4Frame above for why. -->
+<div id="pal4Panel" style="display:none;">
+  <div class="pal4Say" id="pal4Say">Sample layout — the rules are still being worked out. Choose Player just previews who SaNa is watching.</div>
+
+  <div class="pal4Frame" id="pal4Frame">
+    <div class="pal4Corner" style="grid-column:1;grid-row:1"></div>
+    <div class="pal4Corner" style="grid-column:9;grid-row:1"></div>
+    <div class="pal4Corner" style="grid-column:1;grid-row:9"></div>
+    <div class="pal4Corner" style="grid-column:9;grid-row:9"></div>
+
+    <!-- data-pal4 is the RING INDEX, 0-27, clockwise: A0..A6, B0..B6, C0..C6,
+         D0..D6 — this DOM order already runs clockwise per side (A left to
+         right, B top to bottom, C right to left, D bottom to top), so the
+         index just counts straight through it. Sowing math is (pos+1)%28
+         against this same index — no separate "which side is next" table. -->
+    <button class="pal4Cup sideA" type="button" data-pal4="0" style="grid-column:2;grid-row:1"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideA" type="button" data-pal4="1" style="grid-column:3;grid-row:1"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideA" type="button" data-pal4="2" style="grid-column:4;grid-row:1"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideA" type="button" data-pal4="3" style="grid-column:5;grid-row:1"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideA" type="button" data-pal4="4" style="grid-column:6;grid-row:1"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideA" type="button" data-pal4="5" style="grid-column:7;grid-row:1"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideA" type="button" data-pal4="6" style="grid-column:8;grid-row:1"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+
+    <button class="pal4Cup sideB" type="button" data-pal4="7" style="grid-column:9;grid-row:2"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideB" type="button" data-pal4="8" style="grid-column:9;grid-row:3"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideB" type="button" data-pal4="9" style="grid-column:9;grid-row:4"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideB" type="button" data-pal4="10" style="grid-column:9;grid-row:5"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideB" type="button" data-pal4="11" style="grid-column:9;grid-row:6"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideB" type="button" data-pal4="12" style="grid-column:9;grid-row:7"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideB" type="button" data-pal4="13" style="grid-column:9;grid-row:8"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+
+    <button class="pal4Cup sideC" type="button" data-pal4="14" style="grid-column:8;grid-row:9"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideC" type="button" data-pal4="15" style="grid-column:7;grid-row:9"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideC" type="button" data-pal4="16" style="grid-column:6;grid-row:9"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideC" type="button" data-pal4="17" style="grid-column:5;grid-row:9"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideC" type="button" data-pal4="18" style="grid-column:4;grid-row:9"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideC" type="button" data-pal4="19" style="grid-column:3;grid-row:9"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideC" type="button" data-pal4="20" style="grid-column:2;grid-row:9"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+
+    <button class="pal4Cup sideD" type="button" data-pal4="21" style="grid-column:1;grid-row:8"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideD" type="button" data-pal4="22" style="grid-column:1;grid-row:7"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideD" type="button" data-pal4="23" style="grid-column:1;grid-row:6"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideD" type="button" data-pal4="24" style="grid-column:1;grid-row:5"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideD" type="button" data-pal4="25" style="grid-column:1;grid-row:4"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideD" type="button" data-pal4="26" style="grid-column:1;grid-row:3"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+    <button class="pal4Cup sideD" type="button" data-pal4="27" style="grid-column:1;grid-row:2"><span class="pal4Seeds"></span><span class="pal4Count">5</span></button>
+
+    <div class="pal4Well">
+      <!-- Raja: "add one empty box near player, but should be blank, can enter
+           manually by player and same persist until game is cleared" — the
+           same real, typed-into name boxes the two-player game already uses,
+           reused here rather than four more read-only labels. -->
+      <div class="pal4Card pal4A" id="pal4CardA"><input class="pal4CardName" maxlength="10" placeholder="Player A" autocomplete="off" spellcheck="false">
+        <div class="pal4CardStore"><span class="pal4CardStoreCap">STORE</span><span class="pal4CardStoreNum">35</span></div></div>
+      <div class="pal4Card pal4B" id="pal4CardB"><input class="pal4CardName" maxlength="10" placeholder="Player B" autocomplete="off" spellcheck="false">
+        <div class="pal4CardStore"><span class="pal4CardStoreCap">STORE</span><span class="pal4CardStoreNum">35</span></div></div>
+      <div class="pal4Card pal4C" id="pal4CardC"><input class="pal4CardName" maxlength="10" placeholder="Player C" autocomplete="off" spellcheck="false">
+        <div class="pal4CardStore"><span class="pal4CardStoreCap">STORE</span><span class="pal4CardStoreNum">35</span></div></div>
+      <div class="pal4Card pal4D" id="pal4CardD"><input class="pal4CardName" maxlength="10" placeholder="Player D" autocomplete="off" spellcheck="false">
+        <div class="pal4CardStore"><span class="pal4CardStoreCap">STORE</span><span class="pal4CardStoreNum">35</span></div></div>
+
+      <div class="pal4SanaMid">
+        <div class="pal4SanaFace">🐒<div class="pal4Look lookA" id="pal4Look"></div></div>
+        <div class="pal4SanaName">SaNa</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Raja: "select sub level, either 2 player or 3 or four... the select
+       will done by four tick box that decide who are to enable the run fill
+       seed sequence." All four start ticked, matching the board as it was
+       before this — nobody who was already playing loses a seat by default. -->
+  <div class="pal4Select" id="pal4Select">
+    <span class="pal4SelectLabel">Players:</span>
+    <label class="pal4Tick sideA on"><input type="checkbox" checked data-side="A"><span>A</span></label>
+    <label class="pal4Tick sideB on"><input type="checkbox" checked data-side="B"><span>B</span></label>
+    <label class="pal4Tick sideC on"><input type="checkbox" checked data-side="C"><span>C</span></label>
+    <label class="pal4Tick sideD on"><input type="checkbox" checked data-side="D"><span>D</span></label>
+  </div>
+
+  <button class="pal4Choose" id="pal4Choose" type="button">👤 Choose player — Player A starts</button>
+
+  <!-- Raja: "ring order is not much need to know... it was just
+       information — replace this tab to Live Round." The ring-order text
+       moved into How to play; this slot now shows the live round number
+       instead, informational only (no click handler). -->
+  <span class="slideBtn roundChip" id="pal4RoundChip">Round 1</span>
+
+  <div class="pal4Foot">
+    <button class="slideBtn" id="pal4New" type="button">🔄 New game</button>
+    <button class="slideBtn" id="pal4Rules" type="button">📖 How to play</button>
+    <span class="palStat" id="pal4OnBoard">140 seeds on the board</span>
   </div>
 </div>
 
@@ -3629,6 +4398,31 @@ body{ background:#C9A87C !important; }
       <button class="toggleBtn lvCard" id="sudMasterTab" type="button" data-sud-level="master" data-name="🧩 Sudoku 9×9 Master" style="color:#f472b6; border-color:#ec4899; --c1:#fbcfe8; --c2:#f472b6;">
         <span class="lvGlyph" aria-hidden="true">🧩</span>
         <span class="lvText"><b class="lvName">Sudoku 9×9</b><span class="lvDiff">Master · fewest given</span><span class="lvMeta">the long one — take your time</span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 🫘 PALLANGUZHI — the traditional Tamil sowing game, two rows of seven.
+       ONE card, not a difficulty ladder: every other entry here is a puzzle
+       that can be made harder by giving less away, and this is a game between
+       two people, where the difficulty is the person across from you. -->
+  <div class="modeGroup">
+    <div class="modeHead" style="--m1:#fcd34d; --m2:#b45309;">
+      <span class="mIco">🫘</span>
+      <span><b>Pallanguzhi</b><i>the old Tamil sowing game — two rows of seven, played with a friend</i></span>
+    </div>
+    <div class="toggleSwitch">
+      <button class="toggleBtn lvCard" id="palTab" type="button" data-pal-level="classic" data-name="🫘 Pallanguzhi" style="color:#d97706; border-color:#b45309; --c1:#fde68a; --c2:#f59e0b;">
+        <span class="lvGlyph" aria-hidden="true">🫘</span>
+        <span class="lvText"><b class="lvName">Pallanguzhi 2×7</b><span class="lvDiff">Two players · one phone</span><span class="lvMeta">sow the seeds, win a cup of four — the game your family plays</span></span>
+      </button>
+      <!-- Raja's own proposal: "same as above, instant two players can opt for
+           four players, all other terms are similar." Layout only for now —
+           see the panel comment for what that means and what it deliberately
+           leaves out. -->
+      <button class="toggleBtn lvCard" id="pal4Tab" type="button" data-pal4-level="four" data-name="🫘 Pallanguzhi · 4" style="color:#7c3aed; border-color:#5b21b6; --c1:#ddd6fe; --c2:#8b5cf6;">
+        <span class="lvGlyph" aria-hidden="true">🫘</span>
+        <span class="lvText"><b class="lvName">Pallanguzhi · 4 Players</b><span class="lvDiff">Sample layout · rules coming</span><span class="lvMeta">a square frame, four sides — same idea, twice the family</span></span>
       </button>
     </div>
   </div>
@@ -4243,6 +5037,23 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
     // come back counts a walk to the kitchen as time spent playing
     if (!on && window.__sudTimerStop) window.__sudTimerStop();
   }
+  function showPalMode(on){
+    document.body.classList.toggle('palMode', !!on);
+    var pp = document.getElementById('palPanel');
+    if (pp) pp.style.display = on ? 'block' : 'none';
+    /* Leaving mid-move must stop the sowing timer, or seeds keep dropping into
+       a board nobody is looking at and the game is in a different state when
+       the player comes back to it. */
+    if (!on && window.__palStop) window.__palStop();
+  }
+  function showPal4Mode(on){
+    document.body.classList.toggle('pal4Mode', !!on);
+    var pp = document.getElementById('pal4Panel');
+    if (pp) pp.style.display = on ? 'block' : 'none';
+    // same reason as the 2-player board: leaving mid-move must not leave a
+    // sowing timer dropping seeds into a board nobody is looking at
+    if (!on && window.__pal4Stop) window.__pal4Stop();
+  }
   function showSlideMode(on){
     document.body.classList.toggle('slideMode', !!on);
     var sp = document.getElementById('slidePanel');
@@ -4279,6 +5090,8 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
         if (currentSize === 'gatelogic') showGateMode(false);
         if (currentSize === 'slide') showSlideMode(false);
       if (currentSize === 'sudoku') showSudokuMode(false);
+      if (currentSize === 'pallanguzhi') showPalMode(false);
+      if (currentSize === 'pallanguzhi4') showPal4Mode(false);
         currentSize = newSize;
         showBinaryMode(true);
         highlightNowPlaying();
@@ -4287,7 +5100,9 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
       if (currentSize === 'binary' || currentSize === 'binary2') showBinaryMode(false);   // back to the grids
       if (currentSize === 'gatelogic') showGateMode(false);                               // back to the grids
       if (currentSize === 'slide') showSlideMode(false);
-      if (currentSize === 'sudoku') showSudokuMode(false);                                  // back to the grids
+      if (currentSize === 'sudoku') showSudokuMode(false);
+      if (currentSize === 'pallanguzhi') showPalMode(false);                                  // back to the grids
+      if (currentSize === 'pallanguzhi4') showPal4Mode(false);                                // back to the grids
       if (newSize !== currentSize) {
         currentSize = newSize;
         initBoard();
@@ -7368,6 +8183,8 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
         if (currentSize === 'gatelogic') showGateMode(false);
         showSlideMode(false);
         showSudokuMode(false);
+        showPalMode(false);
+        showPal4Mode(false);
         currentSize = 'sudoku';
         goScreen('scPlay');
         showSudokuMode(true);
@@ -7391,6 +8208,1822 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
       if (p && p.style.display !== 'none'){ sudCellCap = 0; sudRender(); }
     });
 
+    /* ══ PALLANGUZHI ═══════════════════════════════════════════════════════
+       Raja's own game. Two rows of seven cups, two players, one phone.
+
+       THE RING. cups[0..6] is Player 1's row along the bottom, left to right.
+       cups[7..13] is Player 2's row along the top, drawn RIGHT TO LEFT — that
+       reversal is what makes the array a real ring: leaving cup 6 at the
+       bottom right you arrive at cup 7 directly above it, travel back along
+       the top to cup 13 at the top left, and drop to cup 0 below it. Sowing is
+       then just index + 1, and no part of the code has to know about rows.
+
+       Rules taken directly from Raja:
+         "initial layer should be blank in pockets when reserve is 35 for each,
+          then both fill by one to own side pocket each 5 and reserve will lapse
+          to zero"                                  -> the opening fill, below
+         "whenever pocket is filled over 4 seeds, where that row is, that side
+          own only may allow to take that pocket, the name called bonus reward
+          PASU. If forget to take and same filled next round fill with 5, after
+          no right to take further"                 -> claimPasu, below
+         "how pick the end of next pocket if another is empty after one, how
+          much have, that belong to owner of who played; if both continues
+          pocket is empty the player loses the play" -> the end of sowStep
+
+       WHAT IS STILL OPEN. Eleven of the twelve rule questions are still with
+       his family, so where a rule was not settled this takes the plainest
+       reading and says so out loud rather than inventing depth nobody asked
+       for: stores are not sown into, Player 1 opens, a player with an empty row
+       loses their turn, and a cup of four may be claimed by its owner AT ANY
+       TIME while it still shows four — including while the opponent is sowing,
+       which is the whole point of a bonus you can forget. The multi-round game
+       (refilling, kappal) is deliberately absent: it depends on answers that do
+       not exist yet, and guessing at it would be inventing his family's game
+       for them. */
+    (function(){
+      var CUPS = 14, PER_CUP = 5, PASU = 4;
+      var ORDER = [13,12,11,10,9,8,7, 0,1,2,3,4,5,6];   // top row, then bottom
+      var owner = function(i){ return i < 7 ? 0 : 1; };
+      /* EVERY SENTENCE THE BOARD SAYS, in both languages, in one place.
+
+         Most of what this game tells you is assembled at the moment it is said —
+         whose turn it is, what was just won, who forgot a cup of four — so a
+         table of finished strings keyed on English could never reach it. These
+         are templates instead: {a} is a player, {n} a count. English and Tamil
+         sit on the same line, which is the only arrangement where adding a
+         sentence in one language and forgetting the other is obvious on sight.
+
+         Pallanguzhi is the one puzzle translated completely, and it is the right
+         one: the game is Tamil, and so is its vocabulary — பசு, the cups, the
+         sowing. The rest of the app stays in English on Raja's instruction,
+         after the whole-app version was seen to collapse the layouts. */
+      var PAL_TXT = {
+        playerN:   { en:'Player {n}',                     ta:'வீரர் {n}' },
+        playerL:   { en:'Player {a}',                     ta:'வீரர் {a}' },   // 4-player board: A/B/C/D, not 1/2
+        filling:   { en:'Filling the board — <b>five seeds</b> in every cup, straight from each store.',
+                     ta:'பலகையை நிரப்புகிறோம் — ஒவ்வொரு குழியிலும் <b>ஐந்து விதைகள்</b>, சேமிப்பிலிருந்தே.' },
+        starts:    { en:'<b>{a}</b> starts. Tap one of your own cups to lift its seeds.',
+                     ta:'<b>{a}</b> தொடங்குகிறார். உங்கள் குழி ஒன்றைத் தட்டி விதைகளை எடுங்கள்.' },
+        newBoard:  { en:'A new board — <b>{a}</b> starts.',
+                     ta:'புதிய பலகை — <b>{a}</b> தொடங்குகிறார்.' },
+        wonSay:    { en:'<b>{a}</b> won <b>{n}</b> seeds.',
+                     ta:'<b>{a}</b> <b>{n}</b> விதைகளை வென்றார்.' },
+        wonCheer:  { en:'<b>{a}</b> won <b>{n}</b> seeds!',
+                     ta:'<b>{a}</b> <b>{n}</b> விதைகளை வென்றார்!' },
+        nothing:   { en:'Two empty cups in a row — nothing won.',
+                     ta:'தொடர்ந்து இரு காலிக் குழிகள் — ஒன்றும் கிடைக்கவில்லை.' },
+        skipped:   { en:'{msg} <b>{a}</b> has no seeds to lift, so it is <b>{b}</b> again.',
+                     ta:'{msg} <b>{a}</b> இடம் விதைகள் இல்லை, எனவே மீண்டும் <b>{b}</b>.' },
+        nowTurn:   { en:'{msg} Now <b>{a}</b> — tap one of your own cups.',
+                     ta:'{msg} இப்போது <b>{a}</b> — உங்கள் குழி ஒன்றைத் தட்டுங்கள்.' },
+        deadHeat:  { en:'A dead heat — <b>{n} seeds each</b>.',
+                     ta:'சமநிலை — <b>தலா {n} விதைகள்</b>.' },
+        winsWith:  { en:'<b>{a}</b> wins with <b>{n} seeds</b> to {m}.',
+                     ta:'<b>{a}</b> <b>{n} விதைகளுடன்</b> வென்றார், எதிராளிக்கு {m}.' },
+        heatCheer: { en:'A dead heat!',                   ta:'சமநிலை!' },
+        winsGame:  { en:'<b>{a}</b> wins the game!',      ta:'<b>{a}</b> ஆட்டத்தை வென்றார்!' },
+        pasuCheer: { en:'🫘 A cup of <b>four</b> — well spotted, <b>{a}</b>!',
+                     ta:'🫘 நான்கு விதைக் குழி — நல்ல கவனம், <b>{a}</b>!' },
+        pasuTook:  { en:'🫘 <b>{a}</b> took a <b>pasu</b> — four seeds.',
+                     ta:'🫘 <b>{a}</b> <b>பசு</b> எடுத்தார் — நான்கு விதைகள்.' },
+        sowingOn:  { en:' Sowing carries on.',            ta:' விதைப்பு தொடர்கிறது.' },
+        yourTurn:  { en:' <b>{a}</b>, your turn — tap one of your own cups.',
+                     ta:' <b>{a}</b>, உங்கள் முறை — உங்கள் குழி ஒன்றைத் தட்டுங்கள்.' },
+        notYours:  { en:'That row belongs to <b>{a}</b>. Tap one of your own cups.',
+                     ta:'அந்த வரிசை <b>{a}</b> இற்கு உரியது. உங்கள் குழி ஒன்றைத் தட்டுங்கள்.' },
+        cupEmpty:  { en:'That cup is empty — pick one with seeds in it.',
+                     ta:'அந்தக் குழி காலி — விதைகள் உள்ள குழியைத் தேர்ந்தெடுங்கள்.' },
+        tapYours:  { en:'<b>{a}</b> — tap one of your own cups.',
+                     ta:'<b>{a}</b> — உங்கள் குழி ஒன்றைத் தட்டுங்கள்.' },
+        sowingTab: { en:'⏳ sowing…',                      ta:'⏳ விதைக்கிறது…' },
+        turnTab:   { en:'👇 {a} — tap one of your cups',
+                     ta:'👇 {a} — உங்கள் குழியைத் தட்டுங்கள்' },
+        onBoard1:  { en:'{n} seed on the board',          ta:'பலகையில் {n} விதை' },
+        onBoardN:  { en:'{n} seeds on the board',         ta:'பலகையில் {n} விதைகள்' },
+        dealPrompt:{ en:'Each player taps their own store to lay out their row.',
+                     ta:'ஒவ்வொரு வீரரும் தன் சேமிப்பைத் தட்டி தன் வரிசையை நிரப்பவும்.' },
+        // Raja: SaNa's own bubble and the tips box below it were saying this
+        // exact same sentence at the very start of a game — a real clone,
+        // unlike every other moment, where the two already say different
+        // things (compare roundOver/roundCheer, wonSay/wonCheer, above and
+        // below). This gives the mascot its own short version here too,
+        // matching that established pattern instead of repeating the tip.
+        dealPromptCheer: { en:'New board — tap your own store to lay it out!',
+                     ta:'புதிய பலகை — உங்கள் சேமிப்பைத் தட்டி நிரப்புங்கள்!' },
+        roundOver: { en:'{msg}<br>Round over — <b>{a}</b> keeps the <b>{n}</b> seeds left on their side. Tap your stores for the next round.',
+                     ta:'{msg}<br>சுற்று முடிந்தது — தன் பக்கம் மீதமுள்ள <b>{n}</b> விதைகளை <b>{a}</b> எடுத்துக்கொள்கிறார். அடுத்த சுற்றுக்கு உங்கள் சேமிப்பைத் தட்டுங்கள்.' },
+        roundCheer:{ en:'Round over — <b>{a}</b> gathers <b>{n}</b> seeds.',
+                     ta:'சுற்று முடிந்தது — <b>{a}</b> <b>{n}</b> விதைகளைச் சேர்க்கிறார்.' },
+        roundNo:   { en:'Round {n}',                      ta:'சுற்று {n}' },
+        pillaiLocked:{ en:'That is a <b>savings pocket</b> — nobody lifts from it. It goes home at the end of the round.',
+                     ta:'அது ஒரு <b>பிள்ளை குழி</b> — யாரும் அதிலிருந்து எடுக்க முடியாது. சுற்று முடிவில் சொந்தக்காரருக்கே செல்லும்.' },
+        pillaiStop:{ en:'Not enough seeds in hand to pay the <b>savings pocket</b> — the sowing stops there.',
+                     ta:'<b>பிள்ளை குழிக்குக்</b> கொடுக்கப் போதுமான விதைகள் கையில் இல்லை — விதைப்பு அங்கேயே நிற்கிறது.' },
+        lostAll:   { en:'<b>{a}</b> cannot lay out a single cup — <b>{b}</b> wins the game!',
+                     ta:'<b>{a}</b> ஒரு குழியைக் கூட நிரப்ப முடியவில்லை — <b>{b}</b> ஆட்டத்தை வென்றார்!' },
+        fillingRow:{ en:'Laying out <b>{a}</b>’s row — five seeds in every cup.',
+                     ta:'<b>{a}</b> வரிசை நிரம்புகிறது — ஒவ்வொரு குழியிலும் ஐந்து விதைகள்.' },
+        dealOne:   { en:'<b>{a}</b>’s row is down. <b>{b}</b> — tap your store.',
+                     ta:'<b>{a}</b> வரிசை தயார். <b>{b}</b> — உங்கள் சேமிப்பைத் தட்டுங்கள்.' },
+        alreadyDealt:{ en:'<b>{a}</b>’s row is already down.',
+                     ta:'<b>{a}</b> வரிசை ஏற்கனவே தயார்.' },
+        fillFirst: { en:'Lay out both rows first — each player taps their own store.',
+                     ta:'முதலில் இரு வரிசைகளையும் நிரப்புங்கள் — அவரவர் சேமிப்பைத் தட்டவும்.' },
+        chooseP:   { en:'👤 Choose player — {a} starts',
+                     ta:'👤 வீரரைத் தேர்ந்தெடு — {a} தொடங்குகிறார்' },
+        nextGame:  { en:'<b>{a}</b> will start the next game.',
+                     ta:'அடுத்த ஆட்டத்தை <b>{a}</b> தொடங்குவார்.' },
+        /* 3-4 PLAYER PHRASING — the 2-player sentences above all assume
+           exactly one opponent ("the other player", "to {m}"), which stops
+           working the moment a third or fourth side can be in the game.
+           These four keys are the only places that genuinely needed new
+           wording rather than reuse; everything else (pasu, pillai, sowing,
+           per-cup messages) carries over unchanged since none of it was
+           ever really "two-player" — it only ever talked about {a}, never
+           assumed how many other rows existed. */
+        dealWaitingMulti:{ en:'<b>{a}</b>’s row is down. Waiting on: {names}.',
+                     ta:'<b>{a}</b> வரிசை தயார். காத்திருப்பது: {names}.' },
+        roundOver4:{ en:'{msg}<br>Round over — everyone’s leftover seeds go home to their own reserve. Tap your stores for the next round.',
+                     ta:'{msg}<br>சுற்று முடிந்தது — ஒவ்வொருவரின் மீதமுள்ள விதைகளும் அவரவர் சேமிப்பிற்குச் செல்கின்றன. அடுத்த சுற்றுக்கு உங்கள் சேமிப்பைத் தட்டுங்கள்.' },
+        roundCheer4:{ en:'Round over — everyone keeps their own leftover seeds.',
+                     ta:'சுற்று முடிந்தது — ஒவ்வொருவரும் தங்கள் மீதமுள்ள விதைகளை வைத்திருக்கிறார்கள்.' },
+        lostAllN:  { en:'<b>{a}</b> cannot lay out a single cup — the game is over.',
+                     ta:'<b>{a}</b> ஒரு குழியைக் கூட நிரப்ப முடியவில்லை — ஆட்டம் முடிந்தது.' },
+        finalScores:{ en:'Final: {list}.', ta:'இறுதி: {list}.' },
+        winsGameTie:{ en:'A dead heat between {names} — {n} seeds each!',
+                     ta:'{names} இடையே சமநிலை — தலா {n} விதைகள்!' },
+        /* PILLAI POCKETS NO LONGER SWEEP THEMSELVES — Raja: "keep pillai
+           pandi in cup who owned... later by click pillai pandi the seeds
+           will transfer to store." A pocket now sits visible in its own
+           cup after a round ends until its own owner taps it. */
+        roundOverPillaiPending:{ en:'{msg}<br>Round over — tap your own savings pocket to add it to your store, then tap your store for the next round.',
+                     ta:'{msg}<br>சுற்று முடிந்தது — உங்கள் பிள்ளை குழியைத் தட்டி சேமிப்பில் சேர்க்கவும், பின் அடுத்த சுற்றுக்கு உங்கள் சேமிப்பைத் தட்டுங்கள்.' },
+        pillaiCollected:{ en:'<b>{a}</b>’s savings pocket goes home — store now <b>{n}</b>.',
+                     ta:'<b>{a}</b> வின் பிள்ளை குழி சேமிப்பிற்குச் சென்றது — சேமிப்பு இப்போது <b>{n}</b>.' },
+        collectFirst:{ en:'Collect every savings pocket first — tap your own to add it to your store.',
+                     ta:'முதலில் எல்லாப் பிள்ளை குழிகளையும் சேகரிக்கவும் — அவரவர் தங்கள் குழியைத் தட்டி சேமிப்பில் சேர்க்கவும்.' }
+      };
+      /* THE "HOW TO PLAY" SHEET — bilingual, and brought up to date.
+
+         Raja: "try to translate to tamil match to play." Two faults in one
+         request. The sheet was English-only, set ONCE from a static string
+         when the level opened, never touched by the language toggle — so it
+         could not follow Pallanguzhi into Tamil the way every other line on
+         the board already does. And separately, "match to play": the text
+         itself had fallen behind the game. It still described the single-
+         round version from before pillai paandi — no Choose Player, no
+         rounds, no refilling, no savings pocket — while the board underneath
+         it had grown four builds past that. Translating stale English would
+         only have doubled the staleness in two languages instead of one.
+
+         Rebuilt from scratch to match what beta-185 actually plays, and
+         generated fresh in whichever language is current every time it is
+         opened — the same P() lookup every other Pallanguzhi sentence uses,
+         just assembled once into a page of HTML rather than one line. */
+      function palHowTo(){
+        var ta = !!(window.__palTa && window.__palTa());
+        if (ta) return '<h3>🫘 பல்லாங்குழி — எப்படி விளையாடுவது</h3>' +
+          '<p>ஏழு குழிகள் கொண்ட இரு வரிசைகள். கீழ் வரிசை <b>வீரர் 1</b>-க்கும், மேல் வரிசை ' +
+          '<b>வீரர் 2</b>-க்கும் சொந்தம். நிரப்புவதற்கு முன் எப்போது வேண்டுமானாலும் ' +
+          '<b>வீரரைத் தேர்ந்தெடு</b> தட்டி யார் தொடங்குவார் என முடிவு செய்யலாம்.</p>' +
+          '<p>ஒவ்வொரு வீரரும் தன் <b>சேமிப்பைத் தட்டி</b> தன் வரிசையை நிரப்புவார்: சேமிப்பு ' +
+          'இருக்கும் வரை ஒவ்வொரு குழிக்கும் <b>ஐந்து விதைகள்</b>, பிறகு மீதமுள்ளதை ஒரே ' +
+          'குழியில் — அது <b>பிள்ளை குழி</b> ஆகும், கீழே பாருங்கள்.</p>' +
+          '<ol>' +
+          '<li>உங்கள் முறையில், உங்கள் சொந்தக் <b>குழி ஒன்றைத்</b> தட்டுங்கள். அதன் அனைத்து ' +
+          'விதைகளும் தூக்கப்படும்.</li>' +
+          '<li>அவை <b>ஒவ்வொன்றாக</b>, பலகையைச் சுற்றி அடுத்தடுத்த குழிகளில் விழும்.</li>' +
+          '<li>கடைசி விதை விழும்போது, <b>அடுத்த குழியைப்</b> பாருங்கள். அதில் விதைகள் ' +
+          'இருந்தால், அவற்றையும் தூக்கித் தொடருங்கள்.</li>' +
+          '<li><b>காலியா?</b> அப்போது அதற்கு அடுத்த குழியில் உள்ள விதைகள் உங்களுடையவை — ' +
+          'உங்கள் சேமிப்பிற்குச் செல்லும், உங்கள் முறை முடியும்.</li>' +
+          '<li>அதுவும் காலியாக இருந்தால், எதுவும் கிடைக்காது, முறை மாறும்.</li>' +
+          '</ol>' +
+          '<p><b>🫘 பசு — வெகுமதி.</b> எந்த குழியும் சரியாக <b>நான்கு விதைகள்</b> கொண்டவுடன் ' +
+          'அது ஒளிர ஆரம்பிக்கும். அந்தக் குழி எந்த <b>வரிசையில்</b> உள்ளதோ, அந்த வீரர் மட்டுமே ' +
+          'அதை எடுக்க முடியும், <b>தானே தட்ட வேண்டும்</b> — எப்போது வேண்டுமானாலும், மற்றவர் ' +
+          'இன்னும் விதைத்துக் கொண்டிருந்தாலும் கூட. ஐந்தாவது விதை விழுந்தால் <b>வாய்ப்பு ' +
+          'என்றென்றும் போய்விடும்</b>. அதைக் கவனிப்பதே ஆட்டம்.</p>' +
+          '<p><b>🔒 பிள்ளை குழி.</b> ஐந்துக்குக் குறைவாக நிரப்பப்பட்ட குழி அந்தச் சுற்றுக்கு ' +
+          'ஒரு பிள்ளை குழி ஆகும்: <b>யாரும் அதிலிருந்து எடுக்க முடியாது</b>, யாரும் அதை ' +
+          'வெல்லவும் முடியாது. அதைக் கடந்து செல்லும் விதைப்பாளர் அதன் <b>அளவை முழுவதுமாகக் ' +
+          'கொடுக்க வேண்டும்</b>, இல்லையெனில் அங்கேயே நிறுத்த வேண்டும். சுற்று முடிவில், ' +
+          'அதில் உள்ளவை அதன் <b>சொந்தக்காரரின் சேமிப்பிற்குத்</b> திரும்பும்.</p>' +
+          '<p>ஒரு வீரருக்கு தூக்க விதைகள் இல்லாதபோது, <b>சுற்று முடிவடையும்</b>. மற்ற வீரர் ' +
+          'தன் பக்கம் மீதமுள்ள விதைகளைத் தன் சேமிப்பில் வைத்துக்கொள்வார், பிறகு இருவரும் ' +
+          'மீண்டும் தங்கள் சேமிப்பைத் தட்டி அடுத்த சுற்றை நிரப்புவார்கள்.</p>' +
+          '<p><b>ஒரு குழியைக் கூட நிரப்ப முடியாத வீரர் ஆட்டத்தில் தோற்றுவிடுவார்.</b> ' +
+          'இல்லையெனில், ஆட்டம் சுற்று சுற்றாகத் தொடரும்.</p>';
+        return '<h3>🫘 Pallanguzhi — how to play</h3>' +
+          '<p>Two rows of seven cups. The <b>bottom row belongs to Player 1</b>, the ' +
+          '<b>top row to Player 2</b>. Tap <b>Choose Player</b> any time before dealing to ' +
+          'decide who opens.</p>' +
+          '<p>Each player <b>taps their own store</b> to lay out their row: five seeds to a ' +
+          'cup while the reserve allows, then whatever is left in one last cup — a ' +
+          '<b>savings pocket</b>, see below.</p>' +
+          '<ol>' +
+          '<li>On your turn, tap <b>one of your own cups</b>. All its seeds are lifted.</li>' +
+          '<li>They are dropped <b>one at a time</b> into the cups that follow, right around ' +
+          'the board.</li>' +
+          '<li>When the last seed falls, look at the <b>next cup</b>. Seeds in it? Lift those ' +
+          'too and keep going.</li>' +
+          '<li><b>Empty?</b> Then the seeds in the cup <b>after</b> it are yours — into your ' +
+          'store, and your turn ends.</li>' +
+          '<li>If that one is empty too, nothing is won and the turn passes.</li>' +
+          '</ol>' +
+          '<p><b>🫘 Pasu — the bonus.</b> The moment any cup holds <b>exactly four</b> seeds ' +
+          'it starts to glow. Only the player whose <b>row it sits in</b> may take it, and ' +
+          'they must <b>tap it themselves</b> — at any time, even while the other player is ' +
+          'still sowing. Let a fifth seed fall in and <b>the chance is gone for good</b>. ' +
+          'Watching for it is the game.</p>' +
+          '<p><b>🔒 The savings pocket.</b> A cup laid out with fewer than five is a ' +
+          '<b>pillai pocket</b> for that round: nobody may lift it, and nobody may capture ' +
+          'it. A sower passing it must <b>pay it its own size</b>, or the move stops right ' +
+          'there. At the end of the round, whatever it holds goes home to <b>its own ' +
+          'owner\'s reserve</b>.</p>' +
+          '<p>When a player has no seeds left to lift, <b>the round ends</b>. The other ' +
+          'player keeps their own remaining seeds into their reserve, and both tap their ' +
+          'stores again to lay out the next round.</p>' +
+          '<p><b>A player who cannot lay out even one cup has lost the game.</b> Otherwise, ' +
+          'play continues round after round.</p>';
+      }
+      /* The two places that need this — the level-open handler and the How To
+         Play button — both live OUTSIDE this closure, in the outer scope
+         alongside every other Pallanguzhi tab-click handler. Same pattern as
+         __palNew, __palState and the rest: exposed on window rather than
+         moved, since P() and PAL_TXT it depends on belong here. */
+      window.__palHowTo = palHowTo;
+      window.__palP = P;   // the 4-player board reuses this same lookup, not a second one
+
+      function P(key, v){
+        var row = PAL_TXT[key] || {};
+        var ta = !!(window.__palTa && window.__palTa());
+        var t = (ta && row.ta) ? row.ta : (row.en || '');
+        return t.replace(/\{(\w+)\}/g, function(_, k){
+          return (v && v[k] !== undefined) ? v[k] : '';
+        });
+      }
+
+      var cups = [], store = [0,0], pasuDead = [], pillai = [];
+      /* pillai[i] is the SIZE of a savings pocket — the under-five remainder
+         it was laid out with. 0 means an ordinary cup. A pocket keeps its
+         size for the whole round: it is what a passing sower must pay in,
+         and paying it is what makes the pocket grow. */
+      var turn = 0, playing = false, busy = false, step = null, inHand = 0, sowPos = 0;
+      var starter = 0;      // which player opens; Raja's "choose player"
+      var dealt = [false, false];   // each player lays out their OWN row
+      /* True from the moment the first round is actually dealt, and only reset
+         by an explicit New Game. dealt==[false,false] alone cannot tell "the
+         very first deal" from "between rounds, mid-game" — both look
+         identical — and Choose Player used to treat the two the same way,
+         calling newGame() and silently wiping a real game's reserves back to
+         35/35 the moment it was tapped between rounds. */
+      var everDealt = false;
+      var round = 1;                // pillai paandi: the game runs over rounds
+      var boardEl, sayEl, onBoardEl, built = false;
+
+      function nameOf(p){
+        var el = document.getElementById('palName' + (p + 1));
+        var v = el && el.value ? el.value.trim() : '';
+        return v || P('playerN', { n: p + 1 });
+      }
+      function say(html){ if (sayEl) sayEl.innerHTML = html; }
+      /* sfx() is WRAPPED further down the file so that every 'win' also makes the
+         mascot announce "You solved it! Every row, column and diagonal
+         matches." That is the magic square's victory line, and it appeared
+         over this board the first time a capture was made — a sentence about
+         rows and diagonals in a game that has neither. So this plays a sound
+         that carries no message, and says its own. */
+      function palCheer(line, mood, sticky){
+        if (typeof sfx === 'function') try { sfx('card'); } catch(e){}
+        if (typeof sana === 'function') try { sana(line, mood || 'cheer', !!sticky); } catch(e){}
+      }
+      function seedsOnBoard(){
+        var t = 0; for (var i = 0; i < CUPS; i++) t += cups[i]; return t;
+      }
+      /* A savings pocket cannot be lifted, so seeds sitting in one are not a
+         move. A row with nothing but its pillai pocket left is finished, and
+         counting those seeds as playable would hang the round forever. */
+      function rowEmpty(p){
+        for (var i = p * 7; i < p * 7 + 7; i++) if (cups[i] > 0 && !pillai[i]) return false;
+        return true;
+      }
+
+      function build(){
+        boardEl = document.getElementById('palBoard');
+        sayEl = document.getElementById('palSay');
+        onBoardEl = document.getElementById('palOnBoard');
+        if (!boardEl || built) return;
+        var html = '';
+        for (var k = 0; k < ORDER.length; k++){
+          var i = ORDER[k];
+          html += '<button class="palCup" type="button" data-pal="' + i + '">' +
+                  '<span class="palSeeds"></span><span class="palCount">0</span></button>';
+        }
+        boardEl.innerHTML = html;
+        built = true;
+        palFit();
+      }
+
+      /* Size the cups to the room that is actually there.
+
+         Width sets the floor: seven cups across a phone is about forty pixels
+         each and no arithmetic changes that. Height is what is going spare, so
+         the cups take it — up to twice their width, past which a hollow stops
+         reading as a hollow and starts reading as a slot. Measured against the
+         TOP OF THE TAB BAR, not the viewport, which is the lesson beta-148 and
+         the Sudoku board each had to learn separately: a board sized to the
+         window puts its own controls underneath the navigation. */
+      function palFit(){
+        if (!boardEl) return;
+        var cupW = boardEl.children[0] ? boardEl.children[0].getBoundingClientRect().width : 40;
+        if (!cupW) return;
+        var bar = document.querySelector('.tabBar');
+        var floor = bar ? bar.getBoundingClientRect().top : window.innerHeight;
+        var foot = document.querySelector('.palFoot');
+        var top = boardEl.getBoundingClientRect().top;
+        // everything that must stay visible UNDER the board, measured rather
+        // than guessed, so it stays right when a message wraps to two lines
+        var below = foot ? (foot.getBoundingClientRect().bottom - boardEl.getBoundingClientRect().bottom) : 90;
+        var room = floor - top - below - 18;                 // 18 = the board's own padding
+        /* Round, on Raja's instruction — height follows width, and the spare
+           height goes to the panel's own centring rather than to stretching a
+           hollow into an egg. byH still matters as a CEILING: on a short screen
+           two rows of full-width circles would push the board's own controls
+           under the tab bar. */
+        var byH = Math.floor((room - 6) / 2);                // two rows, one 6px gap
+        var h = Math.min(Math.round(cupW), byH);
+        if (!isFinite(h) || h < 24) h = Math.round(cupW);
+        boardEl.style.setProperty('--palCupH', h + 'px');
+        boardEl.style.setProperty('--palNum', Math.max(13, Math.round(cupW * 0.42)) + 'px');
+        boardEl.style.setProperty('--palDot', Math.max(4, Math.round(cupW * 0.13)) + 'px');
+      }
+
+      function draw(){
+        if (!built) return;
+        for (var k = 0; k < ORDER.length; k++){
+          var i = ORDER[k];
+          var el = boardEl.children[k];
+          var n = cups[i];
+          el.querySelector('.palCount').textContent = n;
+          /* Seeds a child can COUNT, up to the point where counting stops
+             being possible at a glance; past that the numeral does the work
+             on its own. */
+          var dots = '';
+          /* Up to FOUR only. A round cup on a phone is about forty pixels
+             and cannot hold eight countable dots above a numeral. Four is
+             also exactly the range that matters: it is what a player is
+             watching for, and seeing four dots IS the bonus. */
+          if (n > 0 && n <= 4) for (var d = 0; d < n; d++) dots += '<span class="palSeed"></span>';
+          el.querySelector('.palSeeds').innerHTML = dots;
+          el.classList.toggle('empty', n === 0);
+          el.classList.toggle('mine1', owner(i) === 0);
+          el.classList.toggle('mine2', owner(i) === 1);
+          var claimable = playing && n === PASU && !pasuDead[i] && !pillai[i];
+          el.classList.toggle('pasu', claimable);
+          el.classList.toggle('pillai', !!pillai[i]);
+          if (pillai[i]) el.setAttribute('data-pillai', pillai[i]);
+          else el.removeAttribute('data-pillai');
+          var canLift = playing && !busy && owner(i) === turn && n > 0;
+          /* Between rounds, a savings pocket LEFT OVER from the round that
+             just ended is its own owner's to tap and collect — mark it
+             pickable too, same visual invitation a liftable cup already
+             gets. Not a pocket this same owner's OWN redeal for the
+             CURRENT round just formed (dealt[owner] already true) — that
+             one stays locked the normal way. */
+          var canCollect = !playing && pillai[i] && n > 0 && !dealt[owner(i)];
+          el.classList.toggle('pickable', canLift || claimable || canCollect);
+        }
+        document.getElementById('palStore1').textContent = store[0];
+        document.getElementById('palStore2').textContent = store[1];
+        /* Don't glow "tap to deal" while a savings pocket LEFT OVER from
+           the last round is still sitting uncollected anywhere — that tap
+           would be refused (collectFirst) until its own owner has claimed
+           it. A pocket someone's OWN current deal just formed does not
+           count — normal, expected, not something blocking anyone. */
+        var anyOldPillaiPending = cups.some(function(c, i){ return pillai[i] && c > 0 && !dealt[owner(i)]; });
+        for (var d = 0; d < 2; d++){
+          var sb = document.querySelector('#palSide' + (d + 1) + ' .palStore');
+          if (sb) sb.classList.toggle('toDeal', !dealt[d] && !busy && !anyOldPillaiPending);
+        }
+        /* Raja: "naming player color bg is permanently placed. Request is who
+           ready to play only colour bg should show, others remain white. When
+           choose player is toggled, the naming player tab bg should change
+           accordingly — so one if colour bg, other should be white, vice versa."
+
+           beta-181 gave each row a fixed identity colour, and that was the
+           actual fault: his screenshot shows the choose-player bar saying
+           Player 1 starts while Player 2's box still sat there coloured blue,
+           because blue was PLAYER 2'S colour regardless of whether it was their
+           turn. Colour has to say "ready to play", not "which row this is".
+
+           So it follows ONE variable, live: whoever is about to move. During
+           play that is turn; before the first ball is dealt, and again between
+           rounds while both stores wait to be tapped, there is no "turn" yet,
+           so it falls back to starter — the same player Choose Player names. */
+        var activeSide = playing ? turn : starter;
+        document.getElementById('palSide1').classList.toggle('turn', activeSide === 0);
+        document.getElementById('palSide2').classList.toggle('turn', activeSide === 1);
+        /* Whose turn it is now shows as COLOUR on that player's own name box
+           and on the Choose Player bar, rather than as a sentence beside them.
+           Raja: "sometime unable remember who finished, who should start" —
+           after a break a colour is read instantly and a sentence has to be
+           found and re-read. */
+        var ch2 = document.getElementById('palChoose');
+        if (ch2){ ch2.classList.toggle('forP1', starter === 0); ch2.classList.toggle('forP2', starter === 1); }
+        var ob = seedsOnBoard();
+        if (onBoardEl) onBoardEl.textContent = P(ob === 1 ? 'onBoard1' : 'onBoardN', { n: ob });
+        var ch = document.getElementById('palChoose');
+        if (ch) ch.textContent = P('chooseP', { a: nameOf(starter) });
+        var roundChip = document.getElementById('palRoundChip');
+        if (roundChip) roundChip.textContent = P('roundNo', { n: round });
+        savePalGame();
+      }
+
+      function markSowed(i){
+        /* Four is the bonus. Five is the bonus gone — Raja: "if forget to take
+           and same filled next round fill with 5, after no right to take
+           further, who any side owns." Dead until the cup empties again, at
+           which point it is a fresh cup and can earn a four of its own. */
+        if (cups[i] === PASU + 1) pasuDead[i] = true;
+        if (cups[i] === 0) pasuDead[i] = false;
+      }
+
+      function newGame(){
+        if (step){ clearTimeout(step); step = null; }
+        // New Game is the one sanctioned way to abandon a saved game --
+        // anything else (backgrounding, closing, reopening the tab) resumes it
+        try { localStorage.removeItem(PAL_SAVE_KEY); } catch(e){}
+        cups = []; pasuDead = []; pillai = [];
+        for (var i = 0; i < CUPS; i++){ cups.push(0); pasuDead.push(false); pillai.push(0); }
+        store = [PER_CUP * 7, PER_CUP * 7];       // the 35 each Raja asked for
+        dealt = [false, false]; round = 1; everDealt = false;
+        turn = starter; playing = false; busy = false; inHand = 0;
+        palFit();
+        say(P('dealPrompt'));
+        /* Raja: "monkey SaNa kept finished game results in new game." The
+           mascot's line is set on events and then just STAYS — so a fresh board
+           sat underneath "Player 1 won 1 seeds!" from the game before it, the
+           one message on screen still describing a game that no longer existed.
+           Cleared here, where the new board is dealt. */
+        if (typeof sana === 'function') try {
+          sana(P('dealPromptCheer'), 'cheer');
+        } catch(e){}
+        draw();
+      }
+
+      /* DEALING IS A MOVE NOW, and each player makes their own.
+
+         Raja: "observed initial filling start to put in to pocket is from always
+         player 1 table even choose player is different. Of course the fill
+         should be do by both side from their own reserve — such two way row
+         filling, not a circular sequence. Player one to fill their row from
+         their reserve, and reserve shows 35 in initial, and when he touch the
+         reserve box the fill start and fill in their rows and reserve will be
+         lapse to zero. Vice versa."
+
+         Two faults in one observation, and the second answers the first. The
+         old fill ran player 0's row and then player 1's, always in that order,
+         so choosing Player 2 to open changed who moved first but not whose seeds
+         went down first — the app still opened the game from one side of the
+         board. And it did it BY ITSELF, which is not how the game starts: each
+         player takes their own thirty-five and lays out their own row.
+
+         So there is no automatic opening any more. Both stores sit at 35, both
+         glow, and each player taps their own to lay out their own seven cups.
+         No order is imposed because none exists to impose. */
+      function dealRow(p){
+        if (dealt[p] || busy) return;
+        busy = true;
+        var c = 0;
+        say(P('fillingRow', { a: nameOf(p) }));
+        (function one(){
+          if (c >= 7){
+            dealt[p] = true;
+            busy = false; step = null;
+            if (dealt[0] && dealt[1]){
+              playing = true; everDealt = true;
+              turn = starter;
+              palFit();
+              say(P('starts', { a: nameOf(starter) }));
+              if (typeof sana === 'function') try {
+                sana(P('newBoard', { a: nameOf(starter) }), 'cheer');
+              } catch(e){}
+            } else {
+              say(P('dealOne', { a: nameOf(p), b: nameOf(1 - p) }));
+            }
+            draw();
+            return;
+          }
+          var i = p * 7 + c;
+          c++;
+          /* Five while five can be afforded; then whatever is left, in one
+             cup; then nothing. Raja: "if any one have shortage to fill
+             pockets they leave it as empty, and if seeds in hand is less
+             than 5 those are to kept in one pocket."
+             An empty cup here is empty FOR THIS ROUND ONLY. There is no
+             permanently dead hole — I had assumed one, and asking what I
+             meant by it was how that came out. Win seeds back and you lay
+             the cup out again next round. Anything above 35 simply stays in
+             the reserve: "who filled all pockets by them, and remain earned
+             seed kept in to reserve box." */
+          pillai[i] = 0;
+          if (store[p] >= PER_CUP){ cups[i] = PER_CUP; store[p] -= PER_CUP; }
+          else if (store[p] > 0){
+            /* The under-five remainder. This cup becomes a savings pocket of
+               exactly this size for the round. */
+            cups[i] = store[p]; pillai[i] = store[p]; store[p] = 0;
+          }
+          else { cups[i] = 0; }
+          draw();
+          if (typeof sfx === 'function') try { sfx('card'); } catch(e){}
+          /* Same beat as the sowing. This is where a child sees where the seeds
+             in front of them came from: their own 35 draining away, five landing
+             in each of their own cups, one at a time along their own row. */
+          step = setTimeout(one, 260);
+        })();
+      }
+
+      /* A ROUND ENDS THE MOMENT THE PLAYER TO MOVE HAS AN EMPTY ROW.
+
+         Raja: "if end of finish the shuffle, the seeds in any side pocket is
+         empty, who don't have a chance to continue the shuffle — the opponent
+         player pockets hold any seeds in different pockets are got reserve of
+         them, and ready to play next shuffle within the reserve of both."
+
+         This replaces a guess I had made and flagged as one. I had the empty
+         player simply LOSE THEIR TURN, with play carrying on around them; in
+         fact that is the end of the round. And it settles the question I could
+         not read from his first description: "seeds in the opposite pocket are
+         owned by the opposite of the empty area" is not a capture during play
+         at all — it is this. Whoever still has seeds when the other side runs
+         dry keeps their own, into their own reserve. Nothing changes hands. */
+      function endTurn(msg){
+        busy = false; inHand = 0;
+        turn = 1 - turn;
+        if (rowEmpty(turn)){ endRound(msg); return; }
+        say(P('nowTurn', { msg: msg, a: nameOf(turn) }));
+        draw();
+      }
+
+      /* Raja: "end of sequence the pillai pandi is immediately transferred
+         to stores, that should avoid -- instead keep pillai pandi in cup
+         who owned... later by click pillai pandi the seeds will transfer
+         to store, to know how much seeds in stores on end of sequence and
+         after pillai pandi how much in stores." Same fix as the 4-player
+         board's own endRound4: a savings pocket stays sitting in its own
+         cup, still locked-looking, until its own owner taps it. */
+      function hasAnySeeds(idx){
+        if (store[idx] > 0) return true;
+        for (var i = idx * 7; i < idx * 7 + 7; i++) if (cups[i] > 0) return true;
+        return false;
+      }
+      function endRound(msg){
+        var keeper = 1 - turn;              // the side that still has seeds
+        var swept = 0;
+        /* Everything EXCEPT a savings pocket goes home to the side that
+           still had seeds; a savings pocket now stays put, collected by
+           hand — INCLUDING the one on the side that just ran dry, which is
+           exactly how a player with nothing playable left still comes back
+           with something to lay out, once they tap it themselves. */
+        for (var i = 0; i < CUPS; i++){
+          if (!cups[i] || pillai[i]) continue;
+          if (owner(i) === keeper){ swept += cups[i]; cups[i] = 0; }
+        }
+        store[keeper] += swept;
+        for (var i = 0; i < CUPS; i++) pasuDead[i] = false;
+        playing = false; busy = false;
+        dealt = [false, false];
+        round++;
+        /* Raja: "after end of that session, next fill to start by opponent
+           only — accordingly mode should swap and colour background choose
+           player and name player bg change according."
+           starter used to be fixed at whatever was chosen once, for the whole
+           game. It alternates now, automatically, every round — and because
+           the choose-player bar, its colour, and the coloured name box are all
+           driven off this one variable already, flipping it here is the whole
+           fix; nothing downstream needs to know a round even happened. Choose
+           Player still works as an override on top of this, same as before. */
+        starter = 1 - starter;
+        /* A player who cannot fill even ONE cup has nothing left to lay out and
+           the game is over. Everything else is another round. Store alone is
+           not enough here — a side can still be holding everything in an
+           as-yet-uncollected savings pocket. */
+        if (!hasAnySeeds(0) || !hasAnySeeds(1)){
+          var lost = !hasAnySeeds(0) ? 0 : 1;
+          /* The game is over — there is no next round left to delay the
+             reveal for, so sweep any still-uncollected pillai straight
+             into its owner's store now, silently, before the final tally. */
+          for (var i = 0; i < CUPS; i++){
+            if (!cups[i]) continue;
+            store[owner(i)] += cups[i]; cups[i] = 0;
+          }
+          for (var i = 0; i < CUPS; i++) pillai[i] = 0;
+          playing = false;
+          say(P('lostAll', { a: nameOf(lost), b: nameOf(1 - lost) }));
+          palCheer(P('winsGame', { a: nameOf(1 - lost) }), 'party', true);
+          draw();
+          return;
+        }
+        if (cups.some(function(c, i){ return pillai[i] && c > 0; })){
+          say(P('roundOverPillaiPending', { msg: msg }));
+        } else {
+          say(P('roundOver', { msg: msg, a: nameOf(keeper), n: swept }));
+        }
+        if (typeof sana === 'function') try { sana(P('roundCheer', { a: nameOf(keeper), n: swept }), 'cheer'); } catch(e){}
+        draw();
+      }
+
+      function finish(msg){
+        playing = false; busy = false;
+        // a finished game has nothing left to resume -- same clear as New Game
+        try { localStorage.removeItem(PAL_SAVE_KEY); } catch(e){}
+        var a = store[0], b = store[1];
+        var who = a === b ? null : (a > b ? 0 : 1);
+        say(msg + '<br>' + (who === null
+          ? P('deadHeat', { n: a })
+          : P('winsWith', { a: nameOf(who), n: Math.max(a, b), m: Math.min(a, b) })));
+        draw();
+        palCheer(who === null ? P('heatCheer') : P('winsGame', { a: nameOf(who) }), 'party', true);
+      }
+
+      /* One sowing move, a seed at a time so it can be followed by eye.
+
+         A move does not stop at the end of the hand — an empty next cup is the
+         only thing that ends it — so a single move can travel the whole board
+         several times over. At a flat pace that is a child staring at the
+         screen for a quarter of a minute, so the drops SPEED UP: the first
+         few are slow enough to follow and teach the rule, and after that it
+         settles into a rhythm that gets to the end of a long move. */
+      /* Raja, twice: "drop the seed pearls feels fast, should be slow to observe
+         the game", then "can do little more slower, to two rows sequence
+         filling, in every drops."
+
+         SO THERE IS NO RAMP ANY MORE. Every drop takes the same time, all the
+         way round both rows, which is what he asked for and what I had been
+         quietly refusing: I kept a ramp because a move does not stop when the
+         hand empties, so it can cross the board several times, and I did not
+         want a child watching for half a minute.
+
+         That worry turned out to be worth measuring rather than guarding
+         against. Across 66 real moves: the MEDIAN move is 5 drops, the mean 10,
+         and the longest in three full games was 47. So a flat pace costs two
+         seconds on the move you make half the time, and only the rare cascade
+         runs to twenty — and that cascade, seeds pouring round the whole board
+         from one cup, is the best thing in the game to watch. The ramp was
+         protecting the moment least in need of protection. */
+      function dropDelay(){ return 400; }
+
+      /* ONE STEP of a move, with no timing in it at all: drop a seed, or lift
+         the next cup and carry on, or finish. Separating the step from the
+         clock is what lets the same rules run at a pace a child can follow AND
+         run to completion instantly when the game has to be put down — with no
+         second copy of the rules to keep in agreement.
+
+         Returns false when the move is over. sowWon then holds what was
+         captured, so the caller can say so. */
+      var sowDropped = 0, sowWon = 0, sowLanded = -1, sowStopped = false;
+      function sowStep(){
+        if (inHand > 0){
+          var nx = (sowPos + 1) % CUPS;
+          /* Raja: "no opponent should fill [a savings pocket] during play...
+             this is solo right by who filled this cup from the beginning."
+             A pillai pocket used to take a toll from WHOEVER's hand passed
+             it, opponent included -- growing one player's forced savings
+             with the other side's seeds. Only its own owner can ever add to
+             it now; anyone else's hand walks straight past it, same as it
+             would past a cup that simply is not there. */
+          while (pillai[nx] && owner(nx) !== turn) nx = (nx + 1) % CUPS;
+          if (pillai[nx]){
+            /* A savings pocket takes its own size or nothing. Hold fewer than
+               that and the move ends right here — which is the whole point of
+               the rule: it forces seeds to be left behind rather than carried
+               on round the board, and they come back as the owner's reserve. */
+            if (inHand < pillai[nx]){
+              /* Raja: "if put 4 in hand three, then that three only fill to
+                 pillai paandi immediately, the play will end there — side no
+                 rights to take next pocket." So a short hand is not carried
+                 back or left behind: every seed of it goes INTO the pocket,
+                 and the move ends with nothing won. The savings pocket is
+                 paid whatever there is, which is what makes it fill up.
+                 It was previously dropped in the cup BEFORE the pocket, which
+                 quietly gave those seeds to an ordinary cup instead. */
+              sowPos = nx;
+              cups[sowPos] += inHand; inHand = 0; sowDropped++;
+              sowLanded = sowPos; sowWon = 0; sowStopped = true;
+              return false;
+            }
+            sowPos = nx;
+            cups[sowPos] += pillai[nx]; inHand -= pillai[nx]; sowDropped++;
+            sowLanded = sowPos;
+            return true;
+          }
+          sowPos = nx;
+          cups[sowPos]++; inHand--; sowDropped++; markSowed(sowPos);
+          sowLanded = sowPos;
+          return true;
+        }
+        /* The hand is empty. Seeds in the next cup mean lift them and carry on,
+           and that is what lets a single move travel the board several times. */
+        var next = (sowPos + 1) % CUPS;
+        if (cups[next] > 0 && !pillai[next]){
+          inHand = cups[next]; cups[next] = 0; sowPos = next; markSowed(next);
+          sowLanded = -1;
+          return true;
+        }
+        // Empty. The cup BEYOND it is the prize.
+        var take = (next + 1) % CUPS;
+        if (cups[take] > 0 && !pillai[take]){
+          sowWon = cups[take];
+          store[turn] += sowWon; cups[take] = 0; pasuDead[take] = false;
+          var el2 = boardEl && boardEl.children[ORDER.indexOf(take)];
+          if (el2){ el2.classList.add('won'); setTimeout(function(){ el2.classList.remove('won'); }, 600); }
+        } else sowWon = 0;
+        return false;
+      }
+
+      function sowFinish(){
+        if (sowStopped){
+          // every seed already went into the savings pocket; nothing is won
+          endTurn(P('pillaiStop'));
+          return;
+        }
+        if (sowWon > 0){
+          palCheer(P('wonCheer', { a: nameOf(turn), n: sowWon }), 'cheer');
+          endTurn(P('wonSay', { a: nameOf(turn), n: sowWon }));
+        } else {
+          endTurn(P('nothing'));
+        }
+      }
+
+      function sow(from){
+        busy = true;
+        /* The hand is a REAL PLACE a seed can be. Mid-sow the lifted seeds are
+           neither in a cup nor in a store, so a count of the board alone comes
+           up short by however many are still being carried — which is exactly
+           what it should do. Keeping the hand at module scope is what lets the
+           whole game be checked at any instant rather than only between moves. */
+        inHand = cups[from]; sowPos = from; sowDropped = 0; sowWon = 0; sowStopped = false;
+        cups[from] = 0; markSowed(from);
+        draw();
+        (function tick(){
+          if (!sowStep()){ draw(); sowFinish(); return; }
+          if (sowLanded >= 0){
+            var el = boardEl.children[ORDER.indexOf(sowLanded)];
+            if (el){ el.classList.add('sowing'); setTimeout(function(){ el.classList.remove('sowing'); }, 130); }
+            /* Raja: "why can't implement touch sound for every seed during
+               seed fills into cup during sequence order." Dealing already
+               plays one per cup (sfx('card')); sowing never played anything
+               at all. sowLanded >= 0 is exactly "a seed just dropped" -- the
+               same condition already driving the visual glow above, so this
+               fires once per real drop, never on a pickup. 'tick' (a short,
+               quiet click) rather than 'card' (a bigger pop) because this
+               can repeat many times in one fast cascade; sfx() itself
+               already respects the sound on/off setting, so no separate
+               check is needed here. */
+            if (typeof sfx === 'function') try { sfx('tick'); } catch(e){}
+          }
+          draw();
+          step = setTimeout(tick, dropDelay(sowDropped));
+        })();
+      }
+
+      function claimPasu(i){
+        var p = owner(i);
+        store[p] += cups[i]; cups[i] = 0; pasuDead[i] = false;
+        var el = boardEl.children[ORDER.indexOf(i)];
+        if (el){ el.classList.add('won'); setTimeout(function(){ el.classList.remove('won'); }, 600); }
+        palCheer(P('pasuCheer', { a: nameOf(p) }), 'cheer');
+        draw();
+        var line = P('pasuTook', { a: nameOf(p) });
+        /* Same fix as the 4-player board's own claimPasu4: a pasu claim is
+           allowed at any time and correctly never consumes a turn, but that
+           also means it never checked whether the player to move now has
+           an empty row, the way a completed sow does via endTurn. If the
+           claim was the active player's own last cup, the round has to end
+           right here or the game waits forever on a player with nothing
+           left to play. */
+        if (playing && !busy && rowEmpty(turn)){ endRound(line); return; }
+        if (busy) say(line + P('sowingOn'));
+        else say(line + P('yourTurn', { a: nameOf(turn) }));
+      }
+
+      document.addEventListener('click', function(e){
+        var b = e.target.closest && e.target.closest('#palBoard [data-pal]');
+        if (!b) return;
+        var i = +b.dataset.pal;
+        if (!playing){
+          /* Between rounds, a savings pocket LEFT OVER from the round that
+             just ended is a live tap target now — its own owner's cup
+             only (owner(i) already pins that), whenever they get to it.
+             A pocket this same owner's OWN redeal for the CURRENT round
+             just formed (dealt[owner(i)] already true) is NOT this — that
+             one stays locked the normal way, only collectible once THIS
+             round ends. */
+          if (pillai[i] && cups[i] > 0 && !dealt[owner(i)]){
+            var pOwner = owner(i);
+            store[pOwner] += cups[i]; cups[i] = 0; pillai[i] = 0;
+            draw();
+            say(P('pillaiCollected', { a: nameOf(pOwner), n: store[pOwner] }));
+            return;
+          }
+          /* Before both rows are down there is no game to play, and saying so
+             is better than a dead tap on a board that looks ready. */
+          if (!dealt[0] || !dealt[1]) say(P('fillFirst'));
+          return;
+        }
+        /* A cup of four can be claimed by its owner AT ANY MOMENT, including
+           while the other player is still sowing. That is deliberate: Raja's
+           rule is that you LOSE the bonus if you do not notice it in time, and
+           a bonus that waits politely for your turn cannot be missed. */
+        if (cups[i] === PASU && !pasuDead[i] && !pillai[i]){ claimPasu(i); return; }
+        if (busy) return;
+        if (owner(i) !== turn){
+          say(P('notYours', { a: nameOf(owner(i)) }));
+          return;
+        }
+        if (pillai[i]){ say(P('pillaiLocked')); return; }
+        if (cups[i] === 0){ say(P('cupEmpty')); return; }
+        sow(i);
+      });
+
+      /* CHOOSING WHO OPENS. Two behaviours, because there are two situations and
+         one answer would be wrong in the other:
+
+         On a board nobody has touched, the choice takes effect NOW — the board
+         is dealt again so the change is visible rather than a promise.
+
+         Once a game is underway, it does NOT throw that game away. A mistap on
+         a prominent gold button should never cost a game in progress, so the
+         choice is simply held for the next board and said out loud. "New game"
+         is right there for anyone who wants it immediately. */
+      /* The stores are the deal. Only your own: tapping the other player's
+         store is refused by name rather than silently ignored, because a
+         glowing box that does nothing when tapped reads as broken. */
+      document.addEventListener('click', function(e){
+        var box = e.target.closest && e.target.closest('#palPanel .palStore');
+        if (!box) return;
+        var side = box.closest('.palSide');
+        var p = side && side.id === 'palSide2' ? 1 : 0;
+        if (dealt[0] && dealt[1]) return;              // nothing to deal
+        /* Only a savings pocket LEFT OVER from the round that just ended
+           blocks dealing — its owner hasn't dealt for the CURRENT round
+           yet, so it can only be old business. One this same owner's OWN
+           redeal for the current round just formed does not count: its
+           owner has already dealt, and that pocket stays locked the usual
+           way until THIS round ends, not something anyone else is waiting
+           on. */
+        if (cups.some(function(c, i){ return pillai[i] && c > 0 && !dealt[owner(i)]; })){
+          say(P('collectFirst'));
+          return;
+        }
+        if (dealt[p]){ say(P('alreadyDealt', { a: nameOf(p) })); return; }
+        dealRow(p);
+      });
+
+      var chooseBtn = document.getElementById('palChoose');
+      if (chooseBtn) chooseBtn.addEventListener('click', function(){
+        starter = 1 - starter;
+        if (typeof sfx === 'function') try { sfx('card'); } catch(e){}
+        /* everDealt, not a guess reconstructed from cups and stores. The old
+           heuristic could not tell "the very first deal" from "between rounds
+           of a real game" — both show dealt==[false,false] and !playing — so
+           tapping Choose Player between rounds called newGame() and silently
+           reset a real game's reserves to 35/35. Only the state that has
+           genuinely never been played gets the full reset; everything else
+           just re-draws with the flipped starter. */
+        if (!everDealt || (playing && !busy && store[0] === 0 && store[1] === 0 &&
+                            cups.every(function(c){ return c === PER_CUP; }))){
+          newGame(); return;
+        }
+        draw();
+        say(P('nextGame', { a: nameOf(starter) }));
+      });
+
+      ['palName1', 'palName2'].forEach(function(id){
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('input', function(){
+          draw();
+          /* The prompt was written when the game began, so it still said
+             "Player 1 starts" while the box underneath it said Raja. A name
+             typed after the board is dealt has to reach the line that uses it,
+             or the two disagree on screen. Only while it is safe to say: mid-
+             sow the line is reporting the move, and overwriting that would lose
+             what just happened. */
+          if (playing && !busy) say(P('tapYours', { a: nameOf(turn) }));
+        });
+      });
+
+      window.__palNew = function(){ build(); newGame(); };
+      /* The board is sized from measurements, so it has to be re-measured when
+         the measurements change — a phone turned sideways is a different
+         board. */
+      window.addEventListener('resize', function(){
+        var p = document.getElementById('palPanel');
+        if (p && p.style.display !== 'none') palFit();
+      });
+      /* Stopping mid-move RUNS THE MOVE OUT rather than abandoning it. The
+         seeds being carried are in no cup, so simply cancelling the timer
+         deleted them: leave the game while seeds are in the air, come back, and
+         the board is short — seeds a player had counted a moment earlier, gone.
+         Tipping the hand into the cup it had reached fixed the arithmetic but
+         put four or five seeds in one hollow, a position the rules cannot
+         produce. Playing the move to its end leaves a board that is not only
+         correct but LEGAL, and costs nothing, because the step and the clock
+         are separate. */
+      window.__palStop = function(){
+        if (step){ clearTimeout(step); step = null; }
+        if (busy){
+          var guard = 0;
+          while (sowStep() && guard++ < 4000){}       // 4000: a stuck loop stops, a real move never gets near
+          sowFinish();
+        }
+        busy = false;
+        draw();
+      };
+      /* Read-only view of the game, for the checks. Every seed in this game is
+         either in a cup or in a store, and that total can never change — which
+         is the one assertion that catches a sowing loop dropping a seed, a
+         capture paying out twice, or a pasu claimed from a cup that had
+         already been emptied. Reading it off the DOM would only ever see what
+         was painted, so the state itself is exposed instead. */
+      /* Switching language mid-game has to re-say the CURRENT line, not wait
+         for the next move: the sentence on screen was built when it was said
+         and is not sitting in the markup to be swapped. */
+      window.__palRedraw = function(){
+        if (!built) return;
+        draw();
+        /* Raja: "need tamil translation in hints, SaNa tips box." His
+           screenshot shows it exactly — every OTHER label on the board had
+           gone Tamil, but the sentence on top still read "Each player taps
+           their own store to lay out their row," in English.
+
+           This only ever handled ONE of the idle states — mid-game, waiting
+           on your move — because that was the state I tested it in. Before the
+           first deal, and again between rounds while both stores sit waiting
+           to be tapped, the game is idle in a DIFFERENT way, and this simply
+           did nothing for either of them: no branch matched, so the sentence
+           already on screen — set in whichever language was active when the
+           game last spoke — just sat there. It needs the line for whichever
+           idle state the game is actually in, not only the one that happened
+           to be exercised first. A move in progress (busy) is left alone: its
+           sentence describes something that just happened, and that cannot be
+           re-said in the other language after the fact without inventing a
+           result that has not occurred. */
+        var line = null;
+        if (playing && !busy) line = P('tapYours', { a: nameOf(turn) });
+        else if (!playing && !busy){
+          if (!dealt[0] && !dealt[1]) line = P('dealPrompt');
+          else if (dealt[0] !== dealt[1]){
+            var waitingOn = dealt[0] ? 1 : 0;
+            line = P('dealOne', { a: nameOf(1 - waitingOn), b: nameOf(waitingOn) });
+          }
+        }
+        if (line !== null){
+          say(line);
+          /* The mascot too. Its line is the game's commentary, so leaving it in
+             the old language put an English sentence above a board that had
+             gone entirely Tamil — the one thing on screen still speaking the
+             language the player just switched away from. */
+          if (typeof sana === 'function') try { sana(line, 'cheer'); } catch(e){}
+        }
+      };
+      window.__palState = function(){
+        return { cups: cups.slice(), store: store.slice(), turn: turn, hand: inHand,
+                 busy: busy, playing: playing, dead: pasuDead.slice(),
+                 dropped: sowDropped, dealt: dealt.slice(), round: round,
+                 pillai: pillai.slice(), starter: starter, everDealt: everDealt };
+      };
+
+      /* Raja: "implement app memory to continue the game from where we left
+         over, go back or app closed by slide up the app or phone is off --
+         except manually closed the game by clear or new game." Saved on
+         every settle (see draw()'s own tail) plus a hard checkpoint right
+         before the tab is hidden -- see the shared visibilitychange/pagehide
+         hook near the bottom of the file, which reuses __palStop() (already
+         built to run a mid-air move out rather than lose it) so nothing is
+         ever snapshotted mid-sow. New Game -- the only sanctioned way to
+         abandon a game -- clears this key itself, in newGame(). */
+      var PAL_SAVE_KEY = 'mmPalSave';
+      function savePalGame(){
+        if (!everDealt || busy) return;   // nothing worth keeping yet, or mid-move -- settle first
+        try {
+          localStorage.setItem(PAL_SAVE_KEY, JSON.stringify({
+            v: 1, cups: cups, store: store, turn: turn, starter: starter,
+            playing: playing, dealt: dealt, pillai: pillai, dead: pasuDead,
+            round: round, everDealt: everDealt,
+            name1: (document.getElementById('palName1') || {}).value || '',
+            name2: (document.getElementById('palName2') || {}).value || ''
+          }));
+        } catch(e){}
+      }
+      function loadPalSave(){
+        try {
+          var raw = localStorage.getItem(PAL_SAVE_KEY);
+          if (!raw) return null;
+          var sv = JSON.parse(raw);
+          // schema guard -- a stale save from a different build must never
+          // crash a restore; fall back to a fresh game instead
+          if (!sv || sv.v !== 1 || !Array.isArray(sv.cups) || sv.cups.length !== CUPS ||
+              !Array.isArray(sv.store) || sv.store.length !== 2) return null;
+          return sv;
+        } catch(e){ return null; }
+      }
+      function restorePalGame(sv){
+        build();
+        cups = sv.cups.slice(); store = sv.store.slice();
+        turn = sv.turn; starter = sv.starter; playing = !!sv.playing;
+        dealt = sv.dealt.slice(); pillai = sv.pillai.slice(); pasuDead = sv.dead.slice();
+        round = sv.round; everDealt = sv.everDealt;
+        busy = false; inHand = 0;   // a saved game is always at rest -- see savePalGame()
+        var n1 = document.getElementById('palName1'), n2 = document.getElementById('palName2');
+        if (n1 && sv.name1) n1.value = sv.name1;
+        if (n2 && sv.name2) n2.value = sv.name2;
+        palFit();
+        if (window.__palRedraw) window.__palRedraw(); else draw();
+      }
+      window.__palSave = savePalGame;
+      window.__palLoadSave = loadPalSave;
+      window.__palRestore = restorePalGame;
+      window.__palClearSave = function(){ try { localStorage.removeItem(PAL_SAVE_KEY); } catch(e){} };
+    })();
+
+    var palNewBtn = document.getElementById('palNew');
+    if (palNewBtn) palNewBtn.addEventListener('click', function(){ window.__palNew(); });
+    var palRulesBtn = document.getElementById('palRules');
+    if (palRulesBtn) palRulesBtn.addEventListener('click', function(){
+      var lb2 = document.getElementById('logicBox');
+      if (lb2) lb2.innerHTML = window.__palHowTo();   // fresh in whichever language is current
+      if (typeof openLearn === 'function') openLearn('logic', false);
+    });
+
+    document.querySelectorAll('.toggleBtn[data-pal-level]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        if (_congratsAutoTimer){ clearInterval(_congratsAutoTimer); _congratsAutoTimer = null; }
+        var cm = document.getElementById('congratsModal');
+        if (cm && cm.style.display === 'flex') cm.style.display = 'none';
+        sfx('card');
+        document.querySelectorAll('.toggleBtn').forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        applyAccent();
+        if (currentSize === 'binary' || currentSize === 'binary2') showBinaryMode(false);
+        if (currentSize === 'gatelogic') showGateMode(false);
+        showSlideMode(false);
+        showSudokuMode(false);
+        showPalMode(false);
+        showPal4Mode(false);
+        currentSize = 'pallanguzhi';
+        goScreen('scPlay');
+        showPalMode(true);
+        // Raja: "continue the game from where we left" -- opening the tile
+        // used to always start fresh, wiping a real game in progress. Now it
+        // resumes a saved one and only starts fresh when there is nothing to
+        // resume (or the last game was ended with New Game, which clears it).
+        var palSaved = window.__palLoadSave ? window.__palLoadSave() : null;
+        var palRestored = false;
+        if (palSaved && window.__palRestore){
+          try { window.__palRestore(palSaved); palRestored = true; } catch(e){}
+        }
+        if (!palRestored) window.__palNew();
+        var title = document.getElementById('appBarTitle');
+        if (title) title.innerHTML = boxedTitle('🫘 Pallanguzhi');
+        var lb = document.getElementById('logicBox');
+        if (lb) lb.innerHTML = window.__palHowTo();
+      });
+    });
+
+    /* ══ PALLANGUZHI · 4 PLAYERS — THE REAL GAME ══════════════════════════
+       Raja: "go through for integration of code for same as existing 2
+       player game rules and procedures the add on is transformed to 4
+       player with choose option for how many players can include and
+       accordingly the seed fill sequence will circulate by as same methode
+       of existing game."
+
+       Same algorithm as the 2-player board (see the long comments on
+       sowStep/endTurn/endRound over there), run on a 28-cup ring instead of
+       14, with the number of live seats set by the tick boxes rather than
+       fixed at two. The capture rule never referenced how many rows exist —
+       it only ever asked "is the next cup empty, is the one after that
+       full" — so CUPS4=28 in place of CUPS=14 is the entire change sowing
+       needed. Round-end simplifies too: the 2-player rule ("the side that
+       still has seeds sweeps everything, pillai pockets go home to their
+       own owner regardless") is mathematically identical to "every
+       remaining seed, pillai or not, goes home to its own cup's row-owner"
+       — the two-player code just never had a reason to say it that way,
+       because with only one other row there was only ever one "owner" left
+       to sweep to. That owner-driven form is what generalises to 3 or 4. */
+    (function(){
+      var SIDES = ['A', 'B', 'C', 'D'];
+      var CUPS4 = 28, PER_CUP4 = 5, PASU4 = 4;
+      function owner4(i){ return Math.floor(i / 7); }   // 0=A,1=B,2=C,3=D
+      /* The next cup that belongs to an ENABLED side. A disabled side is out
+         of the game entirely — no seed count, no turn, per Raja's own tick-
+         box rule — so sowing has to skip its whole 7-cup block, not just
+         refuse to lift from it. Dropping ONE seed as a hand is carried
+         around the ring never checked ownership at all, so a long cascade
+         (and these do run 40-60 cups deep) would otherwise still deposit
+         seeds into cups nobody is playing. Every ring-advance in sowStep4
+         goes through this, never raw (i+1)%CUPS4. */
+      function nextLiveCup(i){
+        for (var k = 1; k <= CUPS4; k++){
+          var n = (i + k) % CUPS4;
+          if (enabled[SIDES[owner4(n)]]) return n;
+        }
+        return (i + 1) % CUPS4;   // unreachable with the "at least 2 enabled" guard in place
+      }
+
+      var active = 0;     // idle: the starter preview. live game: the current turn.
+      var starter4 = 0;   // who opens each round — Choose Player sets this, same split as 2p's starter/turn
+      /* Raja: "the select will done by four tick box that decide who are to
+         enable the run fill seed sequence." All four start enabled. Dropping
+         to 2 or 3 takes the unticked side's cups and card out of the game
+         entirely — no seeds, no turn, out of Choose Player's rotation — the
+         frame itself never changes shape. */
+      var enabled = { A: true, B: true, C: true, D: true };
+
+      var cups4 = [], store4 = [0, 0, 0, 0], pasuDead4 = [], pillai4 = [];
+      var playing4 = false, busy4 = false, step4 = null, inHand4 = 0, sowPos4 = 0;
+      var dealt4 = [false, false, false, false];
+      var everDealt4 = false;
+      var round4 = 1;
+
+      function enabledSides(){ return SIDES.filter(function(s){ return enabled[s]; }); }
+
+      // next enabled side after `from`, walking the same ring order Choose
+      // Player already cycles in — the one place that decides "who's next"
+      function nextEnabledIndex(from){
+        for (var k = 1; k <= 4; k++){
+          var idx = (from + k) % 4;
+          if (enabled[SIDES[idx]]) return idx;
+        }
+        return from;
+      }
+
+      function pal4Names(){
+        var out = {};
+        SIDES.forEach(function(s){
+          var el = document.querySelector('#pal4Card' + s + ' .pal4CardName');
+          out[s] = (el && el.value.trim()) ||
+            (window.__palP ? window.__palP('playerL', { a: s }) : ('Player ' + s));
+        });
+        return out;
+      }
+      function pal4NameOf(p){ return pal4Names()[SIDES[p]]; }
+      function pal4P(key, v){ return window.__palP ? window.__palP(key, v) : key; }
+      function pal4Say(html){ var el = document.getElementById('pal4Say'); if (el) el.innerHTML = html; }
+      function pal4Cheer(line){
+        if (typeof sfx === 'function') try { sfx('card'); } catch(e){}
+        if (typeof sana === 'function') try { sana(line, 'cheer'); } catch(e){}
+      }
+
+      function seedsOnBoard4(){ var t = 0; for (var i = 0; i < CUPS4; i++) t += cups4[i]; return t; }
+      /* A savings pocket cannot be lifted, so seeds sitting in one are not a
+         move — same rule, same reason as the 2-player board's rowEmpty. */
+      function rowEmpty4(p){
+        for (var i = p * 7; i < p * 7 + 7; i++) if (cups4[i] > 0 && !pillai4[i]) return false;
+        return true;
+      }
+      function markSowed4(i){
+        if (cups4[i] === PASU4 + 1) pasuDead4[i] = true;
+        if (cups4[i] === 0) pasuDead4[i] = false;
+      }
+
+      function newGame4(){
+        if (step4){ clearTimeout(step4); step4 = null; }
+        try { localStorage.removeItem(PAL4_SAVE_KEY); } catch(e){}
+        /* Same reset the New Game button always did cosmetically, now the
+           single place both the button AND the tab opener route through —
+           back to all four sides enabled, Player A up first, so opening
+           this board fresh from Home always starts from the same place the
+           2-player one does. */
+        SIDES.forEach(function(s){
+          enabled[s] = true;
+          var cb = document.querySelector('.pal4Tick.side' + s + ' input');
+          if (cb) cb.checked = true;
+        });
+        active = 0; starter4 = 0;
+        cups4 = []; pasuDead4 = []; pillai4 = [];
+        for (var i = 0; i < CUPS4; i++){ cups4.push(0); pasuDead4.push(false); pillai4.push(0); }
+        store4 = [PER_CUP4 * 7, PER_CUP4 * 7, PER_CUP4 * 7, PER_CUP4 * 7];   // 35 each
+        dealt4 = [false, false, false, false];
+        round4 = 1; everDealt4 = false;
+        playing4 = false; busy4 = false; inHand4 = 0;
+        pal4Say(pal4P('dealPrompt'));
+        pal4Cheer(pal4P('dealPromptCheer'));
+        pal4Draw();
+      }
+
+      /* DEALING IS A MOVE, same as the 2-player board — each enabled player
+         taps their own store to lay out their own row. Play starts the
+         moment every ENABLED side (not all four — only the ones ticked in)
+         has dealt. */
+      function dealRow4(p){
+        if (dealt4[p] || busy4 || !enabled[SIDES[p]]) return;
+        busy4 = true;
+        var c = 0;
+        pal4Say(pal4P('fillingRow', { a: pal4NameOf(p) }));
+        (function one(){
+          if (c >= 7){
+            dealt4[p] = true; busy4 = false; step4 = null;
+            var need = enabledSides().map(function(s){ return SIDES.indexOf(s); });
+            var allDealt = need.every(function(idx){ return dealt4[idx]; });
+            if (allDealt){
+              playing4 = true; everDealt4 = true;
+              active = starter4;
+              pal4Say(pal4P('starts', { a: pal4NameOf(active) }));
+              pal4Cheer(pal4P('newBoard', { a: pal4NameOf(active) }));
+            } else {
+              var waiting = need.filter(function(idx){ return !dealt4[idx]; })
+                .map(function(idx){ return pal4NameOf(idx); }).join(', ');
+              pal4Say(pal4P('dealWaitingMulti', { a: pal4NameOf(p), names: waiting }));
+            }
+            pal4Draw();
+            return;
+          }
+          var i = p * 7 + c; c++;
+          pillai4[i] = 0;
+          if (store4[p] >= PER_CUP4){ cups4[i] = PER_CUP4; store4[p] -= PER_CUP4; }
+          else if (store4[p] > 0){ cups4[i] = store4[p]; pillai4[i] = store4[p]; store4[p] = 0; }
+          else { cups4[i] = 0; }
+          pal4Draw();
+          if (typeof sfx === 'function') try { sfx('card'); } catch(e){}
+          step4 = setTimeout(one, 260);
+        })();
+      }
+
+      /* A ROUND ENDS THE MOMENT THE PLAYER TO MOVE HAS AN EMPTY ROW — same
+         rule as the 2-player board, just walking to the next ENABLED side
+         instead of hard-swapping between exactly two. */
+      function endTurn4(msg){
+        busy4 = false; inHand4 = 0;
+        active = nextEnabledIndex(active);
+        if (rowEmpty4(active)){ endRound4(msg); return; }
+        pal4Say(pal4P('nowTurn', { msg: msg, a: pal4NameOf(active) }));
+        pal4Draw();
+      }
+
+      /* Raja: "end of sequence the pillai pandi is immediately transferred
+         to stores, that should avoid -- instead keep pillai pandi in cup
+         who owned... later by click pillai pandi the seeds will transfer
+         to store, to know how much seeds in stores on end of sequence and
+         after pillai pandi how much in stores." Non-pillai leftovers still
+         sweep home automatically; a pillai pocket stays sitting in its own
+         cup, still locked-looking, until its own owner (solo right, same
+         as during play) taps it to move it into their store -- so the
+         store total is visibly split into "what I ended the round with"
+         and "what my savings pocket then added", one tap at a time, in
+         each owner's own time. */
+      function hasAnySeeds4(idx){
+        if (store4[idx] > 0) return true;
+        for (var i = idx * 7; i < idx * 7 + 7; i++) if (cups4[i] > 0) return true;
+        return false;
+      }
+      function endRound4(msg){
+        for (var i = 0; i < CUPS4; i++){
+          if (!cups4[i] || pillai4[i]) continue;   // pillai stays put, collected by hand
+          store4[owner4(i)] += cups4[i]; cups4[i] = 0;
+        }
+        for (var i = 0; i < CUPS4; i++) pasuDead4[i] = false;
+        playing4 = false; busy4 = false;
+        dealt4 = [false, false, false, false];
+        round4++;
+        starter4 = nextEnabledIndex(starter4);   // opener alternates every round, same as 2p
+        active = starter4;
+        /* A player who cannot fill even ONE cup has nothing left to lay out.
+            2p ends the whole game the instant either side hits this — the
+            same read carries over: any enabled side reaching zero ends the
+            match, decided among whoever is still standing. Store alone is
+            not enough here — a side can still be holding everything in an
+            as-yet-uncollected pillai pocket. */
+        var out = enabledSides().filter(function(s){ return !hasAnySeeds4(SIDES.indexOf(s)); });
+        if (out.length){
+          /* The game is over — there is no next round left to delay the
+             reveal for, so sweep any still-uncollected pillai straight
+             into its owner's store now, silently, before the final tally. */
+          for (var i = 0; i < CUPS4; i++){
+            if (!cups4[i]) continue;
+            store4[owner4(i)] += cups4[i]; cups4[i] = 0;
+          }
+          for (var i = 0; i < CUPS4; i++) pillai4[i] = 0;
+          pal4Say(pal4P('lostAllN', { a: pal4NameOf(SIDES.indexOf(out[0])) }));
+          pal4Finish();
+          return;
+        }
+        if (cups4.some(function(c, i){ return pillai4[i] && c > 0; })){
+          pal4Say(pal4P('roundOverPillaiPending', { msg: msg }));
+        } else {
+          pal4Say(pal4P('roundOver4', { msg: msg }));
+        }
+        pal4Cheer(pal4P('roundCheer4'));
+        pal4Draw();
+      }
+
+      function pal4Finish(){
+        playing4 = false; busy4 = false;
+        // a finished game has nothing left to resume -- same clear as New Game
+        try { localStorage.removeItem(PAL4_SAVE_KEY); } catch(e){}
+        var scores = enabledSides().map(function(s){
+          var idx = SIDES.indexOf(s);
+          return { i: idx, n: store4[idx] };
+        });
+        var max = Math.max.apply(null, scores.map(function(x){ return x.n; }));
+        var winners = scores.filter(function(x){ return x.n === max; });
+        var list = scores.map(function(x){ return pal4NameOf(x.i) + ' ' + x.n; }).join(', ');
+        var resultLine = winners.length > 1
+          ? pal4P('winsGameTie', { names: winners.map(function(w){ return pal4NameOf(w.i); }).join(', '), n: max })
+          : pal4P('winsGame', { a: pal4NameOf(winners[0].i) });
+        pal4Say(pal4P('finalScores', { list: list }) + '<br>' + resultLine);
+        pal4Cheer(resultLine);
+        pal4Draw();
+      }
+
+      /* ONE SOWING MOVE — identical mechanics to the 2-player board's
+         sowStep: land empty-handed, the NEXT cup with seeds gets picked up
+         and carried on; the next cup empty (or a locked pillai pocket) means
+         look one further for the capture. Never once asks who owns what. */
+      var sowDropped4 = 0, sowWon4 = 0, sowLanded4 = -1, sowStopped4 = false;
+      function sowStep4(){
+        if (inHand4 > 0){
+          var nx = nextLiveCup(sowPos4);
+          /* Raja: "no opponent should fill [a savings pocket] during play...
+             this is solo right by who filled this cup from the beginning."
+             Same fix as the 2-player board's own sowStep, same reasoning:
+             only a pillai pocket's OWN row-owner can ever add to it. Any
+             other player's hand walks straight past it, same as it already
+             walks past a disabled side's whole row via nextLiveCup. Capped
+             at CUPS4 skips so a board that somehow had nothing else live
+             cannot spin forever. */
+          for (var guard = 0; guard < CUPS4 && pillai4[nx] && owner4(nx) !== active; guard++) nx = nextLiveCup(nx);
+          if (pillai4[nx] && owner4(nx) === active){
+            if (inHand4 < pillai4[nx]){
+              sowPos4 = nx; cups4[sowPos4] += inHand4; inHand4 = 0; sowDropped4++;
+              sowLanded4 = sowPos4; sowWon4 = 0; sowStopped4 = true;
+              return false;
+            }
+            sowPos4 = nx; cups4[sowPos4] += pillai4[nx]; inHand4 -= pillai4[nx]; sowDropped4++;
+            sowLanded4 = sowPos4;
+            return true;
+          }
+          sowPos4 = nx; cups4[sowPos4]++; inHand4--; sowDropped4++; markSowed4(sowPos4);
+          sowLanded4 = sowPos4;
+          return true;
+        }
+        var next = nextLiveCup(sowPos4);
+        if (cups4[next] > 0 && !pillai4[next]){
+          inHand4 = cups4[next]; cups4[next] = 0; sowPos4 = next; markSowed4(next);
+          sowLanded4 = -1;
+          return true;
+        }
+        var take = nextLiveCup(next);
+        if (cups4[take] > 0 && !pillai4[take]){
+          sowWon4 = cups4[take];
+          store4[active] += sowWon4; cups4[take] = 0; pasuDead4[take] = false;
+          var el2 = document.querySelector('.pal4Cup[data-pal4="' + take + '"]');
+          if (el2){ el2.classList.add('won'); setTimeout(function(){ el2.classList.remove('won'); }, 600); }
+        } else sowWon4 = 0;
+        return false;
+      }
+
+      function sowFinish4(){
+        if (sowStopped4){ endTurn4(pal4P('pillaiStop')); return; }
+        if (sowWon4 > 0){
+          pal4Cheer(pal4P('wonCheer', { a: pal4NameOf(active), n: sowWon4 }));
+          endTurn4(pal4P('wonSay', { a: pal4NameOf(active), n: sowWon4 }));
+        } else {
+          endTurn4(pal4P('nothing'));
+        }
+      }
+
+      function sow4(from){
+        busy4 = true;
+        inHand4 = cups4[from]; sowPos4 = from; sowDropped4 = 0; sowWon4 = 0; sowStopped4 = false;
+        cups4[from] = 0; markSowed4(from);
+        pal4Draw();
+        (function tick(){
+          if (!sowStep4()){ pal4Draw(); sowFinish4(); return; }
+          if (sowLanded4 >= 0){
+            var el = document.querySelector('.pal4Cup[data-pal4="' + sowLanded4 + '"]');
+            if (el){ el.classList.add('sowing'); setTimeout(function(){ el.classList.remove('sowing'); }, 130); }
+            /* Same fix as the 2-player board's own sow() -- a sound per
+               real drop (sowLanded4 >= 0, same condition driving the glow
+               above), never on a pickup. See its comment for why 'tick'
+               and why sfx() alone already covers the sound on/off setting. */
+            if (typeof sfx === 'function') try { sfx('tick'); } catch(e){}
+          }
+          pal4Draw();
+          step4 = setTimeout(tick, 400);
+        })();
+      }
+
+      function claimPasu4(i){
+        var p = owner4(i);
+        store4[p] += cups4[i]; cups4[i] = 0; pasuDead4[i] = false;
+        var el = document.querySelector('.pal4Cup[data-pal4="' + i + '"]');
+        if (el){ el.classList.add('won'); setTimeout(function(){ el.classList.remove('won'); }, 600); }
+        pal4Cheer(pal4P('pasuCheer', { a: pal4NameOf(p) }));
+        pal4Draw();
+        var line = pal4P('pasuTook', { a: pal4NameOf(p) });
+        /* Raja: Player B claimed their own last remaining cup as a pasu —
+           allowed at any time, so it correctly never consumes a turn — but
+           that also means it never went through the same "does the player
+           to move now have an empty row" check a completed sow gets in
+           endTurn4. If the claim happens to be the active player's own
+           move and it was their last cup, their row is now genuinely
+           empty and the round has to end right here — otherwise the game
+           sits waiting forever on a player with nothing left to play. */
+        if (playing4 && !busy4 && rowEmpty4(active)){ endRound4(line); return; }
+        pal4Say(busy4 ? line + pal4P('sowingOn') : line + pal4P('yourTurn', { a: pal4NameOf(active) }));
+      }
+
+      function pal4Draw(){
+        if (!enabled[SIDES[active]]) active = nextEnabledIndex(active);
+        if (!enabled[SIDES[starter4]]) starter4 = nextEnabledIndex(starter4);
+        var names = pal4Names();
+        SIDES.forEach(function(s, i){
+          var isOn = enabled[s];
+          var isActive = isOn && i === active;
+          var cupsEls = document.querySelectorAll('.pal4Cup.side' + s);
+          cupsEls.forEach(function(c, k){
+            var idx = i * 7 + k;
+            c.classList.toggle('active', isActive);
+            c.classList.toggle('off', !isOn);
+            /* Raja, cross-checked against the 2-player board's own draw():
+               that one renders cups[i]/store[d] unconditionally, every call,
+               from the moment the board opens (cups start at 0 there too).
+               Gating this block behind everDealt4 (only true once EVERY
+               enabled side has fully finished dealing) meant a real deal
+               correctly drained store4 and filled cups4 in the data, but
+               nothing on screen reflected it until all sides were done --
+               with all four sides enabled by default, one player's tap
+               looked like it did nothing at all. Unconditional now, same
+               as 2p. */
+            var n = cups4[idx] || 0;
+            var countEl = c.querySelector('.pal4Count'), seedsEl = c.querySelector('.pal4Seeds');
+            if (countEl) countEl.textContent = n;
+            if (seedsEl){
+              var dots = '';
+              if (n > 0 && n <= 4) for (var d = 0; d < n; d++) dots += '<span class="pal4Seed"></span>';
+              seedsEl.innerHTML = dots;
+            }
+            c.classList.toggle('empty', n === 0);
+            var claimable = playing4 && n === PASU4 && !pasuDead4[idx] && !pillai4[idx];
+            c.classList.toggle('pasu', claimable);
+            c.classList.toggle('pillai', !!pillai4[idx]);
+            var canLift = playing4 && !busy4 && isOn && owner4(idx) === active && n > 0 && !pillai4[idx];
+            /* Between rounds, a still-full pillai pocket LEFT OVER from
+               the round that just ended is its own owner's to tap and
+               collect — mark it pickable too, same visual invitation a
+               liftable cup already gets. Not the same as a pillai pocket
+               this same player's OWN redeal for the CURRENT round just
+               formed (dealt4[i] already true by then) — that one stays
+               locked the normal way, only collectible once THIS round
+               itself ends. */
+            var canCollect = !playing4 && pillai4[idx] && n > 0 && !dealt4[i];
+            c.classList.toggle('pickable', canLift || claimable || canCollect);
+          });
+          var card = document.getElementById('pal4Card' + s);
+          if (card){
+            card.classList.toggle('active', isActive);
+            card.classList.toggle('off', !isOn);
+          }
+          var tick = document.querySelector('.pal4Tick.side' + s);
+          if (tick) tick.classList.toggle('on', isOn);
+          var storeNumEl = document.querySelector('#pal4Card' + s + ' .pal4CardStoreNum');
+          /* Raja: an unticked player should show no reserve at all, not a
+             dimmed "35" that still reads as "this player has seeds
+             waiting" — blank makes "not in this game" unambiguous. */
+          if (storeNumEl) storeNumEl.textContent = isOn ? store4[i] : '';
+          var storeBox = document.querySelector('#pal4Card' + s + ' .pal4CardStore');
+          /* Don't glow "tap to deal" while a pillai pocket LEFT OVER from
+             the last round is still sitting uncollected anywhere — that
+             tap would be refused (collectFirst) until every such owner
+             has claimed their own. A pillai pocket someone's OWN CURRENT
+             deal just formed does not count here — that is a normal,
+             expected part of dealing, not something blocking anyone. */
+          var anyOldPillaiPending = cups4.some(function(c2, i2){ return pillai4[i2] && c2 > 0 && !dealt4[owner4(i2)]; });
+          if (storeBox) storeBox.classList.toggle('toDeal', isOn && !dealt4[i] && !busy4 && !playing4 && !anyOldPillaiPending);
+        });
+        var look = document.getElementById('pal4Look');
+        if (look) look.className = 'pal4Look look' + SIDES[active];
+        var choose = document.getElementById('pal4Choose');
+        if (choose) choose.textContent = pal4P('chooseP', { a: names[SIDES[starter4]] });
+        var onBoard = document.getElementById('pal4OnBoard');
+        if (onBoard){
+          var seedTotal = seedsOnBoard4();   // always real, same as 2p's seedsOnBoard()
+          onBoard.textContent = pal4P(seedTotal === 1 ? 'onBoard1' : 'onBoardN', { n: seedTotal });
+        }
+        var roundChip = document.getElementById('pal4RoundChip');
+        if (roundChip) roundChip.textContent = pal4P('roundNo', { n: round4 });
+        savePal4Game();
+      }
+
+      /* CUP TAPS — own cup to sow, any cup of four to claim at any moment,
+         same rules as the 2-player board's own click handler. */
+      document.addEventListener('click', function(e){
+        var b = e.target.closest && e.target.closest('#pal4Frame .pal4Cup');
+        if (!b) return;
+        var i = +b.dataset.pal4;
+        if (!enabled[SIDES[owner4(i)]]) return;   // disabled side — not part of the game
+        if (!playing4){
+          /* Between rounds, a pillai pocket LEFT OVER from the round that
+             just ended is a live tap target now — its own owner's cup
+             only (owner4(i) already pins that; nobody can collect anyone
+             else's), one pocket at a time, whenever they get to it. A
+             pillai pocket this same owner's OWN redeal for the CURRENT
+             round just formed (dealt4[owner4(i)] already true) is NOT
+             this — that one stays locked the normal way, same as any
+             pillai during play, only collectible once THIS round ends. */
+          if (pillai4[i] && cups4[i] > 0 && !dealt4[owner4(i)]){
+            var pOwner = owner4(i);
+            store4[pOwner] += cups4[i]; cups4[i] = 0; pillai4[i] = 0;
+            pal4Draw();
+            pal4Say(pal4P('pillaiCollected', { a: pal4NameOf(pOwner), n: store4[pOwner] }));
+            return;
+          }
+          if (!everDealt4 || dealt4.some(function(d, idx){ return enabled[SIDES[idx]] && !d; }))
+            pal4Say(pal4P('fillFirst'));
+          return;
+        }
+        if (cups4[i] === PASU4 && !pasuDead4[i] && !pillai4[i]){ claimPasu4(i); return; }
+        if (busy4) return;
+        if (owner4(i) !== active){ pal4Say(pal4P('notYours', { a: pal4NameOf(owner4(i)) })); return; }
+        if (pillai4[i]){ pal4Say(pal4P('pillaiLocked')); return; }
+        if (cups4[i] === 0){ pal4Say(pal4P('cupEmpty')); return; }
+        sow4(i);
+      });
+
+      /* The beta-203/204 raw touch/pointer/click logger that lived here is
+         gone (beta-206). Its job was to find why store taps looked like
+         they did nothing — beta-205's pal4Draw() fix (found by reading the
+         2-player board's own code, not from this log's output) was the
+         real cause and Raja confirmed the two-step deal now works. Left
+         running afterward, the log itself became a new, real problem: a
+         fixed bottom-of-screen box that grew with every tap and covered the
+         app's own tab bar and board controls. Removed. window.onerror
+         (beta-202, just above the <head> of this file) stays — it renders
+         nothing at all unless a real uncaught error fires, so it costs
+         nothing to leave in place as an ongoing safety net. */
+
+      /* STORE TAPS — tap your own to lay out your own row. */
+      document.addEventListener('click', function(e){
+        var box = e.target.closest && e.target.closest('#pal4Panel .pal4CardStore');
+        if (!box) return;
+        var card = box.closest('.pal4Card');
+        var m = card && card.id.match(/^pal4Card([A-D])$/);
+        if (!m) return;
+        var p = SIDES.indexOf(m[1]);
+        if (!enabled[SIDES[p]]) return;
+        if (enabledSides().every(function(s){ return dealt4[SIDES.indexOf(s)]; })) return;
+        /* Only a pillai pocket LEFT OVER from the round that just ended
+           blocks dealing — its owner hasn't dealt for the CURRENT round
+           yet, so it can only be old business. A pillai pocket someone's
+           OWN redeal for the current round just formed does not count:
+           its owner has already dealt, and that pocket is normal, locked
+           the usual way until THIS round ends, not something anyone else
+           is waiting on. */
+        if (cups4.some(function(c, i){ return pillai4[i] && c > 0 && !dealt4[owner4(i)]; })){
+          pal4Say(pal4P('collectFirst'));
+          return;
+        }
+        if (dealt4[p]){ pal4Say(pal4P('alreadyDealt', { a: pal4NameOf(p) })); return; }
+        dealRow4(p);
+      });
+
+      var chooseBtn = document.getElementById('pal4Choose');
+      if (chooseBtn) chooseBtn.addEventListener('click', function(){
+        starter4 = nextEnabledIndex(starter4);
+        if (!playing4) active = starter4;
+        if (typeof sfx === 'function') try { sfx('card'); } catch(e){}
+        if (playing4) pal4Say(pal4P('nextGame', { a: pal4NameOf(starter4) }));
+        pal4Draw();
+      });
+
+      document.querySelectorAll('#pal4Select input[type=checkbox]').forEach(function(cb){
+        cb.addEventListener('change', function(){
+          var s = cb.dataset.side;
+          var p = SIDES.indexOf(s);
+          /* Raja: dealing A and C first, then trying to untick B and D to
+             drop them, hit this guard even though B and D had never dealt
+             a single seed — it blocked ANY tick change the moment ANY side
+             had dealt, not just the side being changed. A player who has
+             already dealt can't be removed cleanly (their 35 seeds are
+             already split across their own 7 cups with nowhere to go), so
+             THAT stays locked, same as before dealing has fully finished
+             (playing4). But a side that hasn't dealt yet is untouched by
+             anything happening elsewhere on the board, so switching it off
+             is always safe, even mid-selection with other sides already
+             down. */
+          if (playing4 || dealt4[p]){ cb.checked = enabled[s]; return; }
+          if (!cb.checked){
+            var onCount = SIDES.filter(function(x){ return enabled[x]; }).length;
+            if (onCount <= 2){ cb.checked = true; return; }   // can't go below 2 players
+            enabled[s] = false;
+          } else {
+            enabled[s] = true;
+          }
+          if (typeof sfx === 'function') try { sfx('card'); } catch(e){}
+          pal4Draw();
+        });
+      });
+
+      document.querySelectorAll('#pal4Panel .pal4CardName').forEach(function(el){
+        el.addEventListener('input', pal4Draw);
+      });
+
+      var pal4NewBtn = document.getElementById('pal4New');
+      if (pal4NewBtn) pal4NewBtn.addEventListener('click', function(){
+        if (typeof sfx === 'function') try { sfx('card'); } catch(e){}
+        newGame4();
+      });
+
+      // bilingual, same ta/en branch pattern as the 2-player board's palHowTo()
+      function pal4HowTo(){
+        var ta = !!(window.__palTa && window.__palTa());
+        if (ta) return '<h3>🫘 பல்லாங்குழி · 4 வீரர்கள் — எப்படி விளையாடுவது</h3>' +
+          '<p>ஏழு குழிகள் கொண்ட நான்கு பக்கங்கள், சதுரத்தைச் சுற்றி ஒரே ஒரு தொடர் ' +
+          'வளையம். 2, 3 அல்லது 4 வீரர்கள் — கீழே உள்ள tick பெட்டிகளால் ' +
+          'தேர்ந்தெடுக்கவும். ஒவ்வொருவரும் தன் <b>சேமிப்பைத் தட்டி</b> தன் ' +
+          'வரிசையை நிரப்புவார்.</p>' +
+          '<p>சட்டத்தைச் சுற்றி ஒரே ஒரு வளையம் ஓடுகிறது — மேலே A, வலப் ' +
+          'பக்கமாக இறங்கி B, கீழே C, இடப் பக்கமாக ஏறி D, மீண்டும் A-வுக்குள்.</p>' +
+          '<ol>' +
+          '<li>உங்கள் முறையில், உங்கள் சொந்தக் <b>குழி ஒன்றைத்</b> தட்டுங்கள். ' +
+          'அதன் அனைத்து விதைகளும் தூக்கப்படும்.</li>' +
+          '<li>அவை <b>ஒவ்வொன்றாக</b>, வளையத்தைச் சுற்றி அடுத்தடுத்த குழிகளில் விழும் — ' +
+          'A, B, C, D வழியாக, மீண்டும் A-வுக்குள்.</li>' +
+          '<li>கடைசி விதை விழும்போது, அடுத்த குழியைப் பாருங்கள். விதைகள் ' +
+          'இருந்தால், தூக்கித் தொடருங்கள்.</li>' +
+          '<li><b>காலியா?</b> அதற்கு அடுத்த குழியில் உள்ள விதைகள் உங்களுடையவை — ' +
+          'யாருடைய வரிசையாக இருந்தாலும் சரி.</li>' +
+          '</ol>' +
+          '<p><b>🫘 பசு.</b> எந்த குழியும் சரியாக நான்கு விதைகள் கொண்டவுடன், அதன் ' +
+          'சொந்தக்காரர் எப்போது வேண்டுமானாலும் அதைத் தட்டி எடுக்கலாம்.</p>' +
+          '<p><b>🔒 பிள்ளை குழி.</b> ஐந்துக்குக் குறைவாக நிரப்பப்பட்ட குழி அந்தச் ' +
+          'சுற்றுக்கு ஒரு பிள்ளை குழி ஆகும் — யாரும் எடுக்கவோ வெல்லவோ முடியாது.</p>' +
+          '<p>ஒரு வீரருக்கு தூக்க விதைகள் இல்லாதபோது, <b>சுற்று முடிவடையும்</b> — ' +
+          'ஒவ்வொருவரும் தங்கள் மீதமுள்ள விதைகளைத் தங்கள் சேமிப்பில் வைத்துக்கொள்வார்கள். ' +
+          'ஒரு குழியைக் கூட நிரப்ப முடியாத வீரர் வந்தால், ஆட்டம் முடிந்துவிடும்.</p>';
+        return '<h3>🫘 Pallanguzhi · 4 Players — how to play</h3>' +
+          '<p>Four sides of seven cups each, one continuous ring around the ' +
+          'square. 2, 3 or 4 players — chosen with the tick boxes below. Each ' +
+          'player <b>taps their own store</b> to lay out their own row.</p>' +
+          '<p>One ring runs the whole way round the frame — A along the top, ' +
+          'B down the right, C along the bottom, D up the left, back into A.</p>' +
+          '<ol>' +
+          '<li>On your turn, tap <b>one of your own cups</b>. All its seeds are lifted.</li>' +
+          '<li>They are dropped <b>one at a time</b> around the ring — through A, B, ' +
+          'C, D, back into A.</li>' +
+          '<li>When the last seed falls, look at the next cup. Seeds in it? Lift ' +
+          'those too and keep going.</li>' +
+          '<li><b>Empty?</b> The seeds in the cup after that are yours — whoever’s ' +
+          'row it sits in.</li>' +
+          '</ol>' +
+          '<p><b>🫘 Pasu.</b> The moment any cup holds exactly four seeds, its own ' +
+          'owner may tap it and take it, any time.</p>' +
+          '<p><b>🔒 The savings pocket.</b> A cup laid out with fewer than five is a ' +
+          'pillai pocket for that round — nobody may lift it or capture it.</p>' +
+          '<p>When a player has no seeds left to lift, <b>the round ends</b> — ' +
+          'everyone keeps their own leftover seeds into their own reserve. A ' +
+          'player who cannot lay out even one cup has lost the game.</p>';
+      }
+      window.__pal4HowTo = pal4HowTo;
+
+      var pal4RulesBtn = document.getElementById('pal4Rules');
+      if (pal4RulesBtn) pal4RulesBtn.addEventListener('click', function(){
+        var lb2 = document.getElementById('logicBox');
+        if (lb2) lb2.innerHTML = pal4HowTo();
+        if (typeof openLearn === 'function') openLearn('logic', false);
+      });
+
+      window.__pal4New = function(){ newGame4(); };
+      window.__pal4Stop = function(){
+        if (step4){ clearTimeout(step4); step4 = null; }
+        if (busy4){
+          var guard = 0;
+          while (sowStep4() && guard++ < 4000){}
+          sowFinish4();
+        }
+        busy4 = false;
+        pal4Draw();
+      };
+      window.__pal4Redraw = function(){
+        if (!everDealt4) { pal4Say(pal4P('dealPrompt')); return; }
+        if (playing4 && !busy4) pal4Say(pal4P('tapYours', { a: pal4NameOf(active) }));
+      };
+      window.__pal4Draw = pal4Draw;   // for the checks
+      window.__pal4State = function(){
+        return { active: SIDES[active], starter: SIDES[starter4], enabled: Object.assign({}, enabled),
+                 cups: cups4.slice(), store: store4.slice(), playing: playing4, busy: busy4,
+                 dealt: dealt4.slice(), pillai: pillai4.slice(), dead: pasuDead4.slice(),
+                 round: round4, everDealt: everDealt4, hand: inHand4, dropped: sowDropped4 };
+      };
+
+      /* Same save/resume as the 2-player board -- see its own PAL_SAVE_KEY
+         comment for the why. */
+      var PAL4_SAVE_KEY = 'mmPal4Save';
+      function savePal4Game(){
+        if (!everDealt4 || busy4) return;
+        try {
+          localStorage.setItem(PAL4_SAVE_KEY, JSON.stringify({
+            v: 1, cups: cups4, store: store4, active: active, starter4: starter4,
+            enabled: enabled, playing: playing4, dealt: dealt4, pillai: pillai4,
+            dead: pasuDead4, round: round4, everDealt: everDealt4,
+            names: SIDES.map(function(s){
+              var el = document.querySelector('#pal4Card' + s + ' .pal4CardName');
+              return (el && el.value) || '';
+            })
+          }));
+        } catch(e){}
+      }
+      function loadPal4Save(){
+        try {
+          var raw = localStorage.getItem(PAL4_SAVE_KEY);
+          if (!raw) return null;
+          var sv = JSON.parse(raw);
+          if (!sv || sv.v !== 1 || !Array.isArray(sv.cups) || sv.cups.length !== CUPS4 ||
+              !Array.isArray(sv.store) || sv.store.length !== 4 ||
+              !sv.enabled || typeof sv.enabled !== 'object') return null;
+          return sv;
+        } catch(e){ return null; }
+      }
+      function restorePal4Game(sv){
+        SIDES.forEach(function(s, i){
+          enabled[s] = !!sv.enabled[s];
+          var cb = document.querySelector('.pal4Tick.side' + s + ' input');
+          if (cb) cb.checked = enabled[s];
+        });
+        cups4 = sv.cups.slice(); store4 = sv.store.slice();
+        active = sv.active; starter4 = sv.starter4; playing4 = !!sv.playing;
+        dealt4 = sv.dealt.slice(); pillai4 = sv.pillai.slice(); pasuDead4 = sv.dead.slice();
+        round4 = sv.round; everDealt4 = sv.everDealt;
+        busy4 = false; inHand4 = 0;
+        if (sv.names) SIDES.forEach(function(s, i){
+          var el = document.querySelector('#pal4Card' + s + ' .pal4CardName');
+          if (el && sv.names[i]) el.value = sv.names[i];
+        });
+        pal4Draw();
+        if (window.__pal4Redraw) window.__pal4Redraw();
+      }
+      window.__pal4Save = savePal4Game;
+      window.__pal4LoadSave = loadPal4Save;
+      window.__pal4Restore = restorePal4Game;
+      window.__pal4ClearSave = function(){ try { localStorage.removeItem(PAL4_SAVE_KEY); } catch(e){} };
+    })();
+
+    /* The actual "slide up / close / phone off" checkpoint for both boards'
+       save-to-resume. visibilitychange fires reliably on Android/iOS the
+       moment the app is backgrounded -- before the OS can ever kill the
+       process -- and pagehide covers an outright tab close. __palStop() /
+       __pal4Stop() already exist to run a mid-air move out to a legal rest
+       state rather than lose it; each one's own draw()/pal4Draw() call then
+       does the actual save (see their tails above), so there is nothing
+       left to do here but settle whichever move, if any, is in flight.
+       Harmless to call for a board that was never opened this session --
+       both stops are no-ops unless their own busy flag is set. */
+    function palSaveCheckpoint(){
+      if (window.__palStop) try { window.__palStop(); } catch(e){}
+      if (window.__pal4Stop) try { window.__pal4Stop(); } catch(e){}
+    }
+    document.addEventListener('visibilitychange', function(){
+      if (document.hidden) palSaveCheckpoint();
+    });
+    window.addEventListener('pagehide', palSaveCheckpoint);
+
+    document.querySelectorAll('.toggleBtn[data-pal4-level]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        if (_congratsAutoTimer){ clearInterval(_congratsAutoTimer); _congratsAutoTimer = null; }
+        var cm = document.getElementById('congratsModal');
+        if (cm && cm.style.display === 'flex') cm.style.display = 'none';
+        sfx('card');
+        document.querySelectorAll('.toggleBtn').forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        applyAccent();
+        if (currentSize === 'binary' || currentSize === 'binary2') showBinaryMode(false);
+        if (currentSize === 'gatelogic') showGateMode(false);
+        showSlideMode(false);
+        showSudokuMode(false);
+        showPalMode(false);
+        currentSize = 'pallanguzhi4';
+        goScreen('scPlay');
+        showPal4Mode(true);
+        // resume a saved game, same rule as the 2-player tab; fresh only
+        // when there is nothing to resume
+        var pal4Saved = window.__pal4LoadSave ? window.__pal4LoadSave() : null;
+        var pal4Restored = false;
+        if (pal4Saved && window.__pal4Restore){
+          try { window.__pal4Restore(pal4Saved); pal4Restored = true; } catch(e){}
+        }
+        if (!pal4Restored && window.__pal4New) window.__pal4New();
+        var title = document.getElementById('appBarTitle');
+        if (title) title.innerHTML = boxedTitle('🫘 Pallanguzhi 4P');   // the full name truncated in the app bar
+        // matches the 2-player opener: keep the top-bar LOGIC button honest
+        // for whichever board is actually open, not whatever was open last
+        var lb3 = document.getElementById('logicBox');
+        if (lb3 && window.__pal4HowTo) lb3.innerHTML = window.__pal4HowTo();
+      });
+    });
+
     var gateListBtn = document.getElementById('gateListBtn');
     if (gateListBtn){
       gateListBtn.addEventListener('click', function(){
@@ -7404,6 +10037,8 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
         if (currentSize === 'binary' || currentSize === 'binary2') showBinaryMode(false);
         if (currentSize === 'slide') showSlideMode(false);
       if (currentSize === 'sudoku') showSudokuMode(false);
+      if (currentSize === 'pallanguzhi') showPalMode(false);
+      if (currentSize === 'pallanguzhi4') showPal4Mode(false);
         currentSize = 'gatelogic';
         goScreen('scPlay');
         showGateMode(true);
@@ -8524,6 +11159,133 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
   });
 
 
+  /* ══ ENGLISH / தமிழ் ═══════════════════════════════════════════════════
+     Raja: "can make English / Tamil language conversion toggle by in settings
+     along sound mode."
+
+     MEASURED FIRST, because the size of this decides how it has to be built:
+     the app holds about 5,900 words of English a player can read — 1,700 in the
+     markup and 4,200 more built in JavaScript across 625 strings, 191 of them
+     longer than eight words. That is not one change, it is a running
+     commitment: every English sentence added later needs a Tamil twin or the
+     app drifts back to half-English, which is worse than being in English.
+
+     So it goes in SLICES, and the slice is chosen by what a child has to read
+     to get playing: the tab bar, the chips, and every puzzle name, level and
+     one-line description on the list. Anything not yet translated falls back to
+     its English, and check-language.js REPORTS THE COVERAGE per screen so the
+     gap is a number we watch rather than a surprise on a screenshot.
+
+     Keyed on the English text itself, not on invented ids. In a single-file app
+     that means no markup to churn and nothing to keep in step; the cost is that
+     editing an English string silently drops its translation — which is exactly
+     what the coverage check is for. */
+  var LANG = localStorage.getItem('mmLang') === 'ta' ? 'ta' : 'en';
+  var TA = {
+    // the board's own furniture — everything else in the app stays English
+    'Store':'சேமிப்பு', '🔄 New game':'🔄 புதிய ஆட்டம்', '📖 How to play':'📖 எப்படி விளையாடுவது',
+    'Player 1':'வீரர் 1', 'Player 2':'வீரர் 2',
+    'Tap Start to fill the board.':'பலகையை நிரப்ப தொடங்கு என்பதைத் தட்டுங்கள்.',
+    // the 4-player board — same family, same rule: translated completely, not patched
+    'STORE':'சேமிப்பு',
+    'Player A':'வீரர் A', 'Player B':'வீரர் B', 'Player C':'வீரர் C', 'Player D':'வீரர் D',
+    'Players:':'வீரர்கள்:',
+    'Sample layout — the rules are still being worked out. Choose Player just previews who SaNa is watching.':
+      'மாதிரி அமைப்பு — விளையாட்டு விதிகள் இன்னும் வடிவமைக்கப்பட்டு வருகின்றன. வீரரைத் தேர்ந்தெடு என்பது SaNa யாரைக் கவனிக்கிறார் என்பதை மட்டும் காட்டும்.'
+  };
+
+  /* Swap the text in place, remembering the English so the switch works both
+     ways. Whole text nodes only: a node that mixes wording with a live number
+     ("70 seeds on the board") cannot be matched from a table and belongs to the
+     next slice, where the sentence is assembled through a lookup instead. */
+  function applyLangToRoot(root){
+    if (!root) return;
+    var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), n;
+    while ((n = w.nextNode())){
+      var p = n.parentElement;
+      if (!p || p.tagName === 'SCRIPT' || p.tagName === 'STYLE') continue;
+      if (n.__en === undefined){
+        var t = n.nodeValue.replace(/\s+/g, ' ').trim();
+        if (!t || !/[A-Za-z]{2}/.test(t)) continue;
+        n.__en = n.nodeValue;
+        n.__key = t;
+      }
+      n.nodeValue = (LANG === 'ta' && TA[n.__key]) ? TA[n.__key] : n.__en;
+    }
+    // placeholders are attributes, invisible to a text walk
+    root.querySelectorAll('[placeholder]').forEach(function(el){
+      if (el.__ph === undefined) el.__ph = el.getAttribute('placeholder');
+      el.setAttribute('placeholder', (LANG === 'ta' && TA[el.__ph]) ? TA[el.__ph] : el.__ph);
+    });
+  }
+  function applyLang(){
+    /* THE PALLANGUZHI BOARDS ONLY. This walked the whole app shell for one
+       build, and the screenshots settled it: Raja — "change entire app to
+       Tamil is possible to collapse the UI decoration." He is right, and it
+       was measurable. Tamil runs longer than English, every layout here is
+       sized by measuring itself, and in Tamil the nine-puzzle ladder stopped
+       fitting one screen and a chip was cut 11px short. Nine puzzles
+       half-translated is worse than nine in English.
+       Pallanguzhi is the opposite case: a Tamil game, whose whole vocabulary is
+       Tamil already — pasu, the cups, the sowing. Both boards — 2-player and
+       4-player, same family — are translated COMPLETELY, sentences included,
+       and nothing else in the app is touched. */
+    applyLangToRoot(document.getElementById('palPanel'));
+    applyLangToRoot(document.getElementById('pal4Panel'));
+    document.documentElement.setAttribute('lang', LANG === 'ta' ? 'ta' : 'en');
+    document.body.classList.toggle('langTa', LANG === 'ta');
+  }
+
+  function refreshLangBtn(){
+    var label = LANG === 'ta' ? '🌐 தமிழ்' : '🌐 English';
+    ['langBtn', 'pal4LangBtn'].forEach(function(id){
+      var b = document.getElementById(id);
+      if (b) b.textContent = label;
+    });
+  }
+  function toggleLang(){
+    LANG = LANG === 'ta' ? 'en' : 'ta';
+    localStorage.setItem('mmLang', LANG);
+    applyLang();
+    refreshLangBtn();
+    /* Redraw both boards, because most of what they say is a SENTENCE built at
+       the moment it is said — whose turn it is, what was just won — and those
+       are not sitting in the page waiting to be swapped. Without this the
+       labels turn Tamil while the running commentary stays English until the
+       next move. */
+    if (window.__palRedraw) window.__palRedraw();
+    if (window.__pal4Draw) window.__pal4Draw();
+    if (window.__pal4Redraw) window.__pal4Redraw();
+    if (typeof sfx === 'function') try { sfx('card'); } catch(e){}
+  }
+  (function buildLangBtns(){
+    /* ON THE BOARDS THEMSELVES, not in the app's settings. It began beside
+       Sound and Music because that is where Raja first asked for it, and that
+       was right while it was an app-wide switch. Now that it changes the
+       Pallanguzhi family only, a control buried in global settings would be a
+       promise the app does not keep — so it sits with New Game and How To
+       Play, on the screens it actually affects. One button per board, same
+       shared LANG underneath, so toggling either one keeps both in step. */
+    [['langBtn', '.palFoot'], ['pal4LangBtn', '.pal4Foot']].forEach(function(pair){
+      var row = document.querySelector(pair[1]);
+      if (!row) return;
+      var b = document.createElement('button');
+      b.id = pair[0]; b.type = 'button'; b.className = 'slideBtn';
+      row.insertBefore(b, row.firstChild);
+      b.addEventListener('click', toggleLang);
+    });
+    refreshLangBtn();
+    if (LANG === 'ta') applyLang();
+  })();
+  window.__mmLang = function(l){                 // for the checks
+    if (l){ LANG = l; localStorage.setItem('mmLang', l); applyLang(); refreshLangBtn();
+            if (window.__palRedraw) window.__palRedraw();
+            if (window.__pal4Draw) window.__pal4Draw();
+            if (window.__pal4Redraw) window.__pal4Redraw(); }
+    return LANG;
+  };
+  window.__palTa = function(){ return LANG === 'ta'; };
+
   // Sound on/off toggle (remembered across visits; the tap itself unlocks WebAudio)
   refreshSoundBtn();
   document.getElementById('soundBtn').addEventListener('click', function(){
@@ -8687,7 +11449,19 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
     if (!bar) return;
     sanaEl = document.createElement('div');
     sanaEl.className = 'sana';
-    sanaEl.innerHTML = '<span class="sanaFace">🐒<span class="sanaSpark"></span></span>' +
+    /* Raja: "place the name SaNa below wherever monkey persist." The monkey is
+       introduced by name once, in the opening line, and after that every other
+       thing it says is just a sentence beside a face — a child who arrives on a
+       puzzle screen has never been told who is talking to them. The name sits
+       under the face now, so it travels with the monkey to every screen.
+       The face keeps its own element: the cheer, oops, think and party
+       animations are all hung on .sanaFace, so the name goes in a wrapper
+       AROUND it rather than inside it, and none of them start bouncing the
+       caption. */
+    sanaEl.innerHTML = '<span class="sanaWho">' +
+                         '<span class="sanaFace">🐒<span class="sanaSpark"></span></span>' +
+                         '<span class="sanaName">SaNa</span>' +
+                       '</span>' +
                        '<span class="sanaBub">Hello! I\'m <b>SaNa</b>. Pick a puzzle and I\'ll help you.</span>';
     bar.insertAdjacentElement('afterend', sanaEl);
     /* The BETA/feedback banner used to sit here as its own row under SaNa.
@@ -10181,7 +12955,7 @@ if (navigator.storage && navigator.storage.persist) {
 (function(){
   // Build baked into this HTML — always reflects the exact version being run,
   // independent of cache timing. Keep in sync with the SW CACHE_VERSION on deploy.
-  var BUILD_VER = 'v139';
+  var BUILD_VER = 'v140';
   /* DERIVED, not a second literal. This was its own hardcoded string and it sat
      at beta-147 through two releases, so the footer and the BETA flag told
      anyone who looked that the update had not arrived. Two version numbers that
@@ -10268,13 +13042,36 @@ if (navigator.storage && navigator.storage.persist) {
          reload; the block at the end of this file spends it on the way back in.
          The screen and the puzzle only — NOT a half-filled board. A new build
          can change a grid, and pouring stale cells into a different puzzle is
-         worse than starting it clean. */
+         worse than starting it clean.
+
+         Raja: puzzles beyond the original 3x3-style family (Sudoku, Slide,
+         Pallanguzhi) left the app on the WRONG puzzle after Update -- this only
+         ever looked for data-size, which only the original magic-square family
+         carries. Every other family keys its own tile a different way
+         (data-sud-level, data-slide-level, data-pal-level, data-pal4-level),
+         so an update from any of them saved z:'' and silently defaulted back to
+         3x3 -- with everything downstream that keys off currentSize now
+         disagreeing with what actually got shown. That mismatch, not the cache
+         itself, is what let two puzzles' panels end up on screen together after
+         enough further taps. Now every family's own attribute is recognised.
+         Gate Logic's own tile carries no data-*-level at all -- it opens a
+         picker, not a single puzzle -- so it falls back to its id, landing back
+         on the gate list rather than the specific room (still correct, just not
+         as deep). */
       try {
         var open = document.querySelector('[data-screen].on');
-        var lvl  = document.querySelector('.toggleBtn.active[data-size]');
+        var lvl  = document.querySelector('.toggleBtn.active');
+        var lvlAttr = '', lvlVal = '';
+        if (lvl){
+          var LEVEL_ATTRS = ['data-size', 'data-slide-level', 'data-sud-level', 'data-pal-level', 'data-pal4-level'];
+          for (var lai = 0; lai < LEVEL_ATTRS.length; lai++){
+            if (lvl.hasAttribute(LEVEL_ATTRS[lai])){ lvlAttr = LEVEL_ATTRS[lai]; lvlVal = lvl.getAttribute(LEVEL_ATTRS[lai]); break; }
+          }
+          if (!lvlAttr && lvl.id){ lvlAttr = 'id'; lvlVal = lvl.id; }
+        }
         sessionStorage.setItem('mm.resume', JSON.stringify({
           s: open ? open.getAttribute('data-screen') : 'scHome',
-          z: lvl  ? lvl.getAttribute('data-size')    : ''
+          za: lvlAttr, z: lvlVal
         }));
       } catch (e) {}
       var jobs = [];
@@ -10324,8 +13121,13 @@ if (navigator.storage && navigator.storage.persist) {
 
     // The level card takes you to the board, so open it first and let the tab
     // have the last word — otherwise landing on Home would be overruled.
+    // za names which attribute the tile was found by (see the save side,
+    // above) — 'id' for Gate Logic's own tile, one of the data-*-level
+    // attributes for every other puzzle family.
     if (st.z){
-      var card = document.querySelector('.toggleBtn[data-size="' + st.z + '"]');
+      var za = st.za || 'data-size';   // old notes saved before this fix had no za
+      var card = za === 'id' ? document.getElementById(st.z)
+                              : document.querySelector('.toggleBtn[' + za + '="' + st.z + '"]');
       if (card) card.click();
     }
     // Fall back to Home if that screen has no tab any more. scLearn is already
