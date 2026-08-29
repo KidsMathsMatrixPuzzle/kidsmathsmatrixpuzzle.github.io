@@ -3694,8 +3694,13 @@ body{ background:#C9A87C !important; }
    again, because .badge.corner outranks .badge and would otherwise keep its
    own fill. check-badge-ring.js measures every state at every board size
    rather than trusting that. */
+/* .full is listed here on purpose. It means "all three squares are filled",
+   NOT "correct" -- and the older rule above hands it a green tint at four
+   classes deep, so leaving it out would quietly restore the very bug Raja
+   found. Until the target is known a finished line is still just orange. */
 .boardContainer .board .badge,
 .boardContainer .board .badge.partial,
+.boardContainer .board .badge.full,
 .boardContainer .board .badge.corner{
   background:#F0A500 !important; color:#2B0512 !important;
   border-color:rgba(0,0,0,.34) !important;
@@ -3703,13 +3708,27 @@ body{ background:#C9A87C !important; }
   box-shadow:inset 0 0 0 1px rgba(0,0,0,.30) !important; }
 .boardContainer .board .badge.corner{
   box-shadow:inset 0 0 0 2px rgba(0,0,0,.42) !important; }
-/* Finished lines go green -- the one colour a child reads as "done" without
-   being told, and it keeps orange meaning only "not yet". White text on it,
-   Raja's call after seeing it on the phone: pure white is both what he wanted
-   and slightly the better number, 5.3:1 against the mint's 5.0. */
-.boardContainer .board .badge.full,
+/* A line that is finished and WRONG. Raja found this on the live board: a
+   finished row was turning green whatever it added up to, so the board was
+   congratulating a wrong answer. Red is the only colour that reads as "not
+   that" without a word of explanation, and it is already what a duplicate
+   digit uses, so a child meets it in one meaning only. */
+.boardContainer .board .badge.wrong,
+.boardContainer .board .badge.corner.wrong{
+  background:#B3261E !important; color:#FFFFFF !important;
+  border-color:rgba(0,0,0,.34) !important;
+  border-radius:0 !important;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.30) !important; }
+
+/* Finished AND correct goes green -- the one colour a child reads as "done"
+   without being told. White text on it, Raja's call after seeing it on the
+   phone: pure white is both what he wanted and slightly the better number,
+   5.4:1 against the mint's 5.0.
+
+   .full stays here too, for the window before the target is known: the app
+   infers the target from two agreeing lines, so until then a finished line
+   cannot be called right or wrong and keeps the neutral fill. */
 .boardContainer .board .badge.win,
-.boardContainer .board .badge.corner.full,
 .boardContainer .board .badge.corner.win{
   background:#127A45 !important; color:#FFFFFF !important;
   border-color:rgba(0,0,0,.34) !important;
@@ -3719,7 +3738,21 @@ body{ background:#C9A87C !important; }
 .targetPill *{ color:inherit !important; }
 /* white on the mid green was 3.2:1 — a deeper green takes it past 7 */
 .targetPill.solved{ background:#116B44 !important; color:#FFFFFF !important; }
-.solvedCounter{ background:rgba(94,64,32,.16) !important; color:#4A331A !important; }
+/* Raja: "the text next to the target tab is not much visible — the tab
+   background colour and the main screen colour are near similar. Suggest
+   change to orange."
+
+   Exactly what it was: rgba(94,64,32,.16) is the sandalwood ground with a
+   sixteen-percent brown wash over it, so the tab was very nearly the screen it
+   sat on. It had no edge, and a panel with no edge is not a panel.
+
+   Orange, and the SAME orange as the result ring around the board, so the two
+   things a player watches while solving -- the line totals and how close they
+   are to mastering the level -- speak with one colour instead of two. Dark
+   text on it measures 8.9:1, the same pairing the ring already uses. */
+.solvedCounter{ background:#F0A500 !important; color:#2B0512 !important;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.28) !important; }
+.solvedCounter b, .solvedCounter span{ color:#2B0512 !important; }
 
 /* keypad */
 .kp{ background:#8A5E31 !important; color:#FFF6E7 !important; }
@@ -3934,7 +3967,16 @@ body{ background:#C9A87C !important; }
    reads as a toast, not just a line of text. */
 .gateFeedback-ok{ color:#0E5A34; background:#DFF7E9; border:2px solid #22c55e;
   border-radius:12px; padding:10px 14px; font-size:18px; }
-.gateFeedback-bad{ color:#9A3412; }
+/* Raja: "else pop red wrong try again."
+
+   The right answer already got a filled pill, for the reason written just
+   above — a plain colour change on small text was too easy to miss. The wrong
+   answer still WAS just a colour change, and a burnt orange one at that, so it
+   read as a quieter version of the same thing rather than as "no". Same pill
+   shape, in the red this app already uses for a line that does not match its
+   target, so a child meets red in one meaning only. */
+.gateFeedback-bad{ color:#7F1D1D; background:#FDE7E7; border:2px solid #B3261E;
+  border-radius:12px; padding:10px 14px; font-size:18px; }
 /* Tap-to-continue instead of a timer — see the comment in gateChoose()
    for why. Block-level so it sits on its own line under the message,
    not squeezed inline beside it. */
@@ -6284,7 +6326,7 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
   function setBadge(key, text, cls){
     badges[key].forEach(function(b){
       b.textContent = text;
-      b.classList.remove('partial','full','win','word','peektone');
+      b.classList.remove('partial','full','win','word','peektone','wrong');
       if (cls) b.classList.add(cls);
     });
   }
@@ -6380,6 +6422,7 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
     if (hint) hint.classList.toggle('show', tracks >= 8 && cell < 40);
 
     fitCells();
+    fitBadges();   // the ring re-fits with the board, not only on a new entry
   }
 
   /* Tablet/laptop landscape has height to spare for the board even after
@@ -6420,6 +6463,53 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
     }
   }
 
+  /* fitCells() shrinks the digits INSIDE a square by how many there are. The
+     result ring never got the same treatment: --badgeFont scales with the
+     board, not with the number, so 3³ Multiply's target of 5,451,776 -- seven
+     digits in a box sized for three -- overflowed and ran into the badge next
+     to it. Raja: "3 multiply text is not shrinked when more digits present."
+
+     Per badge rather than per board, because badges on one board do not all
+     hold the same number of characters: a corner carries an arrow as well as
+     its total, and a half-finished line can be showing 16 while the line below
+     it shows 5451776. --badgeFont stays the ceiling, so nothing grows; a badge
+     only ever shrinks to fit what it is actually holding. */
+  function fitBadges(){
+    if (!board) return;
+    var list = board.querySelectorAll('.badge');
+    var ceil = parseFloat(board.style.getPropertyValue('--badgeFont')) || 0;
+    var i, b, sized = [];
+
+    /* Pass 1: estimate. A digit runs about 0.68em in this bold face, and a
+       corner badge carries an arrow as well, which is wider still. */
+    for (i = 0; i < list.length; i++){
+      b = list[i];
+      if (!b.clientWidth) continue;
+      var n = (b.textContent || '').trim().length || 1;
+      var fit = Math.floor((b.clientWidth - 3) / (n * 0.68));
+      b.style.setProperty('font-size',
+        Math.max(7, ceil ? Math.min(ceil, fit) : fit) + 'px', 'important');
+      sized.push(b);
+    }
+
+    /* Pass 2: let the browser correct me. A single em-width constant cannot be
+       right for every face, weight and glyph -- the first version of this used
+       0.60 and "5451776" still needed 67px in a 65px badge. Rather than tune a
+       magic number until it happens to pass, ask the layout engine what it
+       actually did and scale down anything that still spills.
+
+       Writes are batched before reads on purpose: all of pass 1, then all of
+       pass 2, so this costs two reflows for the whole ring rather than two per
+       badge. In the normal case pass 2 changes nothing. */
+    for (i = 0; i < sized.length; i++){
+      b = sized[i];
+      if (b.scrollWidth <= b.clientWidth) continue;
+      var cur = parseFloat(b.style.fontSize) || 12;
+      b.style.setProperty('font-size',
+        Math.max(7, Math.floor(cur * b.clientWidth / b.scrollWidth)) + 'px', 'important');
+    }
+  }
+
   function update(){
     if (solvedFlag) return;
     var puzzle = PUZZLES[currentSize];
@@ -6443,7 +6533,7 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
     fitCells();   // keep digit sizes fitted on every change
 
     // Badge updates
-    var completeSums = [];
+    var completeSums = [], completeLines = [];
     puzzle.lines.forEach(function(k){
       var vals = lineVals(k);
       var filled = vals.filter(function(x){ return x !== null; });
@@ -6455,16 +6545,18 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
       } else {
         setBadge(k, sum, peeking ? 'peektone' : 'full');
         completeSums.push(sum);
+        completeLines.push({ k: k, sum: sum });
       }
     });
 
     // Target pill — EVIDENCE-BASED and uniform for every size: the target appears
     // (orange) only once TWO or more complete lines/diagonals agree on the same
     // value; until then it stays '?'. All lines matching → green (handled in win()).
+    var candidate = null;
     if (!solvedFlag) {
       var counts = {};
       completeSums.forEach(function(s){ counts[s] = (counts[s] || 0) + 1; });
-      var candidate = null, best = 1;
+      var best = 1;
       for (var key in counts){ if (counts[key] >= 2 && counts[key] > best){ best = counts[key]; candidate = +key; } }
       if (candidate !== null){
         targetVal.textContent = candidate;
@@ -6474,7 +6566,33 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
         targetVal.textContent = '?';
       }
     }
-    
+
+    /* Raja, on the live board: "green fill happens in target total monitor with
+       the wrong number — should be red scoring. Here when the line is finished
+       it turns green by itself."
+
+       He is right, and it is my doing. The pass above marks a line 'full' the
+       moment its three squares are FILLED, which says nothing about whether it
+       is correct -- and beta-251 gave 'full' the green fill. So a finished row
+       adding to 20 against a target of 15 was congratulating a child for a
+       wrong answer. Before that change every state shared one green tint, which
+       was uninformative; this was worse, because it actively claimed something
+       untrue.
+
+       A line can only be judged once the target is known, and this app infers
+       the target rather than being told it -- it appears when two complete
+       lines agree. So there are genuinely three states, not two:
+         complete and matching        -> green
+         complete and NOT matching    -> red
+         complete, target not yet known -> left as it was, because nothing can
+                                           honestly be said about it yet. */
+    if (!peeking && !solvedFlag && candidate !== null){
+      completeLines.forEach(function(L){
+        setBadge(L.k, L.sum, L.sum === candidate ? 'win' : 'wrong');
+      });
+    }
+    fitBadges();   // every badge's text is final by here — size it to fit
+
     // Win check
     var allFilled = true;
     for (var r3 = 0; r3 < puzzle.rows; r3++) for (var c4 = 0; c4 < puzzle.cols; c4++)
@@ -7107,10 +7225,27 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
         diff:'Opposite of AND', rule:'NAND is the opposite of AND — OFF only when ALL inputs are ON.' },
       { key:'nor',  name:'NOR Gate',  glyph:'⊽', levels:multiLevels('nor'),
         diff:'Opposite of OR', rule:'NOR is the opposite of OR — ON only when ALL inputs are OFF.' },
+      /* Raja, on the 5-input XNOR room where every input was OFF and the answer
+         was ON: "the instruction says an even number of inputs ON gives ON --
+         if ALL inputs are OFF, how does that apply?"
+
+         The gate is right and the rule is right: none-at-all is zero inputs ON,
+         zero is even, so XNOR is ON. But a child does not think of zero as an
+         even number, and a rule that needs that leap is not doing its job. Both
+         parity rules now say what happens with nothing switched on, which is
+         also the very first row of every truth table they will read.
+
+         The short labels changed for a harder reason: they were WRONG. "ON when
+         different" and "ON when the same" are only true of TWO inputs, and this
+         card covers the 2, 3 and 5-input levels together -- three inputs all ON
+         are all "the same", yet XNOR gives OFF, because 3 is odd. Parity is the
+         only description that survives more than two inputs. */
       { key:'xor',  name:'XOR Gate',  glyph:'⊕', levels:multiLevels('xor'),
-        diff:'ON when different', rule:'XOR is ON when an ODD number of inputs are ON.' },
+        diff:'ON for an ODD number ON',
+        rule:'XOR is ON when an ODD number of inputs are ON — so with every input OFF it is OFF.' },
       { key:'xnor', name:'XNOR Gate', glyph:'⊙', levels:multiLevels('xnor'),
-        diff:'ON when the same', rule:'XNOR is ON when an EVEN number of inputs are ON.' }
+        diff:'ON for an EVEN number ON',
+        rule:'XNOR is ON when an EVEN number of inputs are ON — and none at all counts as even, so with every input OFF it is ON.' }
     ];
     // Raja, pointing straight at the ChatGPT draft's own 4 screenshots:
     // rooms 1-3 are easy pass-through questions (an animal fact), room 4
@@ -7337,9 +7472,46 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
         });
       });
     })();
+    /* Raja: "in the logic picture card the correct tab is mostly placed top
+       left, or the same place again — can you change its order to a different
+       location?"
+
+       Measured before touching anything: of the 62 warm-up questions, 59 had
+       the right answer in the FIRST slot. A child could score 95% by tapping
+       top-left every time without reading a word — which is precisely the
+       habit a warm-up exists to avoid teaching.
+
+       So the four cards are shuffled per room. DETERMINISTICALLY, and that is
+       the whole difficulty: renderGateRoom() draws the buttons and numbers
+       them by position, then gateChoose() calls this again to look up what was
+       tapped. A fresh Math.random() on the second call would deal a different
+       order and mark a right answer wrong. Seeded from the room's own identity
+       instead, so both calls agree — and so leaving a room and coming back
+       finds the cards exactly where they were left. */
+    function gateShuffleSeed(key, levelIdx, roomIdx){
+      var s = key + '|' + levelIdx + '|' + roomIdx, h = 2166136261;   // FNV-1a
+      for (var i = 0; i < s.length; i++){
+        h ^= s.charCodeAt(i);
+        h = (h * 16777619) >>> 0;
+      }
+      return h;
+    }
     function gateWarmup(g, levelIdx, roomIdx){
       var base = GATE_WARMUP_OFFSET[g.key][levelIdx];
-      return WARMUPS[(base + roomIdx) % WARMUPS.length];
+      var w = WARMUPS[(base + roomIdx) % WARMUPS.length];
+      var order = w.choices.slice(), h = gateShuffleSeed(g.key, levelIdx, roomIdx);
+      for (var i = order.length - 1; i > 0; i--){
+        h = (h * 1664525 + 1013904223) >>> 0;      // same seed, same deal, every time
+        /* Take the HIGH bits, not h % (i+1). An LCG's low-order bits cycle
+           very short, and with only four cards every draw is h % 4, h % 3,
+           h % 2 -- exactly those bits. The first version did that and left the
+           answer top-left 60% of the time: better than the 95% it replaced,
+           and still a corner worth guessing. Scaling the top bits instead
+           spreads it properly. */
+        var j = Math.floor((h / 4294967296) * (i + 1)), t = order[i];
+        order[i] = order[j]; order[j] = t;
+      }
+      return { tip: w.tip, choices: order };
     }
     // Rotated per correct answer so 4-6 in a row don't all say the same
     // thing — same short "cheer" voice SaNa already uses for a finished
@@ -7579,7 +7751,7 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
       } else {
         var row = level.rows[st.roomIdx - wc];
         correct = (val === row[row.length - 1]);
-        wrongMsg = '❌ Not quite. ' + g.rule;
+        wrongMsg = '❌ Not quite — try again. ' + g.rule;
       }
 
       if (correct){
@@ -7636,8 +7808,13 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
         // find, so make sure it is actually on screen rather than trusting
         // it always lands inside the visible viewport on every device.
         try { fb.scrollIntoView({ behavior:'smooth', block:'end' }); } catch(e){}
+        /* Long enough to read, short enough not to wait on. The warm-up hand-off
+           says something the child has not seen before ("now the real logic
+           begins"), so it gets longer than an ordinary well-done. */
+        gateArmNext(enteringLogic ? 1900 : 1150);
       } else {
         sfx('no');
+        gateCancelNext();   // a wrong answer never moves anyone on
         if (btn){
           btn.classList.remove('gateShake'); void btn.offsetWidth; btn.classList.add('gateShake');
         }
@@ -7646,9 +7823,53 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
       }
     }
 
-    // Tapped after seeing the appreciation — see the comment in
-    // gateChoose() on why this replaced the setTimeout auto-advance.
+    /* Raja: "keep auto next in when success, else pop red wrong try again —
+       it will help move next step fast while correct selection."
+
+       This deliberately walks back part of an earlier decision, so the reason
+       is worth writing down. Auto-advance was REMOVED from here once before,
+       because a timed appreciation pop kept being missed: every tuning pass
+       (1.6s, then 3.5s, then 1.2s) was a race against when he happened to
+       look, and a tap-to-continue button ended it by making the pop impossible
+       to miss.
+
+       That fix worked, and it is now the cost: a gate is up to 37 rooms, and
+       an extra tap on every single correct answer is a lot of tapping for
+       something the child already knows they got right.
+
+       So both, rather than swapping one for the other. The pill and the Next
+       button stay exactly as they are -- nothing is taken away, and an
+       impatient child can still tap straight through -- and a timer moves on
+       by itself if they do not. The appreciation is still shown; it just no
+       longer has to be acknowledged.
+
+       A wrong answer never schedules anything. It stays put, in red, and the
+       choices stay live, which is the "try again" half of the ask. */
+    var gateNextTimer = null;
+    function gateCancelNext(){
+      if (gateNextTimer){ clearTimeout(gateNextTimer); gateNextTimer = null; }
+    }
+    function gateArmNext(delay){
+      gateCancelNext();
+      var st = gateState; if (!st) return;
+      /* Remember exactly which room armed this. The timer then refuses to fire
+         unless that same room is still on screen -- so tapping Next, going
+         back to All Gates, skipping the level, or leaving the puzzle entirely
+         cannot be overtaken by a stale timer landing a moment later. */
+      var key = st.gate.key, lvl = st.levelIdx, room = st.roomIdx;
+      gateNextTimer = setTimeout(function(){
+        gateNextTimer = null;
+        var now = gateState;
+        if (!now || now.gate.key !== key || now.levelIdx !== lvl || now.roomIdx !== room) return;
+        var btn = document.getElementById('gateNextBtn');
+        if (!btn || btn.offsetParent === null) return;   // answered room is no longer visible
+        gateAdvance();
+      }, delay);
+    }
+
+    // Tapped after seeing the appreciation, or reached on the timer above.
     function gateAdvance(){
+      gateCancelNext();
       var st = gateState; if (!st) return;
       var g = st.gate, total = gateTotalRooms(g, st.levelIdx);
       st.roomIdx++;
@@ -12155,6 +12376,7 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
     var gateBackBtn = document.getElementById('gateBackBtn');
     if (gateBackBtn) gateBackBtn.addEventListener('click', function(){
       sfx('back');
+      gateCancelNext();
       if (gateState && gateState.gate.levels.length > 1) openGateLevels(gateState.gate.key);
       else openGatePicker();
     });
@@ -14118,6 +14340,7 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
     board.style.setProperty('--gap', gap + 'px');
     board.style.setProperty('--badgeFont', Math.max(7, Math.round(cell * 0.30)) + 'px');
     try { fitCells(); } catch(e){}
+    try { fitBadges(); } catch(e){}
   };
   if (window.ResizeObserver){
     var bw = document.getElementById('boardWrap');
@@ -14977,15 +15200,6 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
     try { return JSON.parse(localStorage.getItem('mmStickers') || '[]'); } catch(e){ return []; }
   }
   // the achievement line the app already tracks, said plainly
-  function progressLine(){
-    var el = document.getElementById('solvedCounter');
-    var raw = el ? el.textContent : '';
-    var m = raw.match(/(\d+)\s*\/\s*(\d+)/);
-    if (!m) return 'Solve one more to master this level';
-    var need = Math.max(0, (+m[2]) - (+m[1]));
-    return need > 0 ? ('Solve ' + need + ' more to master this level')
-                    : 'This level is mastered';
-  }
   function earnSticker(size){
     var s = stickerStore();
     if (s.indexOf(size) < 0){ s.push(size); try { localStorage.setItem('mmStickers', JSON.stringify(s)); } catch(e){} }
@@ -15025,14 +15239,25 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
         '<div class="winStat"><b>' + time + '</b><span>Time</span></div>' +
         '<div class="winStat w"><b>' + lines + '/' + lines + '</b><span>Lines</span></div>' +
       '</div>' +
+      /* Raja: "the applause pop's indigo tab says the same as the tab next to
+         Target at the top — suggest remove this tab."
+
+         He is right, and only for the not-yet-mastered case. That branch
+         printed progressLine(), which is the SAME sentence the counter beside
+         the target pill is already showing on the board behind it -- so the
+         panel spent its most prominent row repeating something the child had
+         just read. Saying it twice does not make it twice as true; it only
+         makes the panel taller, which is what pushed the board out of sight in
+         the first place.
+
+         The MASTERED branch stays. That one is not a repeat -- it names the
+         sticker just earned and how many of the set that makes, which appears
+         nowhere else. */
       (mastered
         ? '<div class="winSticker"><span class="s">' + icon + '</span>' +
             '<span><b>' + name + '</b><span>sticker ' + total + ' of ' +
             Object.keys(STICKERS).length + ' collected</span></span></div>'
-        // the "one more, with a different total" guidance used to live in a
-        // hidden element; it belongs here where the child is actually looking
-        : '<div class="winSticker"><span class="s">🎯</span><span><b>' + progressLine() +
-            '</b><span>a different total earns the sticker</span></span></div>');
+        : '');
     box.insertBefore(el, box.firstChild);
 
     sana(stars === 3 ? '<b>Three stars!</b> No hints at all. 🐒'
@@ -15159,7 +15384,7 @@ if (navigator.storage && navigator.storage.persist) {
 (function(){
   // Build baked into this HTML — always reflects the exact version being run,
   // independent of cache timing. Keep in sync with the SW CACHE_VERSION on deploy.
-  var BUILD_VER = 'v151';
+  var BUILD_VER = 'v152';
   /* ── BEACON FOR APPS INSTALLED LONG AGO ─────────────────────────────────
      Raja's iPhone sat on v139 and would not come forward, however many times
      he tapped Online Update.
@@ -15184,7 +15409,7 @@ if (navigator.storage && navigator.storage.persist) {
      rejects). check-update-beacon.js keeps it equal to BUILD_VER, because a
      beacon that goes stale strands people exactly as thoroughly as no beacon.
 
-     window.BETA_VER = 'v151'
+     window.BETA_VER = 'v152'
      ───────────────────────────────────────────────────────────────────── */
   /* DERIVED, not a second literal. This was its own hardcoded string and it sat
      at beta-147 through two releases, so the footer and the BETA flag told
