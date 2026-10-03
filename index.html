@@ -1973,13 +1973,6 @@ body{ background:var(--gr) !important; padding:0 !important; margin:0 !important
 .modeHead b{ font-size:calc(10.5px * var(--lvScale, 1)) !important; font-weight:800 !important; letter-spacing:.8px;
   text-transform:uppercase; color:var(--bink3) !important; }
 .modeHead i{ display:none !important; }
-/* Raja: new players landing on the list cold had no idea what "Add Magic"
-   actually asks them to do until they tapped in. Every other group's
-   one-line explanation stays hidden to keep the compact list fitting on
-   screen — just this first, orienting one is brought back. */
-.modeHeadIntro i{ display:block !important; font-size:calc(9px * var(--lvScale, 1)) !important;
-  font-weight:700 !important; text-transform:none !important; letter-spacing:.1px !important;
-  color:var(--bink2) !important; margin-top:1px !important; }
 .toggleSwitch{ gap:calc(5px * var(--lvScale, 1)) !important; }
 .toggleBtn.lvCard{ border-radius:12px !important;
   padding:calc(6px * var(--lvScale, 1)) calc(7px * var(--lvScale, 1))
@@ -4690,14 +4683,15 @@ body{ background:#C9A87C !important; }
   <!-- New players landing on a long list sometimes do not realise there is
        more below the fold and stop at the first group. One line, shown
        once per visit, pointing that out. -->
-  <div style="text-align:center; font-size:11px; font-weight:700; color:#9fb0d0; margin:0 0 8px;">⬇️ Scroll down to see every puzzle — there are lots!</div>
+  <div style="text-align:center; margin:0 0 9px;"><span style="display:inline-block; background:#F3E4C9; border:2px solid #C4A277; border-radius:999px; padding:5px 14px; font-size:13px; font-weight:800; color:#9A3412;">⬇️ Scroll down to see every puzzle — there are lots!</span></div>
 
   <!-- ➕ ADD MODE — the six size puzzles, an easy→hard ladder -->
   <div class="modeGroup">
-    <div class="modeHead modeHeadIntro" style="--m1:#7dd3fc; --m2:#38bdf8;">
+    <div class="modeHead" style="--m1:#7dd3fc; --m2:#38bdf8;">
       <span class="mIco">➕</span>
-      <span><b>Add Magic</b><i>All rows, columns &amp; diagonal: total the same</i></span>
+      <span><b>Add Magic</b></span>
     </div>
+    <div style="background:#F3E4C9; border:2px solid #C4A277; border-radius:10px; padding:5px 10px; margin:0 0 7px; font-size:12px; font-weight:800; color:#9A3412; text-align:center;">All rows, columns &amp; diagonal: total the same</div>
     <div class="toggleSwitch">
       <button class="toggleBtn lvCard active" data-size="3x3" data-name="3×3 Easy" style="color:#60a5fa; border-color:#3b82f6; --c1:#9ec7ff; --c2:#60a5fa;">
         <span class="lvGrid" style="--n:3" aria-hidden="true"></span>
