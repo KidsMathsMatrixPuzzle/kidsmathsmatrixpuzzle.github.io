@@ -4163,17 +4163,17 @@ body{ background:#C9A87C !important; }
 <section class="screen on" data-screen="scHome">
 <div class="titleCard">
   <h1>🐒🎲 MathMatrix Pro++</h1>
-  <div style="text-align:center; font-size:12px; font-weight:700; margin-top:4px; letter-spacing:.4px; line-height:1.5;">🐒 Kids Puzzle · for 5th grade &amp; up<br><span class="tagline">“Maths and monkeys — neither sits in one direction.”</span><br><span style="color:#4ade80;">Puzzles :</span><span id="nowPlaying" style="color:#8ab4f8;"><span class="np" data-np="3x3">3×3</span> · <span class="np" data-np="4x4">4×4</span> · <span class="np" data-np="5x5">5×5</span> · <span class="np" data-np="6x6">6×6</span> · <span class="np" data-np="8x8">8×8</span> · <span class="np" data-np="10x10">10×10</span> · <span class="np" data-np="3cube">3³</span> · <span class="np" data-np="ramanujan">🎂 Sir Ramanujan MathMagic</span> · <!--
+  <div style="text-align:center; font-size:12px; font-weight:700; margin-top:4px; letter-spacing:.4px; line-height:1.5;">🐒 Kids Puzzle · for 5th grade &amp; up<br><span class="tagline">“Maths and monkeys — neither sits in one direction.”</span><br><span style="color:#4ade80;">Puzzles :</span><span id="nowPlaying" style="color:#8ab4f8;"><span class="np" data-np="3x3">3×3</span> · <span class="np" data-np="4x4">4×4</span> · <span class="np" data-np="5x5">5×5</span> · <span class="np" data-np="6x6">6×6</span> · <span class="np" data-np="8x8">8×8</span> · <span class="np" data-np="10x10">10×10</span> · <span class="np" data-np="3cube">3³</span> <span style="color:#fbbf24;">(🔄 rotate or mirror any solution — 8 twins — for endless new puzzles!)</span> · <span class="np" data-np="ramanujan">🎂 Sir Ramanujan MathMagic</span> · <!--
   This list is live: np-active highlights whichever puzzle you are on. It still
   had a single "Binary Guess" from before the game was split, so a child on
   Advance saw nothing light up — there was no entry carrying data-np="binary2"
   for the highlighter to find. Two entries now, numbered as Raja asked and
   carrying the card names so the two agree.
---><span class="np" data-np="binary">🔢 Guess My Number L1 · Junior</span> · <span class="np" data-np="binary2">L2 · Advance</span></span><br><!-- The "New here? Tap ▶ Watch Me Solve … then pick any level in the table
+--><span class="np" data-np="binary">🔢 Guess My Number L1 · Junior</span> · <span class="np" data-np="binary2">L2 · Advance</span> · ➕ Criss-Cross · ⚙️ 7 Logic Gates · 🔀 Slide 1-15 · A-Z · A-Z+1-9 · 🧩 Sudoku 3×3 · 9×9 · 🐚 Pallanguzhi · 🎲 Thayam 5×5 · 7×7 <span style="color:#9fb0d0; font-weight:600;">(each its own one puzzle)</span></span><br><!-- The "New here? Tap ▶ Watch Me Solve … then pick any level in the table
        below" line is gone. This card is only ever seen inside the About sheet
        now, where there is no level table to point at, and Watch has its own
        named button in the bar — so it was directing a child to something that
-       is not on the screen they are looking at. --><span style="color:#fbbf24;">🔄 Once you know it: rotate or mirror any solution — 8 twins — for endless new puzzles!</span></div>
+       is not on the screen they are looking at. --></div>
 </div>
 </section>
 
@@ -4732,18 +4732,18 @@ body{ background:#C9A87C !important; }
 
   <!-- Triangle Magic removed from the visible list (kept dormant below in
        CSS/PUZZLES/JS — see .board.sizetriangle, PUZZLES.triangle, and
-       NEXT_SIZE_MAP for the untouched original code). This seat uses the
-       existing .lvSoon "announced but not built yet" pattern so nothing
-       shifts and a future puzzle can drop straight into this slot later. -->
+       NEXT_SIZE_MAP for the untouched original code). This seat, previously
+       "Reserved/Coming Soon", now carries Criss-Cross — tested separately
+       as a beta feature first, then brought in once proven stable. -->
   <div class="modeGroup">
-    <div class="modeHead" style="--m1:#d9cdb8; --m2:#8a7a5c;">
-      <span class="mIco">⭐</span>
-      <span><b>Reserved</b><i>a new puzzle is on its way for this seat</i></span>
+    <div class="modeHead" style="--m1:#f6d08a; --m2:#c97b2e;">
+      <span class="mIco">✚</span>
+      <span><b>Criss-Cross</b><i>a guided math puzzle — fill the grid, check every row and column</i></span>
     </div>
     <div class="toggleSwitch">
-      <button class="toggleBtn lvCard lvSoon" type="button" tabindex="-1" aria-disabled="true">
-        <span class="lvGlyph" aria-hidden="true">⭐</span>
-        <span class="lvText"><b class="lvName">Coming Soon</b><span class="lvDiff">new puzzle</span><span class="lvMeta">this spot is saved for what's next</span></span>
+      <button class="toggleBtn lvCard" id="crissCrossTab" data-size="crisscross" data-name="Criss-Cross" style="color:#f59e0b; border-color:#c97b2e; --c1:#f6d08a; --c2:#f59e0b;">
+        <span class="lvGlyph" aria-hidden="true">✚</span>
+        <span class="lvText"><b class="lvName">Criss-Cross</b><span class="lvDiff">Guided Math Puzzle</span><span class="lvMeta">3×3 · use 1–9 · rows &amp; columns</span><span class="lvNow">PLAYING</span></span>
       </button>
     </div>
   </div>
@@ -5398,76 +5398,81 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
   // ---- Background music: "Monkeys Spinning Monkeys" by Kevin MacLeod (CC BY 3.0, incompetech.com) ----
   // Plays softly while the child thinks; fades down while they enter numbers so the
   // puzzle sounds stay clear, then rises again after a short pause.
+  // WebAudio buffer playback (no HTMLMediaElement): avoids creating a browser
+  // media-playback element/notification card that would otherwise appear when
+  // swiping down the notification shade — proven in the beta build first.
   var musicOn = (localStorage.getItem('mmMusic') !== 'off');   // default ON
   var bgm = null, bgmFadeIv = null, bgmDuckTimer = null;
   var BGM_IDLE = 0.20, BGM_DUCK = 0.06;
+  var bgmLoading = false, bgmTipShown = false;
 
   function fadeMusicTo(target){
-    if (!bgm) return;
+    if (!bgm || !bgm.gain) return;
     clearInterval(bgmFadeIv);
     bgmFadeIv = setInterval(function(){
-      if (!bgm){ clearInterval(bgmFadeIv); bgmFadeIv = null; return; }
-      var d = target - bgm.volume;
-      if (Math.abs(d) < 0.013){
-        bgm.volume = Math.max(0, Math.min(1, target));
-        clearInterval(bgmFadeIv); bgmFadeIv = null;
-        return;
+      if (!bgm || !bgm.gain){ clearInterval(bgmFadeIv); bgmFadeIv=null; return; }
+      var cur = bgm.gain.gain.value, d = target-cur;
+      if (Math.abs(d)<0.013){ bgm.gain.gain.value=Math.max(0,Math.min(1,target)); clearInterval(bgmFadeIv); bgmFadeIv=null; return; }
+      bgm.gain.gain.value=Math.max(0,Math.min(1,cur+(d>0?0.013:-0.013)));
+    },60);
+  }
+
+  function startBgmBuffer(){
+    if (!bgm || !bgm.buffer || bgm.playing || !audioCtx || !soundOn || !musicOn) return;
+    try{
+      var src=audioCtx.createBufferSource();
+      src.buffer=bgm.buffer; src.loop=true;
+      var gain=audioCtx.createGain(); gain.gain.value=0;
+      var pan=audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
+      if(pan){
+        var lfo=audioCtx.createOscillator(), lfoGain=audioCtx.createGain();
+        lfo.type='sine'; lfo.frequency.value=0.08; lfoGain.gain.value=0.45;
+        lfo.connect(lfoGain); lfoGain.connect(pan.pan); lfo.start();
+        src.connect(gain); gain.connect(pan); pan.connect(audioCtx.destination);
+        bgm.lfo=lfo; bgm.pan=pan;
+      }else{ src.connect(gain); gain.connect(audioCtx.destination); }
+      bgm.source=src; bgm.gain=gain; bgm.playing=true;
+      src.onended=function(){ if(bgm&&bgm.source===src) bgm.playing=false; };
+      src.start(0);
+      fadeMusicTo(BGM_IDLE);
+      if(!bgmTipShown && msg){
+        bgmTipShown=true;
+        msg.innerHTML='🎧 Tip: wear earphones — the sounds play in stereo and the monkey music drifts side to side!';
+        msg.className='';
       }
-      bgm.volume = Math.max(0, Math.min(1, bgm.volume + (d > 0 ? 0.013 : -0.013)));
-    }, 60);
+    }catch(e){ bgm.playing=false; }
   }
-  var bgmPanTried = false, bgmTipShown = false;
-  // The monkey drifts slowly left↔right: route the music through a StereoPanner
-  // swung by a very slow LFO (~12s per crossing). Best effort — if the browser
-  // lacks the nodes the music simply plays centred as before.
-  function wireBgmPan(){
-    if (bgmPanTried || !audioCtx || !audioCtx.createStereoPanner || !audioCtx.createMediaElementSource) return;
-    bgmPanTried = true;   // createMediaElementSource is once-per-element; never retry
-    try {
-      var src = audioCtx.createMediaElementSource(bgm);
-      var pan = audioCtx.createStereoPanner();
-      var lfo = audioCtx.createOscillator();
-      var lfoGain = audioCtx.createGain();
-      lfo.type = 'sine'; lfo.frequency.value = 0.08;   // one full left↔right swing ≈ 12s
-      lfoGain.gain.value = 0.45;                        // gentle drift, never hard-panned
-      lfo.connect(lfoGain); lfoGain.connect(pan.pan);
-      src.connect(pan); pan.connect(audioCtx.destination);
-      lfo.start();
-    } catch (e) {}
-  }
+
   function ensureMusic(){
     if (!musicOn || !soundOn) return;   // 🔊 Sound is the MASTER: off = total silence (night play)
-    if (!bgm){
-      bgm = new Audio(ASSET('bgm-monkeys.mp3'));
-      // last resort: if the relative path fails, try the site root once
-      bgm.addEventListener('error', function(){
-        if (bgm.dataset.retried) return;
-        bgm.dataset.retried = '1';
-        bgm.src = '/bgm-monkeys.mp3';
-        bgm.load();
-        if (musicOn && soundOn) { var p = bgm.play(); if (p && p.catch) p.catch(function(){}); }
-      });
-      bgm.loop = true; bgm.preload = 'auto'; bgm.volume = 0;
-    }
-    wireBgmPan();
-    if (bgm.paused){
-      var p = bgm.play();
-      if (p && p.then) p.then(function(){
-        if (!bgmTipShown && msg){
-          bgmTipShown = true;
-          msg.innerHTML = '🎧 Tip: wear earphones — the sounds play in stereo and the monkey music drifts side to side!';
-          msg.className = '';
-        }
-      }, function(){});   // browsers block autoplay until a real gesture
-      else if (p && p.catch) p.catch(function(){});
-    }
-    fadeMusicTo(BGM_IDLE);
+    ensureAudio(); if(!audioCtx) return;
+    if (!bgm){ bgm={buffer:null,source:null,gain:null,pan:null,lfo:null,playing:false}; }
+    if (bgm.buffer){ startBgmBuffer(); return; }
+    if (bgmLoading) return;
+    bgmLoading=true;
+    fetch(ASSET('bgm-monkeys.mp3')).then(function(r){
+      if(!r.ok) throw new Error('music load '+r.status); return r.arrayBuffer();
+    }).then(function(ab){
+      return new Promise(function(resolve,reject){ audioCtx.decodeAudioData(ab,resolve,reject); });
+    }).then(function(buf){
+      bgmLoading=false; if(!bgm) return; bgm.buffer=buf;
+      if(musicOn && soundOn) startBgmBuffer();
+    }).catch(function(){ bgmLoading=false; });
   }
+
   function duckMusic(){
-    if (!musicOn || !bgm || bgm.paused) return;
-    fadeMusicTo(BGM_DUCK);
-    clearTimeout(bgmDuckTimer);
-    bgmDuckTimer = setTimeout(function(){ fadeMusicTo(BGM_IDLE); }, 2500);
+    if(!musicOn || !bgm || !bgm.playing) return;
+    fadeMusicTo(BGM_DUCK); clearTimeout(bgmDuckTimer);
+    bgmDuckTimer=setTimeout(function(){ if(musicOn&&soundOn) fadeMusicTo(BGM_IDLE); },2500);
+  }
+
+  function stopBgmBuffer(){
+    if(!bgm) return;
+    try{ if(bgm.source){ bgm.source.stop(); bgm.source.disconnect(); } }catch(e){}
+    try{ if(bgm.lfo) bgm.lfo.stop(); }catch(e){}
+    try{ if(bgm.gain) bgm.gain.disconnect(); if(bgm.pan) bgm.pan.disconnect(); }catch(e){}
+    bgm.source=null; bgm.gain=null; bgm.pan=null; bgm.lfo=null; bgm.playing=false;
+    clearInterval(bgmFadeIv); bgmFadeIv=null;
   }
   function refreshMusicBtn(){
     var b = document.getElementById('musicBtn');
@@ -5650,6 +5655,12 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
       var cm = document.getElementById('congratsModal');
       if (cm && cm.style.display === 'flex') cm.style.display = 'none';
       var newSize = this.dataset.size;
+      if (newSize === 'crisscross') {
+        // Criss-Cross: its own tested page, kept separate from the magic-square
+        // engine (same reasoning Gate Logic uses for its own dedicated handler).
+        window.location.href = 'criss-cross.html';
+        return;
+      }
       document.querySelectorAll('.toggleBtn').forEach(function(b){ b.classList.remove('active'); });
       this.classList.add('active');
       /* Fresh puzzle, fresh start: Logic and Watch are back, and the "already
@@ -13668,7 +13679,7 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
     } else if (bgm){
       // 🔊 is the master switch: turning it OFF silences the music too (night play)
       fadeMusicTo(0);
-      setTimeout(function(){ if (bgm && !soundOn) bgm.pause(); }, 1000);
+      setTimeout(function(){ if (bgm && !soundOn) stopBgmBuffer(); }, 1000);
     }
   });
 
@@ -13681,7 +13692,7 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
     if (musicOn) ensureMusic();
     else if (bgm){
       fadeMusicTo(0);
-      setTimeout(function(){ if (bgm && !musicOn) bgm.pause(); }, 1000);
+      setTimeout(function(){ if (bgm && !musicOn) stopBgmBuffer(); }, 1000);
     }
   });
 
@@ -15409,7 +15420,7 @@ if (navigator.storage && navigator.storage.persist) {
 (function(){
   // Build baked into this HTML — always reflects the exact version being run,
   // independent of cache timing. Keep in sync with the SW CACHE_VERSION on deploy.
-  var BUILD_VER = 'v152+ (Triangle Magic reserved for a future puzzle instead of removed outright; Thayam\'s How-it-works popup now shows its own content and updates correctly when the language toggle is used)';
+  var BUILD_VER = 'v153 (Criss-Cross added to the Reserved seat, tested as a beta feature first; background music moved to WebAudio so it no longer shows a media-playback notification when swiping down)';
   /* ── BEACON FOR APPS INSTALLED LONG AGO ─────────────────────────────────
      Raja's iPhone sat on v139 and would not come forward, however many times
      he tapped Online Update.
