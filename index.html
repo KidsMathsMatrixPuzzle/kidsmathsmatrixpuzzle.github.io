@@ -1183,13 +1183,13 @@ window.onerror = function(msg, src, line, col, err){
   }
   @media (orientation:portrait){ #rotateHint.show { display:block; } }
 
-  /* Phone-class devices only (see isPhoneClass()): rotating during play
+  /* Phones AND tablets now (see isRotatable()): rotating during play
      leaves no room for the board once the header and keypad claim their
      share of a short landscape screen — measured at 2px free on a
      390px-tall phone. The board would silently collapse to nothing and
      taps would land on the keypad underneath it instead of the cell.
-     Tablets and laptops have height to spare in landscape, so they are
-     left alone — that gate is in JS, this is just the blocking screen. */
+     Laptops/desktops can't physically rotate, so they stay exempt —
+     that gate is in JS, this is just the blocking screen. */
   #portraitLock {
     display:none; position:fixed; inset:0; z-index:9999;
     background:rgba(20,12,4,.94); color:#FFF6E7;
@@ -1464,10 +1464,12 @@ body{ background:var(--gr) !important; padding:0 !important; margin:0 !important
    line — four times a readable measure. So cap the app and centre it: above
    this width everything inside is the phone layout that is already tested.
 
-   The min-height guard matters. A phone held sideways is 844x390 — wide
-   enough to trip a width-only query, but capping it there would letterbox the
-   game into a narrow strip. Landscape keeps the full width it needs.        */
-@media (min-width: 540px) and (min-height: 600px){
+   Width-only now, deliberately: a unified, letterboxed phone-style column
+   on every device and every orientation — tablet landscape included — not
+   just tall windows. (Previously had a min-height guard specifically to
+   let landscape use the full width instead; that's been removed on
+   purpose, for a consistent look everywhere rather than two layouts.)     */
+@media (min-width: 540px){
   body{ background:radial-gradient(120% 65% at 50% 0%, #241A5C 0%, #0C0828 72%) !important; }
   /* the long-hand pair first: margin-inline is Safari 14.1+, and without it the
      app would sit hard left on an older iPad instead of centred */
@@ -6450,27 +6452,25 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
     fitBadges();   // the ring re-fits with the board, not only on a new entry
   }
 
-  /* Tablet/laptop landscape has height to spare for the board even after
-     the header and keypad take their share — a phone in landscape does
-     not (measured: 2px left on a 390px-tall screen). screen.width/height,
-     not innerWidth/innerHeight: they track the device's fixed physical
-     dimensions across rotation, so this reads the same in portrait and
-     landscape. 600 sits between the widest common phones (~430–480 CSS
-     px) and the narrowest tablets (iPad mini: 744). */
-  function isPhoneClass(){
-    var s = window.screen || {};
-    var short = Math.min(s.width || 9999, s.height || 9999);
-    return short < 600;
+  /* Unified now: phones AND tablets lock to portrait during play, not just
+     phones — a deliberate request for one consistent layout everywhere.
+     The real line isn't screen size any more, it's whether the device can
+     physically be turned at all. A phone or tablet can; a laptop/desktop
+     monitor can't, and its window is naturally wider than tall, so it
+     must stay exempt or it would be wrongly blocked just for existing.
+     Touch capability is the signal that actually separates the two. */
+  function isRotatable(){
+    return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
   }
-  // Blocks play on a phone rotated to landscape instead of leaving it to
-  // silently collapse (see isPhoneClass()). Cancels any running Watch demo
-  // so nothing keeps animating, unseen, behind the block.
+  // Blocks play on a phone or tablet rotated to landscape instead of
+  // leaving it to silently collapse. Cancels any running Watch demo so
+  // nothing keeps animating, unseen, behind the block.
   function checkPortraitLock(){
     var lock = document.getElementById('portraitLock');
     if (!lock) return;
     var onPlay = !!document.querySelector('[data-screen="scPlay"].on');
     var landscape = window.innerWidth > window.innerHeight;
-    var show = onPlay && isPhoneClass() && landscape;
+    var show = onPlay && isRotatable() && landscape;
     lock.classList.toggle('show', show);
     if (show && watchIv){ clearInterval(watchIv); watchIv = null; }
   }
@@ -15433,7 +15433,7 @@ if (navigator.storage && navigator.storage.persist) {
 (function(){
   // Build baked into this HTML — always reflects the exact version being run,
   // independent of cache timing. Keep in sync with the SW CACHE_VERSION on deploy.
-  var BUILD_VER = 'v154 (Sudoku 4×4 added between 3×3 and 9×9 as the intermediate step; Criss-Cross now has its own portrait-lock, matching every other puzzle; orientation locked to portrait app-wide via the manifest)';
+  var BUILD_VER = 'v155 (Unified layout: the narrow phone-style column and portrait lock now apply consistently on tablets and laptops too, not just phones — tablet landscape no longer spreads wide, laptop/desktop stay exempt from the lock since they cannot physically rotate)';
   /* ── BEACON FOR APPS INSTALLED LONG AGO ─────────────────────────────────
      Raja's iPhone sat on v139 and would not come forward, however many times
      he tapped Online Update.
