@@ -1485,15 +1485,22 @@ body{ background:var(--gr) !important; padding:0 !important; margin:0 !important
    let landscape use the full width instead; that's been removed on
    purpose, for a consistent look everywhere rather than two layouts.)     */
 @media (min-width: 540px){
-  /* body background intentionally not set here any more — the wood-tan
-     theme further down the stylesheet already covers it, consistently,
-     on every screen size. Setting it here just fought that rule and lost
-     to source order anyway, which is why the margin looked tan instead
-     of the dark gradient this used to specify. */
+  /* Plain black margin, as requested — html body (not just body) so this
+     reliably wins over the later wood-tan rule regardless of where either
+     sits in the file; relying on source order already went wrong once. */
+  html body{ background:#000 !important; }
   /* the long-hand pair first: margin-inline is Safari 14.1+, and without it the
      app would sit hard left on an older iPad instead of centred */
   .appShell{ max-width:480px; margin-left:auto; margin-right:auto; margin-inline:auto;
     box-shadow:0 0 0 1px rgba(255,255,255,.07), 0 18px 60px rgba(0,0,0,.55); }
+}
+/* While visually rotation-locked, window.innerWidth still reads the real,
+   pre-rotation (landscape) measurement, so the narrow-column rule above
+   would double up with the rotation itself and leave blank gaps — the
+   'semi rotation' look. Switch it off during the lock; the rotation alone
+   already gives the portrait-shaped frame, nothing more is needed. */
+html.lockRotateCW .appShell, html.lockRotateCCW .appShell{
+  max-width:none !important; margin-left:0 !important; margin-right:0 !important;
 }
 
 /* 56px, not 46: Raja asked for the top-area tabs bigger, and dropping the
@@ -15462,7 +15469,7 @@ if (navigator.storage && navigator.storage.persist) {
 (function(){
   // Build baked into this HTML — always reflects the exact version being run,
   // independent of cache timing. Keep in sync with the SW CACHE_VERSION on deploy.
-  var BUILD_VER = 'v156 (Portrait lock on tablet/phone now visually rotates the page back instead of showing a warning — no more pop-up, the app just stays portrait-shaped; fixed the side margins showing tan instead of a calm background, caused by an older rule winning by source order)';
+  var BUILD_VER = 'v157 (Side margins on wide screens are now plain black, not tan; fixed a blank-gap "semi rotation" look on tablet landscape caused by the narrow-column rule doubling up with the rotation lock; Criss-Cross\\u2019s header bar and SaNa row now stay narrow and centred too, matching the puzzle grid below them)';
   /* ── BEACON FOR APPS INSTALLED LONG AGO ─────────────────────────────────
      Raja's iPhone sat on v139 and would not come forward, however many times
      he tapped Online Update.
