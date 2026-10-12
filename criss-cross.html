@@ -2,7 +2,9 @@
 <html lang="en"><head><meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<link rel="manifest" href="./manifest.json">
 <title>MathMatrix Pro++ — Criss-Cross</title>
+<script>if(('ontouchstart' in window)||(navigator.maxTouchPoints>0))document.documentElement.classList.add('touchViewport');</script>
 <style>
 :root{--safeTop:env(safe-area-inset-top,0px);--safeLeft:env(safe-area-inset-left,0px);--safeRight:env(safe-area-inset-right,0px);--bg:#d8b98c;--accent:#8a5a2b;--accent2:#c97b2e;--good:#2f9e5c;--bad:#c0392b;--ink:#3a2415;--blue:#2d6ca8;--kbd-height:0px;}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -25,7 +27,9 @@ body{margin:0;font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:va
 .ccmTopBtn{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
 @media (max-width:389px){.ccmBarTitle{font-size:14px;} .ccmTopActions{gap:5px;} .ccmTopBtn{width:46px;min-width:46px;flex-basis:46px;} .ccmTopBtn i{font-size:16px;} .ccmTopBtn span{font-size:10px;}}
 .sanaRow{display:flex;align-items:flex-start;gap:9px;margin:12px 10px 8px;}
-.sanaAvatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#ffd54f,#ffca28);display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid #fff;flex-shrink:0;}
+.sanaAvatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#ffd54f,#ffca28);display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid #fff;flex-shrink:0;animation:ccSanaBob 3s ease-in-out infinite;transform-origin:50% 72%;}
+@keyframes ccSanaBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@media(prefers-reduced-motion:reduce){.sanaAvatar{animation:none;}}
 .sanaName{font-size:9px;font-weight:800;text-align:center;margin-top:3px;}
 .sanaBubble{flex:1;background:#fff;border-radius:18px 18px 18px 4px;padding:14px 16px;box-shadow:0 3px 10px rgba(0,0,0,.2);font-size:15px;font-weight:700;position:relative;min-height:48px;line-height:1.45;}
 .sanaBubble::before{content:'';position:absolute;left:-9px;top:15px;width:0;height:0;border-top:7px solid transparent;border-bottom:7px solid transparent;border-right:11px solid #fff;}
@@ -145,7 +149,7 @@ body{margin:0;font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:va
 .validBadge{display:inline-block;background:#c8e6c9;border:1px solid #4caf74;border-radius:6px;padding:2px 6px;font-weight:900;font-size:10px;color:#2f9e5c;margin-left:6px;}
 .posBadge{display:inline-block;background:#e3f2fd;border:1px solid #4a90d9;border-radius:6px;padding:1px 5px;font-weight:900;font-size:9px;color:#2d6ca8;}
 
-.ccmSoundSheet{position:fixed;left:0;right:0;bottom:0;z-index:90;background:#f9e8c9;border-radius:22px 22px 0 0;box-shadow:0 -8px 24px rgba(0,0,0,.3);padding:18px 16px 24px;max-width:480px;margin:0 auto;}
+.ccmSoundSheet{position:fixed;left:0;right:0;bottom:0;z-index:90;background:#f9e8c9;border-radius:22px 22px 0 0;box-shadow:0 -8px 24px rgba(0,0,0,.3);padding:18px 16px 24px;max-width:480px;margin:0 auto;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
 .ccmSoundOverlay{position:fixed;inset:0;z-index:89;background:rgba(0,0,0,.48);}
 .ccmSoundHead{display:flex;justify-content:space-between;align-items:center;font-size:16px;font-weight:900;margin-bottom:12px;}
 .ccmSoundClose{border:none;background:#8a5e31;color:#fff;border-radius:12px;width:44px;height:44px;font-size:22px;box-shadow:0 3px 0 rgba(0,0,0,.2);}
@@ -165,7 +169,8 @@ html.lockRotateCCW{transform:rotate(-90deg);transform-origin:top left;top:100%;l
 @media (min-width:540px){
   body{background:#000 !important;}
   .ccmBar,.sanaRow{max-width:480px;margin-left:auto;margin-right:auto;margin-inline:auto;}
-}
+}html.touchViewport body{background:var(--bg) !important;}
+
 /* While visually rotation-locked, the device's actual window is already
    landscape-shaped — this media query still reads the real (pre-rotation)
    width, so the narrow-column rule above would double up with the
@@ -174,6 +179,99 @@ html.lockRotateCCW{transform:rotate(-90deg);transform-origin:top left;top:100%;l
 html.lockRotateCW .ccmBar, html.lockRotateCW .sanaRow, html.lockRotateCW .ccmWrap,
 html.lockRotateCCW .ccmBar, html.lockRotateCCW .sanaRow, html.lockRotateCCW .ccmWrap{
   max-width:none !important; margin-left:0 !important; margin-right:0 !important;
+}
+/* The wide-screen rule above makes desktop side margins black. During the
+   touch rotation lock the app itself is the full screen, so restore its wood
+   background and let the page cover the portrait-height viewport. */
+html.lockRotateCW body, html.lockRotateCCW body{
+  background:var(--bg) !important; min-height:100vw;
+}
+/* On portrait tablets, expand the page and its grid as HTML/CSS elements.
+   Keep the existing sandalwood palette and square input cells; the screen
+   width and height both set a sensible board size, rather than zooming a
+   phone-sized screenshot. */
+@media (min-width:560px) and (orientation:portrait){
+  html.touchViewport .ccmBar,
+  html.touchViewport .sanaRow,
+  html.touchViewport .ccmLevels,
+  html.touchViewport .ccTimerRow,
+  html.touchViewport .ccmWrap{
+    width:calc(100% - 32px);
+    max-width:960px;
+    margin-left:auto;
+    margin-right:auto;
+    margin-inline:auto;
+  }
+  html.touchViewport .ccmGrid{
+    --ccmSize:clamp(78px, 15.5vw, 124px);
+    --ccmOp:clamp(32px, 6vw, 48px);
+    --ccmResult:clamp(64px, 11vw, 90px);
+    --ccmGap:clamp(5px, .7vw, 8px);
+    grid-template-columns:var(--ccmSize) var(--ccmOp) var(--ccmSize) var(--ccmOp) var(--ccmSize) var(--ccmResult);
+    grid-auto-rows:var(--ccmSize);
+    gap:var(--ccmGap);
+  }
+  html.touchViewport .ccmGrid .cell{font-size:clamp(20px,2.5vw,25px);}
+  html.touchViewport .ccmGrid .cell input{font-size:clamp(20px,2.5vw,25px);}
+  html.touchViewport .ccmGrid .opCell{font-size:clamp(30px,4vw,38px);}
+  html.touchViewport .ccmGrid .resCell{font-size:clamp(16px,2vw,20px);}
+  html.touchViewport .ccmDockHead,
+  html.touchViewport .ccmKeysRow,
+  html.touchViewport .ccmCalcDock{max-width:min(calc(100vw - 48px),760px);}
+  html.touchViewport .ccmKeysRow .key{height:clamp(50px,6vw,60px);font-size:clamp(20px,2.5vw,25px);}
+  html.touchViewport .ccmToggle{font-size:14px;padding:9px 12px;}
+  html.touchViewport .logicSheet,
+  html.touchViewport .ccmSoundSheet{max-width:960px;}
+}
+/* Laptop landscape: use the warm board canvas and give the grid and controls
+   more room, while limiting tile growth by screen height so the puzzle stays
+   together with its keypad. This does not apply to touch tablets. */
+@media (min-width:1024px) and (orientation:landscape) and (hover:hover) and (pointer:fine){
+  html:not(.touchViewport) body{background:var(--bg)!important;min-height:100vh;}
+  html:not(.touchViewport) .ccmBar,
+  html:not(.touchViewport) .sanaRow,
+  html:not(.touchViewport) .ccmLevels,
+  html:not(.touchViewport) .ccTimerRow,
+  html:not(.touchViewport) .ccmWrap{
+    width:calc(100% - clamp(40px,5vw,112px));
+    max-width:1240px;
+    margin-left:auto;
+    margin-right:auto;
+    margin-inline:auto;
+  }
+  html:not(.touchViewport) .sanaRow{margin-top:8px;margin-bottom:4px;gap:12px;}
+  html:not(.touchViewport) .sanaBubble{font-size:16px;}
+  html:not(.touchViewport) .ccmLevels{margin-top:6px;margin-bottom:8px;}
+  html:not(.touchViewport) .ccTimerRow{margin-top:0;margin-bottom:6px;}
+  html:not(.touchViewport) .ccmWrap{padding:0 20px 16px;}
+  html:not(.touchViewport) .ccmGrid{
+    --ccmSize:clamp(76px,10vh,118px);
+    --ccmOp:clamp(28px,4vh,42px);
+    --ccmResult:clamp(58px,8vh,80px);
+    --ccmGap:clamp(5px,.55vw,8px);
+    grid-template-columns:var(--ccmSize) var(--ccmOp) var(--ccmSize) var(--ccmOp) var(--ccmSize) var(--ccmResult);
+    grid-auto-rows:var(--ccmSize);
+    gap:var(--ccmGap);
+    margin:8px auto 14px;
+  }
+  html:not(.touchViewport) .ccmGrid .cell,
+  html:not(.touchViewport) .ccmGrid .cell input{font-size:clamp(18px,2.2vh,22px);}
+  html:not(.touchViewport) .ccmGrid .opCell{font-size:clamp(25px,3.5vh,32px);}
+  html:not(.touchViewport) .ccmGrid .resCell{font-size:clamp(12px,1.8vh,15px);}
+  html:not(.touchViewport) .ccmBtns{margin:8px 0 16px;}
+  html:not(.touchViewport) .ccmDock{
+    left:50%;
+    right:auto;
+    width:min(calc(100% - clamp(40px,5vw,112px)),820px);
+    transform:translateX(-50%);
+  }
+  html:not(.touchViewport) .ccmDock.hiddenDock{transform:translate(-50%,110%);}
+  html:not(.touchViewport) .ccmDockHead,
+  html:not(.touchViewport) .ccmKeysRow,
+  html:not(.touchViewport) .ccmCalcDock{max-width:760px;width:100%;}
+  html:not(.touchViewport) .ccmKeysRow .key{height:42px;font-size:19px;}
+  html:not(.touchViewport) .logicSheet,
+  html:not(.touchViewport) .ccmSoundSheet{max-width:900px;}
 }
 </style></head><body>
 <div id="portraitLock" role="alert">
@@ -775,6 +873,8 @@ function isRotatable(){
 }
 function checkPortraitLock(){
   var root = document.documentElement;
+  if (isRotatable()) root.classList.add('touchViewport');
+  else root.classList.remove('touchViewport');
   root.classList.remove('lockRotateCW', 'lockRotateCCW');
   if (!isRotatable()) return;
   var landscape = window.innerWidth > window.innerHeight;
@@ -788,6 +888,14 @@ function checkPortraitLock(){
 window.addEventListener('resize', checkPortraitLock);
 window.addEventListener('orientationchange', function(){ setTimeout(checkPortraitLock, 250); });
 setTimeout(checkPortraitLock, 250);
+
+// Criss-Cross can be opened directly, so expose the same offline app worker
+// even when the user has not visited index.html in this browser session.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./sw.js').catch(function(){});
+  });
+}
 
 ccRestoreLastLevel(); ccTimerLoad(); gen(false); setKeyboardMode(true);
 })();

@@ -86,6 +86,7 @@ window.onerror = function(msg, src, line, col, err){
 <meta name="twitter:title" content="🐒🎲 MathMatrix Pro++ — Magic Square Puzzles for Kids">
 <meta name="twitter:description" content="Magic squares 3×3 to 10×10, 3³ Multiply Magic, Sudoku, Logic Gates, Slide puzzles and more. Free, works offline, no ads.">
 <meta name="twitter:image" content="https://kidsmathsmatrixpuzzle.github.io/icon-512.png">
+<script>if(('ontouchstart' in window)||(navigator.maxTouchPoints>0))document.documentElement.classList.add('touchViewport');</script>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html, body { height:100%; width:100%; touch-action:manipulation; }  /* manipulation = normal taps/scroll but no double-tap zoom */
@@ -1479,20 +1480,31 @@ body{ background:var(--gr) !important; padding:0 !important; margin:0 !important
    line — four times a readable measure. So cap the app and centre it: above
    this width everything inside is the phone layout that is already tested.
 
-   Width-only now, deliberately: a unified, letterboxed phone-style column
-   on every device and every orientation — tablet landscape included — not
-   just tall windows. (Previously had a min-height guard specifically to
-   let landscape use the full width instead; that's been removed on
-   purpose, for a consistent look everywhere rather than two layouts.)     */
+   Keep the phone-style column centered on wide screens. On touch devices,
+   the outer canvas follows Criss-Cross's sandalwood color; laptop margins
+   remain black. Puzzle boards keep their own proportions.                  */
 @media (min-width: 540px){
-  /* Plain black margin, as requested — html body (not just body) so this
-     reliably wins over the later wood-tan rule regardless of where either
-     sits in the file; relying on source order already went wrong once. */
+  /* Desktop margin; touch screens override this below. */
   html body{ background:#000 !important; }
   /* the long-hand pair first: margin-inline is Safari 14.1+, and without it the
      app would sit hard left on an older iPad instead of centred */
   .appShell{ max-width:480px; margin-left:auto; margin-right:auto; margin-inline:auto;
     box-shadow:0 0 0 1px rgba(255,255,255,.07), 0 18px 60px rgba(0,0,0,.55); }
+}
+/* Match Criss-Cross on tablet and other wide touch screens without widening
+   the phone-sized app column or stretching puzzle boards. */
+@media (min-width: 540px){
+  html.touchViewport body{ background:#d8b98c !important; }
+}
+/* Portrait tablets use the room they have instead of keeping the phone-width
+   column. The page stays real HTML/CSS (not a scaled screenshot), so text and
+   the puzzle cards keep their crisp, individual styling. Phones and laptops
+   retain the V164 layout. */
+@media (min-width: 560px) and (orientation: portrait){
+  html.touchViewport .appShell{
+    width:calc(100% - 32px);
+    max-width:960px;
+  }
 }
 /* While visually rotation-locked, window.innerWidth still reads the real,
    pre-rotation (landscape) measurement, so the narrow-column rule above
@@ -1501,6 +1513,12 @@ body{ background:var(--gr) !important; padding:0 !important; margin:0 !important
    already gives the portrait-shaped frame, nothing more is needed. */
 html.lockRotateCW .appShell, html.lockRotateCCW .appShell{
   max-width:none !important; margin-left:0 !important; margin-right:0 !important;
+}
+/* The html box is turned into portrait dimensions with 100vh × 100vw. The
+   app shell must use that same long dimension: 100svh still means the short,
+   unrotated landscape height and would leave a blank strip after rotation. */
+html.lockRotateCW .appShell, html.lockRotateCCW .appShell{
+  height:100vw !important; max-height:100vw !important;
 }
 
 /* 56px, not 46: Raja asked for the top-area tabs bigger, and dropping the
@@ -4164,6 +4182,28 @@ body{ background:#C9A87C !important; }
 #chooseLaterBtn{ padding:11px 10px !important; font-size:13px !important; }
 
 @media(prefers-reduced-motion:reduce){ *{ animation:none !important; } }
+</style>
+<style id="v166LaptopFit">
+/* Laptop screens get a wider, centered workspace made from the same sharp HTML
+   cards and puzzle cells. Touch devices keep the already-tested V165 sizing. */
+@media (min-width:1024px) and (orientation:landscape) and (hover:hover) and (pointer:fine){
+  html:not(.touchViewport) .appShell{
+    width:calc(100% - clamp(40px,5vw,112px));
+    max-width:1440px;
+    margin-left:auto;
+    margin-right:auto;
+    margin-inline:auto;
+  }
+  html:not(.touchViewport) .appBar{padding-left:clamp(18px,2vw,34px);padding-right:clamp(18px,2vw,34px);}
+  html:not(.touchViewport) .screen.on{padding-left:clamp(18px,2vw,34px);padding-right:clamp(18px,2vw,34px);}
+  html:not(.touchViewport) .difficultyBar{
+    width:min(100%,1160px)!important;
+    max-width:1160px!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+    margin-inline:auto!important;
+  }
+}
 </style>
 </head>
 <body>
@@ -14401,12 +14441,16 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
     function derive(){
       var cw = Math.floor((box.clientWidth - gap * (tracks - 1)) / tracks);
       var ch = Math.floor((box.clientHeight - gap * (tracks - 1)) / tracks);
-      /* The ceiling was 74, which left a 3x3 using only 75% of its area on a
-         430px phone — the biggest, easiest cells were the ones being capped.
-         It exists to stop a small board looking absurd on a wide screen, but
-         the shell is now capped at 480px anyway, so width already bounds it.
-         96 lets a 3x3 breathe and still cannot run away. */
-      return Math.min(cw, ch, 96);
+       /* The 96px ceiling keeps the phone layout compact. A portrait tablet has
+          a wider shell now, so allow its cells to grow to 124px. A landscape
+          laptop gets a modestly larger 132px ceiling; cw and ch still keep
+          every board inside its real available space. */
+      var root = document.documentElement;
+      var tabletPortrait = root.classList.contains('touchViewport') &&
+        root.clientWidth >= 560 && root.clientHeight >= root.clientWidth;
+       var laptopLandscape = !root.classList.contains('touchViewport') &&
+         root.clientWidth >= 1024 && root.clientWidth > root.clientHeight;
+       return Math.min(cw, ch, tabletPortrait ? 124 : laptopLandscape ? 132 : 96);
     }
     var cell = derive();
     // A big board on a short phone cannot fit AND keep a keypad. Rather than let the
@@ -15469,7 +15513,7 @@ if (navigator.storage && navigator.storage.persist) {
 (function(){
   // Build baked into this HTML — always reflects the exact version being run,
   // independent of cache timing. Keep in sync with the SW CACHE_VERSION on deploy.
-  var BUILD_VER = 'v157 (Side margins on wide screens are now plain black, not tan; fixed a blank-gap "semi rotation" look on tablet landscape caused by the narrow-column rule doubling up with the rotation lock; Criss-Cross\\u2019s header bar and SaNa row now stay narrow and centred too, matching the puzzle grid below them)';
+  var BUILD_VER = 'v166 (Laptop layout expands; V165 touch layout retained)';
   /* ── BEACON FOR APPS INSTALLED LONG AGO ─────────────────────────────────
      Raja's iPhone sat on v139 and would not come forward, however many times
      he tapped Online Update.
