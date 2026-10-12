@@ -4183,28 +4183,6 @@ body{ background:#C9A87C !important; }
 
 @media(prefers-reduced-motion:reduce){ *{ animation:none !important; } }
 </style>
-<style id="v166LaptopFit">
-/* Laptop screens get a wider, centered workspace made from the same sharp HTML
-   cards and puzzle cells. Touch devices keep the already-tested V165 sizing. */
-@media (min-width:1024px) and (orientation:landscape) and (hover:hover) and (pointer:fine){
-  html:not(.touchViewport) .appShell{
-    width:calc(100% - clamp(40px,5vw,112px));
-    max-width:1440px;
-    margin-left:auto;
-    margin-right:auto;
-    margin-inline:auto;
-  }
-  html:not(.touchViewport) .appBar{padding-left:clamp(18px,2vw,34px);padding-right:clamp(18px,2vw,34px);}
-  html:not(.touchViewport) .screen.on{padding-left:clamp(18px,2vw,34px);padding-right:clamp(18px,2vw,34px);}
-  html:not(.touchViewport) .difficultyBar{
-    width:min(100%,1160px)!important;
-    max-width:1160px!important;
-    margin-left:auto!important;
-    margin-right:auto!important;
-    margin-inline:auto!important;
-  }
-}
-</style>
 </head>
 <body>
 <div id="portraitLock" role="alert">
@@ -14441,16 +14419,13 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
     function derive(){
       var cw = Math.floor((box.clientWidth - gap * (tracks - 1)) / tracks);
       var ch = Math.floor((box.clientHeight - gap * (tracks - 1)) / tracks);
-       /* The 96px ceiling keeps the phone layout compact. A portrait tablet has
-          a wider shell now, so allow its cells to grow to 124px. A landscape
-          laptop gets a modestly larger 132px ceiling; cw and ch still keep
-          every board inside its real available space. */
+      /* The 96px ceiling keeps the phone layout compact. A portrait tablet has
+         a wider shell now, so allow its cells to grow to 124px; cw and ch
+         still keep every board inside its real available space. */
       var root = document.documentElement;
       var tabletPortrait = root.classList.contains('touchViewport') &&
         root.clientWidth >= 560 && root.clientHeight >= root.clientWidth;
-       var laptopLandscape = !root.classList.contains('touchViewport') &&
-         root.clientWidth >= 1024 && root.clientWidth > root.clientHeight;
-       return Math.min(cw, ch, tabletPortrait ? 124 : laptopLandscape ? 132 : 96);
+      return Math.min(cw, ch, tabletPortrait ? 124 : 96);
     }
     var cell = derive();
     // A big board on a short phone cannot fit AND keep a keypad. Rather than let the
@@ -15513,7 +15488,7 @@ if (navigator.storage && navigator.storage.persist) {
 (function(){
   // Build baked into this HTML — always reflects the exact version being run,
   // independent of cache timing. Keep in sync with the SW CACHE_VERSION on deploy.
-  var BUILD_VER = 'v166 (Laptop layout expands; V165 touch layout retained)';
+  var BUILD_VER = 'v167 (V165 test v4 portrait layout unified across screens)';
   /* ── BEACON FOR APPS INSTALLED LONG AGO ─────────────────────────────────
      Raja's iPhone sat on v139 and would not come forward, however many times
      he tapped Online Update.

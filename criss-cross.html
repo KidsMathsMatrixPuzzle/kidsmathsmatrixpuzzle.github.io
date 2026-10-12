@@ -223,55 +223,14 @@ html.lockRotateCW body, html.lockRotateCCW body{
   html.touchViewport .logicSheet,
   html.touchViewport .ccmSoundSheet{max-width:960px;}
 }
-/* Laptop landscape: use the warm board canvas and give the grid and controls
-   more room, while limiting tile growth by screen height so the puzzle stays
-   together with its keypad. This does not apply to touch tablets. */
-@media (min-width:1024px) and (orientation:landscape) and (hover:hover) and (pointer:fine){
-  html:not(.touchViewport) body{background:var(--bg)!important;min-height:100vh;}
-  html:not(.touchViewport) .ccmBar,
-  html:not(.touchViewport) .sanaRow,
-  html:not(.touchViewport) .ccmLevels,
-  html:not(.touchViewport) .ccTimerRow,
-  html:not(.touchViewport) .ccmWrap{
-    width:calc(100% - clamp(40px,5vw,112px));
-    max-width:1240px;
-    margin-left:auto;
-    margin-right:auto;
-    margin-inline:auto;
-  }
-  html:not(.touchViewport) .sanaRow{margin-top:8px;margin-bottom:4px;gap:12px;}
-  html:not(.touchViewport) .sanaBubble{font-size:16px;}
-  html:not(.touchViewport) .ccmLevels{margin-top:6px;margin-bottom:8px;}
-  html:not(.touchViewport) .ccTimerRow{margin-top:0;margin-bottom:6px;}
-  html:not(.touchViewport) .ccmWrap{padding:0 20px 16px;}
-  html:not(.touchViewport) .ccmGrid{
-    --ccmSize:clamp(76px,10vh,118px);
-    --ccmOp:clamp(28px,4vh,42px);
-    --ccmResult:clamp(58px,8vh,80px);
-    --ccmGap:clamp(5px,.55vw,8px);
-    grid-template-columns:var(--ccmSize) var(--ccmOp) var(--ccmSize) var(--ccmOp) var(--ccmSize) var(--ccmResult);
-    grid-auto-rows:var(--ccmSize);
-    gap:var(--ccmGap);
-    margin:8px auto 14px;
-  }
-  html:not(.touchViewport) .ccmGrid .cell,
-  html:not(.touchViewport) .ccmGrid .cell input{font-size:clamp(18px,2.2vh,22px);}
-  html:not(.touchViewport) .ccmGrid .opCell{font-size:clamp(25px,3.5vh,32px);}
-  html:not(.touchViewport) .ccmGrid .resCell{font-size:clamp(12px,1.8vh,15px);}
-  html:not(.touchViewport) .ccmBtns{margin:8px 0 16px;}
-  html:not(.touchViewport) .ccmDock{
-    left:50%;
-    right:auto;
-    width:min(calc(100% - clamp(40px,5vw,112px)),820px);
-    transform:translateX(-50%);
-  }
-  html:not(.touchViewport) .ccmDock.hiddenDock{transform:translate(-50%,110%);}
-  html:not(.touchViewport) .ccmDockHead,
-  html:not(.touchViewport) .ccmKeysRow,
-  html:not(.touchViewport) .ccmCalcDock{max-width:760px;width:100%;}
-  html:not(.touchViewport) .ccmKeysRow .key{height:42px;font-size:19px;}
-  html:not(.touchViewport) .logicSheet,
-  html:not(.touchViewport) .ccmSoundSheet{max-width:900px;}
+/* Keep the laptop game in the same portrait frame as V165 test v4.
+   The black margins sit outside the sandalwood puzzle and keypad. */
+@media (min-width:540px) and (hover:hover) and (pointer:fine){
+  html{background:#000;}
+  body{width:min(100%,480px);max-width:480px;margin:0 auto;background:var(--bg) !important;min-height:100vh;}
+  .ccmDock{width:min(100vw,480px);left:50%;right:auto;transform:translateX(-50%);}
+  .ccmDock.hiddenDock{transform:translate(-50%,110%);}
+  .ccmShowKeyBtn{right:max(14px,calc((100vw - 480px)/2 + 14px));}
 }
 </style></head><body>
 <div id="portraitLock" role="alert">
@@ -834,7 +793,7 @@ document.getElementById('watchTopBtn').addEventListener('click',e=>{e.stopPropag
 document.getElementById('logicClose').addEventListener('click',e=>{e.stopPropagation(); logicModal.classList.add('hidden');});
 logicModal.addEventListener('click',e=>{if(e.target===logicModal) logicModal.classList.add('hidden');});
 document.querySelectorAll('.logicTab').forEach(tab=>{ tab.addEventListener('click',e=>{ e.stopPropagation(); document.querySelectorAll('.logicTab').forEach(t=>t.classList.remove('active')); tab.classList.add('active'); currentLogicView=tab.dataset.view; renderLogic(); }); });
-document.getElementById('ccmBack').addEventListener('click',e=>{e.stopPropagation(); try { if (document.referrer && document.referrer.indexOf(location.origin)===0 && window.history.length > 1) { window.history.back(); return; } } catch(err) {} window.location.href='./';});
+document.getElementById('ccmBack').addEventListener('click',e=>{e.stopPropagation(); try { if (document.referrer && document.referrer.indexOf(location.origin)===0 && window.history.length > 1) { window.history.back(); return; } } catch(err) {} window.location.href='./index.html';});
 document.getElementById('ccmSoundBtn').addEventListener('click',e=>{e.stopPropagation(); openCCSound();});
 document.getElementById('ccmSoundClose').addEventListener('click',e=>{e.stopPropagation(); closeCCSound();});
 document.getElementById('ccmSoundOverlay').addEventListener('click',e=>{e.stopPropagation(); closeCCSound();});
