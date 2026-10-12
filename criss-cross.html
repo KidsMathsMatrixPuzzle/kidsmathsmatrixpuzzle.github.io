@@ -10,19 +10,13 @@
   var touch=('ontouchstart' in window)||(navigator.maxTouchPoints>0);
   if(!touch)return;
   root.classList.add('touchViewport');
-  var type=(screen.orientation&&screen.orientation.type)||'';
-  var landscape=type.indexOf('landscape')===0
-    ? true
-    : type.indexOf('portrait')===0
-      ? false
-      : !!(window.matchMedia&&window.matchMedia('(orientation: landscape)').matches)
-        || window.innerWidth>window.innerHeight;
+  var landscape=window.innerWidth>window.innerHeight;
   if(!landscape)return;
   var angle=(screen.orientation&&typeof screen.orientation.angle==='number')
     ? screen.orientation.angle
     : (typeof window.orientation==='number'?window.orientation:90);
   angle=((angle%360)+360)%360;
-  root.classList.add(angle===90||angle===180?'lockRotateCCW':'lockRotateCW');
+  root.classList.add(angle===90?'lockRotateCCW':'lockRotateCW');
 })();
 </script>
 <style>
@@ -856,19 +850,13 @@ function checkPortraitLock(){
   else root.classList.remove('touchViewport');
   root.classList.remove('lockRotateCW', 'lockRotateCCW');
   if (!isRotatable()) return;
-  var orientationType = (screen.orientation && screen.orientation.type) || '';
-  var landscape = orientationType.indexOf('landscape') === 0
-    ? true
-    : orientationType.indexOf('portrait') === 0
-      ? false
-      : !!(window.matchMedia && window.matchMedia('(orientation: landscape)').matches)
-        || window.innerWidth > window.innerHeight;
+  var landscape = window.innerWidth > window.innerHeight;
   if (!landscape) return;
   var angle = (screen.orientation && typeof screen.orientation.angle === 'number')
     ? screen.orientation.angle
     : (typeof window.orientation === 'number' ? window.orientation : 90);
   angle = ((angle % 360) + 360) % 360;
-  if (angle === 90 || angle === 180) root.classList.add('lockRotateCCW');
+  if (angle === 90) root.classList.add('lockRotateCCW');
   else root.classList.add('lockRotateCW');
 }
 window.addEventListener('resize', checkPortraitLock);

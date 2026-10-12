@@ -92,19 +92,13 @@ window.onerror = function(msg, src, line, col, err){
   var touch=('ontouchstart' in window)||(navigator.maxTouchPoints>0);
   if(!touch)return;
   root.classList.add('touchViewport');
-  var type=(screen.orientation&&screen.orientation.type)||'';
-  var landscape=type.indexOf('landscape')===0
-    ? true
-    : type.indexOf('portrait')===0
-      ? false
-      : !!(window.matchMedia&&window.matchMedia('(orientation: landscape)').matches)
-        || window.innerWidth>window.innerHeight;
+  var landscape=window.innerWidth>window.innerHeight;
   if(!landscape)return;
   var angle=(screen.orientation&&typeof screen.orientation.angle==='number')
     ? screen.orientation.angle
     : (typeof window.orientation==='number'?window.orientation:90);
   angle=((angle%360)+360)%360;
-  root.classList.add(angle===90||angle===180?'lockRotateCCW':'lockRotateCW');
+  root.classList.add(angle===90?'lockRotateCCW':'lockRotateCW');
 })();
 </script>
 <style>
@@ -6531,19 +6525,13 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
     var root = document.documentElement;
     root.classList.remove('lockRotateCW', 'lockRotateCCW');
     if (!isRotatable()) return;
-    var orientationType = (screen.orientation && screen.orientation.type) || '';
-    var landscape = orientationType.indexOf('landscape') === 0
-      ? true
-      : orientationType.indexOf('portrait') === 0
-        ? false
-        : !!(window.matchMedia && window.matchMedia('(orientation: landscape)').matches)
-          || window.innerWidth > window.innerHeight;
+    var landscape = window.innerWidth > window.innerHeight;
     if (!landscape) return;
     var angle = (screen.orientation && typeof screen.orientation.angle === 'number')
       ? screen.orientation.angle
       : (typeof window.orientation === 'number' ? window.orientation : 90);
     angle = ((angle % 360) + 360) % 360;
-    if (angle === 90 || angle === 180) root.classList.add('lockRotateCCW');
+    if (angle === 90) root.classList.add('lockRotateCCW');
     else root.classList.add('lockRotateCW'); // covers 0 and 270-degree landscape orientations
   }
   // Kept as a no-op shell (still referenced at a few call sites below) so
@@ -15521,7 +15509,7 @@ if (navigator.storage && navigator.storage.persist) {
 (function(){
   // Build baked into this HTML — always reflects the exact version being run,
   // independent of cache timing. Keep in sync with the SW CACHE_VERSION on deploy.
-  var BUILD_VER = 'v169 (V165 portrait lock refined for tablets and browser tabs)';
+  var BUILD_VER = 'v170 (V165 viewport-based portrait lock for tablet tabs)';
   /* ── BEACON FOR APPS INSTALLED LONG AGO ─────────────────────────────────
      Raja's iPhone sat on v139 and would not come forward, however many times
      he tapped Online Update.
