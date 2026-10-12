@@ -4,7 +4,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <link rel="manifest" href="./manifest.json">
 <title>MathMatrix Pro++ — Criss-Cross</title>
-<script>if(('ontouchstart' in window)||(navigator.maxTouchPoints>0))document.documentElement.classList.add('touchViewport');</script>
+<script>
+(function(){
+  var root=document.documentElement;
+  var touch=('ontouchstart' in window)||(navigator.maxTouchPoints>0);
+  if(!touch)return;
+  root.classList.add('touchViewport');
+  var type=(screen.orientation&&screen.orientation.type)||'';
+  var landscape=type.indexOf('landscape')===0
+    ? true
+    : type.indexOf('portrait')===0
+      ? false
+      : !!(window.matchMedia&&window.matchMedia('(orientation: landscape)').matches)
+        || window.innerWidth>window.innerHeight;
+  if(!landscape)return;
+  var angle=(screen.orientation&&typeof screen.orientation.angle==='number')
+    ? screen.orientation.angle
+    : (typeof window.orientation==='number'?window.orientation:90);
+  angle=((angle%360)+360)%360;
+  root.classList.add(angle===90||angle===180?'lockRotateCCW':'lockRotateCW');
+})();
+</script>
 <style>
 :root{--safeTop:env(safe-area-inset-top,0px);--safeLeft:env(safe-area-inset-left,0px);--safeRight:env(safe-area-inset-right,0px);--bg:#d8b98c;--accent:#8a5a2b;--accent2:#c97b2e;--good:#2f9e5c;--bad:#c0392b;--ink:#3a2415;--blue:#2d6ca8;--kbd-height:0px;}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -836,16 +856,29 @@ function checkPortraitLock(){
   else root.classList.remove('touchViewport');
   root.classList.remove('lockRotateCW', 'lockRotateCCW');
   if (!isRotatable()) return;
-  var landscape = window.innerWidth > window.innerHeight;
+  var orientationType = (screen.orientation && screen.orientation.type) || '';
+  var landscape = orientationType.indexOf('landscape') === 0
+    ? true
+    : orientationType.indexOf('portrait') === 0
+      ? false
+      : !!(window.matchMedia && window.matchMedia('(orientation: landscape)').matches)
+        || window.innerWidth > window.innerHeight;
   if (!landscape) return;
   var angle = (screen.orientation && typeof screen.orientation.angle === 'number')
     ? screen.orientation.angle
     : (typeof window.orientation === 'number' ? window.orientation : 90);
-  if (angle === 90) root.classList.add('lockRotateCCW');
+  angle = ((angle % 360) + 360) % 360;
+  if (angle === 90 || angle === 180) root.classList.add('lockRotateCCW');
   else root.classList.add('lockRotateCW');
 }
 window.addEventListener('resize', checkPortraitLock);
 window.addEventListener('orientationchange', function(){ setTimeout(checkPortraitLock, 250); });
+if (screen.orientation && screen.orientation.addEventListener){
+  screen.orientation.addEventListener('change', function(){ setTimeout(checkPortraitLock, 100); });
+}
+if (window.visualViewport){
+  window.visualViewport.addEventListener('resize', function(){ setTimeout(checkPortraitLock, 100); });
+}
 setTimeout(checkPortraitLock, 250);
 
 // Criss-Cross can be opened directly, so expose the same offline app worker

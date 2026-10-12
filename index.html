@@ -86,7 +86,27 @@ window.onerror = function(msg, src, line, col, err){
 <meta name="twitter:title" content="🐒🎲 MathMatrix Pro++ — Magic Square Puzzles for Kids">
 <meta name="twitter:description" content="Magic squares 3×3 to 10×10, 3³ Multiply Magic, Sudoku, Logic Gates, Slide puzzles and more. Free, works offline, no ads.">
 <meta name="twitter:image" content="https://kidsmathsmatrixpuzzle.github.io/icon-512.png">
-<script>if(('ontouchstart' in window)||(navigator.maxTouchPoints>0))document.documentElement.classList.add('touchViewport');</script>
+<script>
+(function(){
+  var root=document.documentElement;
+  var touch=('ontouchstart' in window)||(navigator.maxTouchPoints>0);
+  if(!touch)return;
+  root.classList.add('touchViewport');
+  var type=(screen.orientation&&screen.orientation.type)||'';
+  var landscape=type.indexOf('landscape')===0
+    ? true
+    : type.indexOf('portrait')===0
+      ? false
+      : !!(window.matchMedia&&window.matchMedia('(orientation: landscape)').matches)
+        || window.innerWidth>window.innerHeight;
+  if(!landscape)return;
+  var angle=(screen.orientation&&typeof screen.orientation.angle==='number')
+    ? screen.orientation.angle
+    : (typeof window.orientation==='number'?window.orientation:90);
+  angle=((angle%360)+360)%360;
+  root.classList.add(angle===90||angle===180?'lockRotateCCW':'lockRotateCW');
+})();
+</script>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html, body { height:100%; width:100%; touch-action:manipulation; }  /* manipulation = normal taps/scroll but no double-tap zoom */
@@ -6511,13 +6531,20 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
     var root = document.documentElement;
     root.classList.remove('lockRotateCW', 'lockRotateCCW');
     if (!isRotatable()) return;
-    var landscape = window.innerWidth > window.innerHeight;
+    var orientationType = (screen.orientation && screen.orientation.type) || '';
+    var landscape = orientationType.indexOf('landscape') === 0
+      ? true
+      : orientationType.indexOf('portrait') === 0
+        ? false
+        : !!(window.matchMedia && window.matchMedia('(orientation: landscape)').matches)
+          || window.innerWidth > window.innerHeight;
     if (!landscape) return;
     var angle = (screen.orientation && typeof screen.orientation.angle === 'number')
       ? screen.orientation.angle
       : (typeof window.orientation === 'number' ? window.orientation : 90);
-    if (angle === 90) root.classList.add('lockRotateCCW');
-    else root.classList.add('lockRotateCW'); // covers -90 and 270
+    angle = ((angle % 360) + 360) % 360;
+    if (angle === 90 || angle === 180) root.classList.add('lockRotateCCW');
+    else root.classList.add('lockRotateCW'); // covers 0 and 270-degree landscape orientations
   }
   // Kept as a no-op shell (still referenced at a few call sites below) so
   // nothing needs to change there — the warning div it used to toggle
@@ -13881,6 +13908,12 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
   window.addEventListener('orientationchange', function(){ setTimeout(fitBoard, 250); });
   window.addEventListener('resize', checkPortraitLock);
   window.addEventListener('orientationchange', function(){ setTimeout(checkPortraitLock, 250); });
+  if (screen.orientation && screen.orientation.addEventListener){
+    screen.orientation.addEventListener('change', function(){ setTimeout(checkPortraitLock, 100); });
+  }
+  if (window.visualViewport){
+    window.visualViewport.addEventListener('resize', function(){ setTimeout(checkPortraitLock, 100); });
+  }
 
   /* ══════════════════════════════════════════════════════════════════
      BETA ADDITIONS — SaNa the mascot, diagonal arrows, feedback.
@@ -15488,7 +15521,7 @@ if (navigator.storage && navigator.storage.persist) {
 (function(){
   // Build baked into this HTML — always reflects the exact version being run,
   // independent of cache timing. Keep in sync with the SW CACHE_VERSION on deploy.
-  var BUILD_VER = 'v167 (V165 test v4 portrait layout unified across screens)';
+  var BUILD_VER = 'v169 (V165 portrait lock refined for tablets and browser tabs)';
   /* ── BEACON FOR APPS INSTALLED LONG AGO ─────────────────────────────────
      Raja's iPhone sat on v139 and would not come forward, however many times
      he tapped Online Update.
