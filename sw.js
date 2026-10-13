@@ -1,6 +1,6 @@
 // MathMatrix Pro++ Service Worker — full offline support
 // Bump CACHE_VERSION whenever you update the game HTML so kids get the new version.
-const CACHE_VERSION = 'mathmatrix-v170-v165-tablet-portrait-fix';
+const CACHE_VERSION = 'mathmatrix-v173-tablet-v165-portrait-rotation';
 
 const ASSETS = [
   './index.html',

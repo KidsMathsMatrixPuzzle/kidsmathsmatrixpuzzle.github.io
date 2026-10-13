@@ -14132,9 +14132,45 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
      be — the list may shrink as puzzles are added, but never below what Raja
      already has today. Past that it scrolls; illegible beats nothing to read. */
   var LV_MIN = 0.92, LV_MAX = 1.75;
+  function installRotatedListSwipe(bar){
+    if (bar.__rotatedListSwipeBound) return;
+    bar.__rotatedListSwipeBound = true;
+    var root = document.documentElement, drag = null;
+    function rotated(){
+      return root.classList.contains('lockRotateCW') || root.classList.contains('lockRotateCCW');
+    }
+    bar.addEventListener('touchstart', function(e){
+      if (!rotated() || !e.touches || e.touches.length !== 1){ drag = null; return; }
+      var t = e.touches[0];
+      drag = {
+        x: t.clientX,
+        y: t.clientY,
+        top: bar.scrollTop,
+        direction: root.classList.contains('lockRotateCW') ? 1 : -1,
+        axis: null
+      };
+    }, {passive:true});
+    bar.addEventListener('touchmove', function(e){
+      if (!drag || !rotated() || !e.touches || e.touches.length !== 1) return;
+      var t = e.touches[0], dx = t.clientX - drag.x, dy = t.clientY - drag.y;
+      if (!drag.axis){
+        if (Math.max(Math.abs(dx), Math.abs(dy)) < 8) return;
+        drag.axis = Math.abs(dx) > Math.abs(dy) * 1.12 ? 'horizontal' : 'other';
+      }
+      if (drag.axis !== 'horizontal') return;
+      if (e.cancelable) e.preventDefault();
+      var max = Math.max(0, bar.scrollHeight - bar.clientHeight);
+      bar.scrollTop = Math.max(0, Math.min(max, drag.top + dx * drag.direction));
+    }, {passive:false});
+    function clearDrag(){ drag = null; }
+    bar.addEventListener('touchend', clearDrag, {passive:true});
+    bar.addEventListener('touchcancel', clearDrag, {passive:true});
+  }
+  
   function fitHome(){
     var bar = document.querySelector('.difficultyBar');
     if (!bar || !bar.clientHeight) return;
+    installRotatedListSwipe(bar);
 
     // Measure the list top-to-bottom, not the gap underneath it. The list is
     // centred now, so the slack is split above and below — reading only the
@@ -14145,6 +14181,18 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
       for (var i = 0; i < k.length; i++) if (k[i].offsetHeight){ first = k[i]; break; }
       for (var j = k.length - 1; j >= 0; j--) if (k[j].offsetHeight){ last = k[j]; break; }
       if (!first || !last) return 0;
+      var root=document.documentElement;
+      if (root.classList.contains('lockRotateCW') || root.classList.contains('lockRotateCCW')){
+        // A 90-degree root transform turns viewport rectangles sideways. Sum
+        // the list items in layout coordinates so tablet fitting sees portrait height.
+        var total=0, count=0, gap=parseFloat(window.getComputedStyle(bar).rowGap)||0;
+        for (var n=0; n<k.length; n++) if (k[n].offsetHeight){
+          var itemStyle=window.getComputedStyle(k[n]);
+          total += k[n].offsetHeight + (parseFloat(itemStyle.marginTop)||0) + (parseFloat(itemStyle.marginBottom)||0);
+          count++;
+        }
+        return total + Math.max(0,count-1)*gap;
+      }
       return last.getBoundingClientRect().bottom - first.getBoundingClientRect().top;
     }
 
@@ -15509,7 +15557,7 @@ if (navigator.storage && navigator.storage.persist) {
 (function(){
   // Build baked into this HTML — always reflects the exact version being run,
   // independent of cache timing. Keep in sync with the SW CACHE_VERSION on deploy.
-  var BUILD_VER = 'v170 (V165 viewport-based portrait lock for tablet tabs)';
+  var BUILD_VER = 'v173 (V165 tablet portrait rotation reference)';
   /* ── BEACON FOR APPS INSTALLED LONG AGO ─────────────────────────────────
      Raja's iPhone sat on v139 and would not come forward, however many times
      he tapped Online Update.
