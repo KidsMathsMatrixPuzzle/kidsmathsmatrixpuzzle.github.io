@@ -1,0 +1,1458 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#8b5cf6">
+  <meta name="description" content="Tunnels Of SaNa Maze — trace two winding tunnels and find the one that reaches Finish.">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>Tunnels Of SaNa Maze — MathMatrix Pro++</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg1: #d9b888;
+      --bg2: #c9a26e;
+      --card: #fff8ec;
+      --card-border: #c4a277;
+      --brown: #4a331a;
+      --brown-dark: #33220f;
+      --green: #16a34a;
+      --red: #dc2626;
+      --gold: #fbbf24;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
+    }
+    * { box-sizing: border-box; }
+    html { min-height: 100%; background: var(--bg2); }
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: 0;
+      padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+      color: var(--brown-dark);
+      background: linear-gradient(180deg, var(--bg1), var(--bg2));
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    button { font: inherit; }
+    .app { width: min(100%, 720px); margin: 0 auto; padding-bottom: 18px; }
+    .bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; }
+    .back-btn, .top-btn {
+      border: 0;
+      color: #fff;
+      background: #6b4a28;
+      box-shadow: 0 3px 0 rgba(51, 34, 15, .2);
+      font-weight: 800;
+    }
+    .back-btn { flex: 0 0 44px; width: 44px; height: 44px; padding: 0; border-radius: 14px; font-size: 22px; }
+    .title { flex: 1; min-width: 0; overflow: hidden; color: #1f5c3f; font-size: clamp(14px, 3.8vw, 18px); font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
+    .top-actions { display: flex; flex: none; gap: 6px; }
+    .top-btn {
+      display: flex;
+      flex: 0 0 44px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px;
+      width: 44px;
+      height: 44px;
+      padding: 3px 1px;
+      border-radius: 13px;
+      cursor: pointer;
+      line-height: 1;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+    .top-icon { font-size: 17px; line-height: 1; }
+    .top-label { font-size: 8px; font-weight: 900; letter-spacing: .35px; line-height: 1; text-transform: uppercase; }
+    .watch-btn { background: linear-gradient(135deg, #2d6ca8, #4a90d9); }
+    .watch-btn[aria-pressed="true"] { background: #1e8e5a; }
+    .logic-btn { background: linear-gradient(135deg, #7b5ae0, #9b7aff); }
+    .sound-btn { background: #8a5e31; }
+    .sound-btn.off { opacity: 1; background: #8a5e31; }
+    .top-btn:focus-visible, .back-btn:focus-visible { outline: 3px solid #fbbf24; outline-offset: 2px; }
+    .logic-dialog {
+      width: min(calc(100% - 28px), 520px);
+      max-width: 520px;
+      max-height: min(78dvh, 620px);
+      padding: 0;
+      overflow: auto;
+      border: 2px solid var(--card-border);
+      border-radius: 18px;
+      color: var(--brown-dark);
+      background: var(--card);
+      box-shadow: 0 12px 36px rgba(51, 34, 15, .32);
+    }
+    .logic-dialog::backdrop { background: rgba(20, 12, 4, .55); }
+    .logic-content { padding: 18px 20px; }
+    .logic-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .logic-heading h2 { margin: 0; color: #1f5c3f; font-size: 20px; }
+    .logic-content p, .logic-content li { font-size: 16px; line-height: 1.5; }
+    .logic-content ul { padding-left: 22px; }
+    .logic-close { min-height: 40px; padding: 8px 14px; border: 0; border-radius: 12px; color: #fff; background: #6b4a28; font-weight: 800; }
+    .sound-dialog {
+      position: fixed;
+      inset: auto 0 0;
+      width: min(100vw, 480px);
+      max-width: 480px;
+      max-height: min(78dvh, 620px);
+      margin: 0 auto;
+      padding: 0;
+      overflow: auto;
+      border: 2px solid var(--card-border);
+      border-bottom: 0;
+      border-radius: 20px 20px 0 0;
+      color: var(--brown-dark);
+      background: var(--card);
+      box-shadow: 0 -8px 28px rgba(51, 34, 15, .32);
+    }
+    .sound-dialog::backdrop { background: rgba(20, 12, 4, .52); }
+    .sound-content { padding: 18px 18px max(20px, var(--safe-bottom)); }
+    .sound-content p { margin: 10px 0; font-size: 14px; line-height: 1.45; }
+    .sound-options { display: flex; gap: 10px; margin: 14px 0; }
+    .sound-choice { flex: 1; min-height: 48px; border: 2px solid #f59e0b; border-radius: 11px; padding: 9px 7px; color: #fbbf24; background: #3b248c; font-weight: 900; }
+    .sound-choice:nth-child(2) { border-color: #22c55e; color: #4ade80; background: #176b4a; }
+    .sound-choice.is-off, .sound-choice:disabled { border-color: #888; color: #777; background: #eee; }
+    .sound-note { color: #5b4630; font-size: 12px !important; }
+    .msg {
+      margin: 0 12px 8px;
+      padding: 9px 13px;
+      border-radius: 17px;
+      background: var(--card);
+      box-shadow: 0 3px 0 rgba(94, 64, 32, .2);
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+    .msg strong { color: #9a3412; }
+    .level-row, .color-row { display: flex; justify-content: center; align-items: center; gap: 8px; margin: 0 12px 10px; }
+    .level-btn {
+      flex: 1;
+      max-width: 150px;
+      min-height: 40px;
+      border: 0;
+      border-radius: 999px;
+      color: #fff;
+      font-weight: 900;
+      opacity: .58;
+    }
+    .level-btn.active { opacity: 1; box-shadow: 0 3px 0 rgba(0, 0, 0, .2); }
+    .level-btn[data-level="easy"] { background: #16a34a; }
+    .level-btn[data-level="medium"] { background: #2563eb; }
+    .level-btn[data-level="hard"] { background: #ea580c; }
+    .color-row { flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+    .color-label { color: var(--brown); font-size: 12px; font-weight: 900; }
+    .swatch {
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border: 3px solid rgba(255,255,255,.75);
+      border-radius: 50%;
+      box-shadow: 0 1px 2px rgba(0,0,0,.2);
+    }
+    .swatch.picked { outline: 3px solid var(--brown-dark); outline-offset: 1px; }
+    .tag { text-align: center; font-size: 13px; font-weight: 900; letter-spacing: .6px; }
+    .start-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: min(calc(100% - 20px), 500px);
+      min-height: 66px;
+      margin: 0 auto 7px;
+    }
+    .start-person {
+      display: flex;
+      flex: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 58px;
+      min-height: 62px;
+    }
+    .start-person .sana-bubble { margin: 0; }
+    .start-person .start-tag { margin-top: 2px; }
+    .maze-actions { display: flex; flex: 1; justify-content: center; gap: 7px; }
+    .sana-bubble {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+      width: 54px;
+      margin: 0 5px 4px;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      color: #4a331a;
+      background: transparent;
+      box-shadow: none;
+      font-size: 10px;
+      line-height: 1;
+      letter-spacing: .5px;
+      vertical-align: middle;
+    }
+    .sana-bubble[hidden] { display: none; }
+    .sana-face {
+      display: grid;
+      place-items: center;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(160deg, #ffd675, #fbbf24);
+      box-shadow: 0 3px 0 rgba(74, 51, 26, .24);
+      font-size: 28px;
+      line-height: 1;
+      animation: sanaBob 3s cubic-bezier(.2, .8, .2, 1) infinite;
+    }
+    .sana-name { font-size: 10px; font-weight: 900; line-height: 1; }
+    @keyframes sanaBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+    .start-tag { color: var(--green); }
+    .finish-tag { color: var(--red); }
+    .maze-wrap { display: flex; justify-content: center; padding: 3px 10px 8px; }
+    .maze-card {
+      position: relative;
+      width: min(100%, 500px);
+      padding: 9px;
+      border: 2px solid var(--card-border);
+      border-radius: 17px;
+      background: #f3e4c9;
+      box-shadow: 0 4px 0 rgba(74, 51, 26, .18);
+    }
+    #mazeSvg { display: block; width: 100%; height: auto; overflow: visible; touch-action: none; user-select: none; }
+    .win-overlay {
+      position: fixed;
+      z-index: 10;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      padding: 24px;
+      background: rgba(20, 12, 4, .58);
+      text-align: center;
+    }
+    .win-overlay.show { display: flex; }
+    .win-overlay .big { font-size: 52px; }
+    .win-overlay strong { color: #fde68a; font-size: 22px; }
+    .win-overlay span { color: #fff; font-size: 14px; }
+    .win-overlay button {
+      margin-top: 6px;
+      padding: 11px 22px;
+      border: 0;
+      border-radius: 999px;
+      color: #3b2200;
+      background: var(--gold);
+      font-weight: 900;
+    }
+    .win-overlay .win-clear-btn { color: #fff; background: #6b4a28; }
+    @media (min-width: 700px) {
+      .app { padding-top: 8px; }
+      .msg { font-size: 16px; }
+      .start-row { padding-left: 11px; }
+    }
+    @media (max-width: 600px) and (orientation: portrait) {
+      .level-row, .color-row { gap: 7px; }
+      .color-row { margin-bottom: 7px; }
+      .start-row { width: min(calc(100% - 16px), 500px); }
+    }
+    @media (max-width: 389px) {
+      .bar { gap: 4px; padding-inline: 9px; }
+      .top-actions { gap: 4px; }
+      .back-btn, .top-btn { flex-basis: 42px; width: 42px; height: 42px; }
+      .title { font-size: 14px; }
+      .top-icon { font-size: 16px; }
+      .top-label { font-size: 7.5px; }
+    }
+    @media (max-height: 820px) {
+      .bar { padding-block: 5px; }
+      .msg { margin-bottom: 6px; padding-block: 7px; font-size: 14px; }
+      .level-row, .color-row { margin-bottom: 6px; }
+      .color-row { gap: 7px; }
+      .swatch { width: 27px; height: 27px; }
+      .start-row { min-height: 56px; margin-bottom: 3px; }
+      .start-person { min-height: 54px; }
+      .start-person .sana-face { width: 42px; height: 42px; font-size: 24px; }
+      .maze-wrap { padding-top: 1px; padding-bottom: 5px; }
+      .tag { font-size: 12px; }
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      button { transition: transform .12s ease, filter .12s ease; }
+      button:active { transform: translateY(1px) scale(.98); filter: brightness(.96); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .sana-face { animation: none; }
+    }
+    @media (min-width: 540px) and (hover: hover) and (pointer: fine) {
+      html { background: #000; }
+      body {
+        width: min(100%, 480px);
+        max-width: 480px;
+        margin: 0 auto;
+        background: linear-gradient(180deg, var(--bg1), var(--bg2));
+      }
+      .app { width: 100%; max-width: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="bar">
+      <button class="back-btn" id="backBtn" type="button" aria-label="Back to puzzles">←</button>
+      <div class="title">🧭 Tunnels Of SaNa Maze</div>
+      <div class="top-actions">
+        <button class="top-btn logic-btn" id="logicBtn" type="button" aria-haspopup="dialog" aria-label="How to play">
+          <span class="top-icon" aria-hidden="true">💡</span><span class="top-label">Logic</span>
+        </button>
+        <button class="top-btn watch-btn" id="watchBtn" type="button" aria-label="Watch a demonstration of this maze" aria-pressed="false">
+          <span class="top-icon" aria-hidden="true">▶️</span><span class="top-label">Watch</span>
+        </button>
+        <button class="top-btn sound-btn" id="soundBtn" type="button" aria-haspopup="dialog" aria-label="Sound and music settings">
+          <span class="top-icon" id="soundIcon" aria-hidden="true">🔊</span><span class="top-label">Sound</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="msg" id="message" role="status" aria-live="polite">🐒 Two tunnels leave Start. One reaches Finish. Drag to find it.</div>
+
+    <div class="level-row" role="group" aria-label="Maze difficulty">
+      <button class="level-btn active" data-level="easy" type="button" aria-pressed="true">Easy</button>
+      <button class="level-btn" data-level="medium" type="button" aria-pressed="false">Medium</button>
+      <button class="level-btn" data-level="hard" type="button" aria-pressed="false">Hard</button>
+    </div>
+
+    <div class="color-row" role="group" aria-label="Choose path color">
+      <span class="color-label">Path color:</span>
+      <button class="swatch picked" data-color="#2563eb" style="background:#2563eb" type="button" aria-label="Blue path" aria-pressed="true"></button>
+      <button class="swatch" data-color="#dc2626" style="background:#dc2626" type="button" aria-label="Red path" aria-pressed="false"></button>
+      <button class="swatch" data-color="#16a34a" style="background:#16a34a" type="button" aria-label="Green path" aria-pressed="false"></button>
+      <button class="swatch" data-color="#f59e0b" style="background:#f59e0b" type="button" aria-label="Orange path" aria-pressed="false"></button>
+      <button class="swatch" data-color="#9333ea" style="background:#9333ea" type="button" aria-label="Purple path" aria-pressed="false"></button>
+      <button class="swatch" data-color="#ec4899" style="background:#ec4899" type="button" aria-label="Pink path" aria-pressed="false"></button>
+    </div>
+
+    <div class="start-row" id="startControls">
+      <div class="start-person" id="startPerson">
+        <span class="sana-bubble" id="startSana" aria-hidden="true"><span class="sana-face">🐒</span><span class="sana-name">SaNa</span></span>
+        <span class="tag start-tag" id="startTag">↓ START</span>
+      </div>
+      <div class="maze-actions">
+        <button class="top-btn" id="newBtn" type="button" aria-label="Start a new maze">🔄 New</button>
+        <button class="top-btn" id="clearBtn" type="button" aria-label="Clear your path">✖ Clear</button>
+      </div>
+    </div>
+    <div class="maze-wrap">
+      <div class="maze-card">
+        <svg id="mazeSvg" viewBox="0 0 100 133.333" role="img" aria-label="Interactive maze. Drag from the green Start marker to the red Finish marker."></svg>
+      </div>
+    </div>
+    <div class="tag finish-tag" id="finishTag">🏁 FINISH<span class="sana-bubble" id="finishSana" aria-hidden="true" hidden><span class="sana-face">🐒</span><span class="sana-name">SaNa</span></span></div>
+  </main>
+
+  <dialog class="logic-dialog" id="logicDialog" aria-labelledby="logicTitle">
+    <div class="logic-content">
+      <div class="logic-heading">
+        <h2 id="logicTitle">💡 How to play</h2>
+        <button class="logic-close" id="logicClose" type="button">Close</button>
+      </div>
+      <p>Two tunnels leave Start. One winds all the way to Finish; the other gets close, then ends at a wall. Follow the turns and use your own map in your mind.</p>
+      <ul>
+        <li>Drag the colored marker one cell at a time. Walls stop it.</li>
+        <li>Drag back to the previous cell to retrace your route.</li>
+        <li>Choose <b>New</b> for another maze, <b>Clear</b> to restart this one, or <b>Watch</b> for a demonstration.</li>
+      </ul>
+    </div>
+  </dialog>
+
+  <dialog class="sound-dialog" id="soundDialog" aria-labelledby="soundTitle">
+    <div class="sound-content">
+      <div class="logic-heading">
+        <h2 id="soundTitle">🔊 Sound &amp; Music</h2>
+        <button class="logic-close" id="soundClose" type="button">Close</button>
+      </div>
+      <p>Choose how SaNa’s maze sounds.</p>
+      <div class="sound-options">
+        <button class="sound-choice" id="soundMaster" type="button">🔊 Sound: ON</button>
+        <button class="sound-choice" id="musicToggle" type="button">🎵 Music: ON</button>
+      </div>
+      <p class="sound-note">Sound controls the maze taps and finish celebration. Music controls the MathMatrix background tune.</p>
+    </div>
+  </dialog>
+
+  <section class="win-overlay" id="winOverlay" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+    <div class="big" aria-hidden="true">🎉</div>
+    <strong id="winTitle">You found the way through!</strong>
+    <span id="winTime">Solved in 0:00</span>
+    <button id="winNewBtn" type="button">Try a new maze</button>
+    <button id="winClearBtn" class="win-clear-btn" type="button">Clear this maze</button>
+  </section>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var LEVELS = {
+      easy:   { cols: 9,  rows: 12, minSolutionSteps: 18, minSolutionTurns: 5, minDecoySteps: 14, minDecoyTurns: 4 },
+      medium: { cols: 13, rows: 17, minSolutionSteps: 28, minSolutionTurns: 7, minDecoySteps: 22, minDecoyTurns: 5 },
+      hard:   { cols: 17, rows: 22, minSolutionSteps: 38, minSolutionTurns: 8, minDecoySteps: 30, minDecoyTurns: 6 }
+    };
+    var OPP = { top: 'bottom', right: 'left', bottom: 'top', left: 'right' };
+    var DIRECTIONS = [
+      { name: 'top', dx: 0, dy: -1 },
+      { name: 'right', dx: 1, dy: 0 },
+      { name: 'bottom', dx: 0, dy: 1 },
+      { name: 'left', dx: -1, dy: 0 }
+    ];
+    var level = 'easy';
+    var pickedColor = '#2563eb';
+    var lastFinishApproach = null;
+    var cols, rows, cells, path, solved, dragging, previousPointerCell;
+    var elapsedMs = 0;
+    var timerStartedAt = null;
+    var SAVE_KEY = 'mmTunnelsOfSaNaSave';
+    var SAVE_VERSION = 1;
+    var SAVE_STORE_VERSION = 2;
+    var savedLevels = Object.create(null);
+    var PATH_COLORS = ['#2563eb', '#dc2626', '#16a34a', '#f59e0b', '#9333ea', '#ec4899'];
+    var svg = document.getElementById('mazeSvg');
+    var message = document.getElementById('message');
+    var winOverlay = document.getElementById('winOverlay');
+    var winTime = document.getElementById('winTime');
+    var startSana = document.getElementById('startSana');
+    var finishSana = document.getElementById('finishSana');
+    var watchBtn = document.getElementById('watchBtn');
+    var logicBtn = document.getElementById('logicBtn');
+    var logicDialog = document.getElementById('logicDialog');
+    var logicClose = document.getElementById('logicClose');
+    var soundBtn = document.getElementById('soundBtn');
+    var soundDialog = document.getElementById('soundDialog');
+    var soundClose = document.getElementById('soundClose');
+    var soundMaster = document.getElementById('soundMaster');
+    var musicToggle = document.getElementById('musicToggle');
+    var soundIcon = document.getElementById('soundIcon');
+    var mazeSoundOn = localStorage.getItem('mmSound') !== 'off';
+    var mazeMusicOn = localStorage.getItem('mmMusic') !== 'off';
+    var audioContext = null;
+    var audioUnlocked = false;
+    var bgmAudio = new Audio('./bgm-monkeys.mp3');
+    bgmAudio.loop = true;
+    bgmAudio.preload = 'none';
+    bgmAudio.volume = .22;
+    var mazeCard = document.querySelector('.maze-card');
+    var mazeWrap = document.querySelector('.maze-wrap');
+    var startControls = document.getElementById('startControls');
+    var finishTag = document.getElementById('finishTag');
+    var cellSize = 0;
+    var viewHeight = 0;
+    var demoActive = false;
+    var demoPausedClock = false;
+    var demoFrame = null;
+    var demoCleanupTimeout = null;
+    var demoRoute = null;
+
+    function ensureMazeAudio() {
+      try {
+        var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return null;
+        if (!audioContext) audioContext = new AudioContextClass();
+        if (audioContext.state === 'suspended') audioContext.resume().catch(function () {});
+        if (!audioUnlocked) {
+          var silent = audioContext.createBuffer(1, 1, 22050);
+          var source = audioContext.createBufferSource();
+          source.buffer = silent;
+          source.connect(audioContext.destination);
+          source.start(0);
+          audioUnlocked = true;
+        }
+        return audioContext;
+      } catch (err) {
+        audioContext = null;
+        return null;
+      }
+    }
+    function mazeTone(frequency, duration, type, delay, peak) {
+      if (!mazeSoundOn) return;
+      var ctx = ensureMazeAudio();
+      if (!ctx) return;
+      try {
+        var start = ctx.currentTime + (delay || 0);
+        var oscillator = ctx.createOscillator();
+        var gain = ctx.createGain();
+        oscillator.type = type || 'sine';
+        oscillator.frequency.value = frequency;
+        gain.gain.setValueAtTime(.0001, start);
+        gain.gain.exponentialRampToValueAtTime(peak || .045, start + .012);
+        gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
+        oscillator.connect(gain);
+        gain.connect(ctx.destination);
+        oscillator.start(start);
+        oscillator.stop(start + duration + .02);
+      } catch (err) {}
+    }
+    function mazeWinSound() {
+      [523, 659, 784, 1047].forEach(function (frequency, index) {
+        mazeTone(frequency, .16, 'sine', index * .13, .055);
+      });
+    }
+    function startMazeMusic() {
+      if (!mazeSoundOn || !mazeMusicOn || !audioUnlocked) return;
+      try {
+        var play = bgmAudio.play();
+        if (play && typeof play.catch === 'function') play.catch(function () {});
+      } catch (err) {}
+    }
+    function refreshSoundControls() {
+      if (!soundBtn) return;
+      soundIcon.textContent = mazeSoundOn ? '🔊' : '🔇';
+      soundBtn.classList.toggle('off', !mazeSoundOn);
+      soundBtn.setAttribute('aria-label', mazeSoundOn ? 'Sound and music settings, sound on' : 'Sound and music settings, sound off');
+      soundBtn.setAttribute('aria-pressed', String(mazeSoundOn));
+      soundMaster.textContent = mazeSoundOn ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+      soundMaster.classList.toggle('is-off', !mazeSoundOn);
+      musicToggle.textContent = mazeMusicOn ? '🎵 Music: ON' : '🎵 Music: OFF';
+      musicToggle.classList.toggle('is-off', !mazeMusicOn);
+      musicToggle.disabled = !mazeSoundOn;
+      musicToggle.title = mazeSoundOn ? '' : 'Turn Sound ON first';
+      if (!mazeSoundOn || !mazeMusicOn) bgmAudio.pause();
+      else startMazeMusic();
+    }
+    function syncSoundPreferences() {
+      mazeSoundOn = localStorage.getItem('mmSound') !== 'off';
+      mazeMusicOn = localStorage.getItem('mmMusic') !== 'off';
+      refreshSoundControls();
+    }
+    function setWatchButton(watching) {
+      var icon = watchBtn.querySelector('.top-icon');
+      var label = watchBtn.querySelector('.top-label');
+      if (icon) icon.textContent = watching ? '⏹' : '▶️';
+      if (label) label.textContent = watching ? 'Stop' : 'Watch';
+      watchBtn.setAttribute('aria-pressed', String(watching));
+      watchBtn.setAttribute('aria-label', watching ? 'Stop the maze demonstration' : 'Watch a demonstration of this maze');
+    }
+
+    function key(x, y) { return x + ',' + y; }
+    function same(a, b) { return a.x === b.x && a.y === b.y; }
+    function distance(a, b) { return Math.abs(a.x - b.x) + Math.abs(a.y - b.y); }
+    function randomIndex(length, rng) { return Math.floor(rng() * length); }
+    function shuffle(items, rng) {
+      var out = items.slice();
+      for (var i = out.length - 1; i > 0; i--) {
+        var j = randomIndex(i + 1, rng);
+        var tmp = out[i]; out[i] = out[j]; out[j] = tmp;
+      }
+      return out;
+    }
+    function makeGrid(c, r) {
+      var grid = [];
+      for (var y = 0; y < r; y++) {
+        var row = [];
+        for (var x = 0; x < c; x++) {
+          row.push({ x: x, y: y, visited: false, walls: { top: true, right: true, bottom: true, left: true } });
+        }
+        grid.push(row);
+      }
+      return grid;
+    }
+    function neighbors(c, r, x, y) {
+      var out = [];
+      for (var i = 0; i < DIRECTIONS.length; i++) {
+        var d = DIRECTIONS[i], nx = x + d.dx, ny = y + d.dy;
+        if (nx >= 0 && ny >= 0 && nx < c && ny < r) out.push({ x: nx, y: ny, dir: d.name });
+      }
+      return out;
+    }
+    function carve(grid, a, b, dir) {
+      grid[a.y][a.x].walls[dir] = false;
+      grid[b.y][b.x].walls[OPP[dir]] = false;
+    }
+    function carvePath(grid, route) {
+      for (var i = 0; i < route.length; i++) grid[route[i].y][route[i].x].visited = true;
+      for (var j = 1; j < route.length; j++) {
+        var a = route[j - 1], b = route[j], dx = b.x - a.x, dy = b.y - a.y;
+        var dir = dx === 1 ? 'right' : dx === -1 ? 'left' : dy === 1 ? 'bottom' : 'top';
+        carve(grid, a, b, dir);
+      }
+    }
+
+    // Randomized DFS orders the grid before returning its tree path to a target.
+    // Search-only branches are not carved; only the returned route becomes a tunnel.
+    function randomizedDfsPath(c, r, start, target, forbidden, rng) {
+      var startKey = key(start.x, start.y), targetKey = key(target.x, target.y);
+      if (forbidden[startKey] || forbidden[targetKey]) return null;
+      var seen = Object.create(null), parent = Object.create(null);
+      var stack = [start];
+      seen[startKey] = true;
+      parent[startKey] = null;
+      while (stack.length) {
+        var current = stack[stack.length - 1], currentKey = key(current.x, current.y);
+        if (currentKey === targetKey) {
+          var route = [], cursor = targetKey;
+          while (cursor !== null) {
+            var bits = cursor.split(',');
+            route.push({ x: Number(bits[0]), y: Number(bits[1]) });
+            cursor = parent[cursor];
+          }
+          route.reverse();
+          return route;
+        }
+        var options = shuffle(neighbors(c, r, current.x, current.y), rng).filter(function (n) {
+          var k = key(n.x, n.y);
+          return !seen[k] && !forbidden[k];
+        });
+        if (options.length) {
+          var next = options[0], nextKey = key(next.x, next.y);
+          seen[nextKey] = true;
+          parent[nextKey] = currentKey;
+          stack.push({ x: next.x, y: next.y });
+        } else {
+          stack.pop();
+        }
+      }
+      return null;
+    }
+
+    function turns(route) {
+      var count = 0, lastDx = 0, lastDy = 0;
+      for (var i = 1; i < route.length; i++) {
+        var dx = route[i].x - route[i - 1].x, dy = route[i].y - route[i - 1].y;
+        if (i > 1 && (dx !== lastDx || dy !== lastDy)) count++;
+        lastDx = dx; lastDy = dy;
+      }
+      return count;
+    }
+    function quality(route) { return { steps: route.length - 1, turns: turns(route) }; }
+    function meets(route, minSteps, minTurns) {
+      var q = quality(route);
+      return q.steps >= minSteps && q.turns >= minTurns;
+    }
+
+    // Attach each remaining cell to the carved tree with one edge. The Finish
+    // and the decoy endpoint stay leaves, so the near-miss really ends at a wall.
+    function fillRemaining(grid, c, r, protectedLeaves, rng) {
+      var remaining = c * r;
+      for (var y = 0; y < r; y++) for (var x = 0; x < c; x++) if (grid[y][x].visited) remaining--;
+      var guard = c * r * 3;
+      while (remaining > 0 && guard-- > 0) {
+        var frontier = [];
+        for (var fy = 0; fy < r; fy++) {
+          for (var fx = 0; fx < c; fx++) {
+            var cell = grid[fy][fx];
+            if (cell.visited) continue;
+            var attachable = neighbors(c, r, fx, fy).filter(function (n) {
+              var nk = key(n.x, n.y);
+              return grid[n.y][n.x].visited && !protectedLeaves[nk];
+            });
+            if (attachable.length) frontier.push({ cell: { x: fx, y: fy }, attachable: attachable });
+          }
+        }
+        if (!frontier.length) return false;
+        var entry = frontier[randomIndex(frontier.length, rng)];
+        var parent = entry.attachable[randomIndex(entry.attachable.length, rng)];
+        carve(grid, entry.cell, parent, parent.dir);
+        grid[entry.cell.y][entry.cell.x].visited = true;
+        remaining--;
+        var stack = [entry.cell];
+        while (stack.length) {
+          var current = stack[stack.length - 1];
+          var options = shuffle(neighbors(c, r, current.x, current.y), rng).filter(function (n) {
+            return !grid[n.y][n.x].visited && !protectedLeaves[key(n.x, n.y)];
+          });
+          if (!options.length) { stack.pop(); continue; }
+          var next = options[0];
+          carve(grid, current, next, next.dir);
+          grid[next.y][next.x].visited = true;
+          remaining--;
+          stack.push({ x: next.x, y: next.y });
+        }
+      }
+      return remaining === 0;
+    }
+
+    function buildCandidate(c, r, settings, rng, requestedFinishApproach) {
+      var grid = makeGrid(c, r);
+      var start = { x: 0, y: 0 }, finish = { x: c - 1, y: r - 1 };
+      var startExits = [{ x: 1, y: 0, dir: 'right' }, { x: 0, y: 1, dir: 'bottom' }];
+      var trueExit = startExits[randomIndex(startExits.length, rng)];
+      var decoyExit = startExits[0] === trueExit ? startExits[1] : startExits[0];
+      // The right-edge route reaches Finish from above; the bottom-edge route
+      // reaches it from the left. New mazes alternate these final approaches.
+      var finishExits = [{ x: c - 1, y: r - 2 }, { x: c - 2, y: r - 1 }];
+      var trueFinishExit = requestedFinishApproach === 'right' ? finishExits[0] :
+        requestedFinishApproach === 'bottom' ? finishExits[1] : finishExits[randomIndex(finishExits.length, rng)];
+      var decoyFinishExit = finishExits[0] === trueFinishExit ? finishExits[1] : finishExits[0];
+      var forbidden = Object.create(null);
+      forbidden[key(start.x, start.y)] = true;
+      forbidden[key(decoyExit.x, decoyExit.y)] = true;
+      forbidden[key(decoyFinishExit.x, decoyFinishExit.y)] = true;
+
+      var trueRoute = randomizedDfsPath(c, r, { x: trueExit.x, y: trueExit.y }, trueFinishExit, forbidden, rng);
+      if (!trueRoute) return null;
+      trueRoute.unshift(start);
+      trueRoute.push(finish);
+      if (!meets(trueRoute, settings.minSolutionSteps, settings.minSolutionTurns)) return null;
+
+      var trueCells = Object.create(null);
+      trueRoute.forEach(function (p) { trueCells[key(p.x, p.y)] = true; });
+      var decoyForbidden = Object.create(null);
+      Object.keys(trueCells).forEach(function (k) { decoyForbidden[k] = true; });
+
+      var bestDecoy = randomizedDfsPath(c, r, { x: decoyExit.x, y: decoyExit.y }, decoyFinishExit, decoyForbidden, rng);
+      if (!bestDecoy) return null;
+      bestDecoy.unshift(start);
+      if (!meets(bestDecoy, settings.minDecoySteps, settings.minDecoyTurns)) return null;
+
+      var decoyEnd = bestDecoy[bestDecoy.length - 1];
+      carvePath(grid, trueRoute);
+      carvePath(grid, bestDecoy);
+      var protectedLeaves = Object.create(null);
+      protectedLeaves[key(finish.x, finish.y)] = true;
+      protectedLeaves[key(decoyEnd.x, decoyEnd.y)] = true;
+      if (!fillRemaining(grid, c, r, protectedLeaves, rng)) return null;
+
+      return {
+        cols: c, rows: r, cells: grid,
+        start: start, finish: finish,
+        trueGate: { x: trueExit.x, y: trueExit.y },
+        decoyGate: { x: decoyExit.x, y: decoyExit.y },
+        decoyEnd: decoyEnd,
+        finishApproach: trueFinishExit.x === c - 1 ? 'right' : 'bottom'
+      };
+    }
+
+    function generateMaze(levelName, rng, requestedFinishApproach) {
+      var settings = LEVELS[levelName];
+      rng = rng || Math.random;
+      var best = null, bestScore = -Infinity;
+      for (var attempt = 0; attempt < 240; attempt++) {
+        var maze = buildCandidate(settings.cols, settings.rows, settings, rng, requestedFinishApproach);
+        if (!maze) continue;
+        var a = auditMaze(maze);
+        var score = Math.min(a.solutionSteps / settings.minSolutionSteps, a.solutionTurns / settings.minSolutionTurns) +
+          Math.min(a.decoySteps / settings.minDecoySteps, a.decoyTurns / settings.minDecoyTurns);
+        if (a.decoyEndDistance > 2 || !a.isTree || a.startOpenings !== 2 || a.finishRouteCount !== 1) continue;
+        if (score > bestScore) { best = maze; bestScore = score; }
+        if (meets(a.solutionRoute, settings.minSolutionSteps, settings.minSolutionTurns) &&
+            meets(a.decoyRoute, settings.minDecoySteps, settings.minDecoyTurns)) return maze;
+      }
+      if (best) return best;
+      // This fallback is still a valid spanning tree with two Start branches;
+      // it is retained only for unusually unlucky random streams.
+      return buildFallbackMaze(settings, rng, requestedFinishApproach);
+    }
+
+    function buildFallbackMaze(settings, rng, requestedFinishApproach) {
+      // Retry with relaxed route lengths while preserving the near-miss structure.
+      var relaxed = {
+        minSolutionSteps: 1, minSolutionTurns: 0,
+        minDecoySteps: 1, minDecoyTurns: 0
+      };
+      for (var i = 0; i < 500; i++) {
+        var maze = buildCandidate(settings.cols, settings.rows, relaxed, rng, requestedFinishApproach);
+        if (maze) return maze;
+      }
+      throw new Error('Unable to create a connected maze.');
+    }
+
+    function finishApproachFromGrid(grid, c, r) {
+      var finishCell = grid[r - 1][c - 1];
+      if (!finishCell.walls.top) return 'right';
+      if (!finishCell.walls.left) return 'bottom';
+      return null;
+    }
+    function nextFinishApproach(last, rng) {
+      rng = rng || Math.random;
+      if (last === 'right') return 'bottom';
+      if (last === 'bottom') return 'right';
+      return rng() < .5 ? 'right' : 'bottom';
+    }
+
+    function graphNeighbors(maze, p) {
+      var result = [];
+      var cell = maze.cells[p.y][p.x];
+      for (var i = 0; i < DIRECTIONS.length; i++) {
+        var d = DIRECTIONS[i], nx = p.x + d.dx, ny = p.y + d.dy;
+        if (!cell.walls[d.name] && nx >= 0 && ny >= 0 && nx < maze.cols && ny < maze.rows) result.push({ x: nx, y: ny });
+      }
+      return result;
+    }
+    function findPath(maze, from, to, blockedKey) {
+      var todo = [from], parent = Object.create(null), fromKey = key(from.x, from.y), toKey = key(to.x, to.y);
+      parent[fromKey] = null;
+      for (var head = 0; head < todo.length; head++) {
+        var p = todo[head], pk = key(p.x, p.y);
+        if (pk === toKey) break;
+        graphNeighbors(maze, p).forEach(function (n) {
+          var nk = key(n.x, n.y);
+          if (nk === blockedKey || Object.prototype.hasOwnProperty.call(parent, nk)) return;
+          parent[nk] = pk;
+          todo.push(n);
+        });
+      }
+      if (!Object.prototype.hasOwnProperty.call(parent, toKey)) return null;
+      var route = [], cursor = toKey;
+      while (cursor !== null) {
+        var bits = cursor.split(',');
+        route.push({ x: Number(bits[0]), y: Number(bits[1]) });
+        cursor = parent[cursor];
+      }
+      return route.reverse();
+    }
+    function countPathsToFinish(maze) {
+      var count = 0, stack = [{ p: maze.start, seen: Object.create(null) }];
+      stack[0].seen[key(maze.start.x, maze.start.y)] = true;
+      while (stack.length && count < 2) {
+        var item = stack.pop();
+        if (same(item.p, maze.finish)) { count++; continue; }
+        graphNeighbors(maze, item.p).forEach(function (n) {
+          var nk = key(n.x, n.y);
+          if (item.seen[nk]) return;
+          var seen = Object.assign(Object.create(null), item.seen);
+          seen[nk] = true;
+          stack.push({ p: n, seen: seen });
+        });
+      }
+      return count;
+    }
+    function auditMaze(maze) {
+      var edgeCount = 0, cellCount = maze.cols * maze.rows;
+      for (var y = 0; y < maze.rows; y++) {
+        for (var x = 0; x < maze.cols; x++) {
+          var cell = maze.cells[y][x];
+          if (x < maze.cols - 1 && !cell.walls.right) edgeCount++;
+          if (y < maze.rows - 1 && !cell.walls.bottom) edgeCount++;
+        }
+      }
+      var connected = Object.create(null), queue = [maze.start];
+      connected[key(maze.start.x, maze.start.y)] = true;
+      for (var head = 0; head < queue.length; head++) {
+        graphNeighbors(maze, queue[head]).forEach(function (n) {
+          var nk = key(n.x, n.y);
+          if (connected[nk]) return;
+          connected[nk] = true;
+          queue.push(n);
+        });
+      }
+      var startOpenings = graphNeighbors(maze, maze.start).length;
+      var solutionRoute = findPath(maze, maze.start, maze.finish, null) || [];
+      var decoyRoute = findPath(maze, maze.start, maze.decoyEnd, null) || [];
+      var decoyReach = [maze.decoyGate], decoySeen = Object.create(null);
+      decoySeen[key(maze.start.x, maze.start.y)] = true;
+      decoySeen[key(maze.decoyGate.x, maze.decoyGate.y)] = true;
+      for (var dh = 0; dh < decoyReach.length; dh++) {
+        graphNeighbors(maze, decoyReach[dh]).forEach(function (n) {
+          var nk = key(n.x, n.y);
+          if (decoySeen[nk]) return;
+          decoySeen[nk] = true;
+          decoyReach.push(n);
+        });
+      }
+      var minDistance = Infinity;
+      decoyReach.forEach(function (p) { minDistance = Math.min(minDistance, distance(p, maze.finish)); });
+      var solutionQ = quality(solutionRoute), decoyQ = quality(decoyRoute);
+      return {
+        allCellsConnected: queue.length === cellCount,
+        isTree: queue.length === cellCount && edgeCount === cellCount - 1,
+        startOpenings: startOpenings,
+        finishRouteCount: countPathsToFinish(maze),
+        decoyCanReachFinish: !!decoySeen[key(maze.finish.x, maze.finish.y)],
+        decoyNearestDistance: minDistance,
+        decoyEndDistance: distance(maze.decoyEnd, maze.finish),
+        decoyEndOpenings: graphNeighbors(maze, maze.decoyEnd).length,
+        finishOpenings: graphNeighbors(maze, maze.finish).length,
+        solutionSteps: solutionQ.steps,
+        solutionTurns: solutionQ.turns,
+        decoySteps: decoyQ.steps,
+        decoyTurns: decoyQ.turns,
+        solutionRoute: solutionRoute,
+        decoyRoute: decoyRoute
+      };
+    }
+
+    if (window.__TUNNELS_META_TEST_MODE__) {
+      window.__TUNNELS_META_TEST_API__ = {
+        LEVELS: LEVELS,
+        generateMaze: generateMaze,
+        auditMaze: auditMaze,
+        finishApproachFromGrid: finishApproachFromGrid,
+        nextFinishApproach: nextFinishApproach
+      };
+      return;
+    }
+
+    function line(x1, y1, x2, y2, width) {
+      return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 +
+        '" stroke="#4a331a" stroke-width="' + width + '" stroke-linecap="round"/>';
+    }
+    function circle(cx, cy, radius, fill, opacity, stroke, strokeWidth) {
+      return '<circle cx="' + cx + '" cy="' + cy + '" r="' + radius + '" fill="' + fill +
+        '" fill-opacity="' + opacity + '" stroke="' + (stroke || 'none') + '" stroke-width="' + (strokeWidth || 0) + '"/>';
+    }
+    function drawPath() {
+      var pathLayer = document.getElementById('pathLayer'), dotLayer = document.getElementById('dotLayer');
+      if (!pathLayer || !dotLayer || !path.length) return;
+      var d = '';
+      path.forEach(function (p, i) {
+        d += (i ? 'L' : 'M') + ((p.x + .5) * cellSize) + ' ' + ((p.y + .5) * cellSize) + ' ';
+      });
+      pathLayer.innerHTML = path.length > 1
+        ? '<path d="' + d + '" fill="none" stroke="' + pickedColor + '" stroke-width="' + (cellSize * .17) +
+          '" stroke-linecap="round" stroke-linejoin="round" opacity=".92"/>'
+        : '';
+      var last = path[path.length - 1];
+      var cx = (last.x + .5) * cellSize, cy = (last.y + .5) * cellSize;
+      dotLayer.innerHTML = circle(cx, cy, cellSize * .29, pickedColor, 1, '#fff', cellSize * .055);
+    }
+    function clearDemoDrawing() {
+      var pathLayer = document.getElementById('demoPathLayer');
+      var dotLayer = document.getElementById('demoDotLayer');
+      if (pathLayer) pathLayer.innerHTML = '';
+      if (dotLayer) dotLayer.innerHTML = '';
+    }
+    function resumeDemoClock() {
+      if (!demoPausedClock) return;
+      demoPausedClock = false;
+      if (!solved && !document.hidden && timerStartedAt === null) timerStartedAt = Date.now();
+    }
+    function setMessage(text) {
+      message.textContent = text;
+      requestAnimationFrame(fitMazeToViewport);
+    }
+    function stopDemo(announcement, resumeClock) {
+      if (demoFrame !== null) cancelAnimationFrame(demoFrame);
+      if (demoCleanupTimeout !== null) window.clearTimeout(demoCleanupTimeout);
+      demoFrame = null;
+      demoCleanupTimeout = null;
+      demoActive = false;
+      demoRoute = null;
+      clearDemoDrawing();
+      setWatchButton(false);
+      if (resumeClock !== false) resumeDemoClock();
+      else demoPausedClock = false;
+      if (announcement) setMessage(announcement);
+    }
+    function drawDemo(progress) {
+      var pathLayer = document.getElementById('demoPathLayer');
+      var dotLayer = document.getElementById('demoDotLayer');
+      if (!pathLayer || !dotLayer || !demoRoute || !demoRoute.length) return;
+      var steps = demoRoute.length - 1;
+      var position = Math.min(steps, Math.max(0, progress * steps));
+      var wholeSteps = Math.floor(position);
+      var fraction = position - wholeSteps;
+      var points = demoRoute.slice(0, wholeSteps + 1);
+      var last = demoRoute[wholeSteps];
+      var cx = (last.x + .5) * cellSize, cy = (last.y + .5) * cellSize;
+      if (wholeSteps < steps) {
+        var next = demoRoute[wholeSteps + 1];
+        cx += (next.x - last.x) * cellSize * fraction;
+        cy += (next.y - last.y) * cellSize * fraction;
+        if (fraction > 0) points.push({ x: last.x + (next.x - last.x) * fraction, y: last.y + (next.y - last.y) * fraction });
+      }
+      var d = '';
+      points.forEach(function (point, index) {
+        d += (index ? 'L' : 'M') + ((point.x + .5) * cellSize) + ' ' + ((point.y + .5) * cellSize) + ' ';
+      });
+      var width = cellSize * .2;
+      pathLayer.innerHTML = d
+        ? '<path d="' + d + '" fill="none" stroke="#fff" stroke-width="' + (width * 1.5) + '" stroke-linecap="round" stroke-linejoin="round" opacity=".95"/>' +
+          '<path d="' + d + '" fill="none" stroke="#ec4899" stroke-width="' + width + '" stroke-linecap="round" stroke-linejoin="round" opacity=".96"/>'
+        : '';
+      dotLayer.innerHTML = circle(cx, cy, cellSize * .28, '#ec4899', 1, '#fff', cellSize * .07);
+    }
+    function finishDemo() {
+      demoActive = false;
+      demoFrame = null;
+      demoRoute = null;
+      setWatchButton(false);
+      setMessage('🐒 Demo complete! Now find the path yourself.');
+      resumeDemoClock();
+      demoCleanupTimeout = window.setTimeout(function () {
+        demoCleanupTimeout = null;
+        clearDemoDrawing();
+      }, 1100);
+    }
+    function startDemo() {
+      if (demoActive) {
+        stopDemo('🐒 Demo stopped. Your saved path is ready.');
+        return;
+      }
+      if (solved) {
+        setMessage('🐒 You already found the way! Start a new maze to watch it.');
+        return;
+      }
+      if (demoCleanupTimeout !== null) window.clearTimeout(demoCleanupTimeout);
+      demoCleanupTimeout = null;
+      clearDemoDrawing();
+      demoRoute = findPath({ cols: cols, rows: rows, cells: cells }, { x: 0, y: 0 }, { x: cols - 1, y: rows - 1 }, null);
+      if (!demoRoute || demoRoute.length < 2) {
+        demoRoute = null;
+        setMessage('🐒 This maze demo is unavailable. Try a new maze.');
+        return;
+      }
+      if (timerStartedAt !== null) {
+        elapsedMs = currentElapsedMs();
+        timerStartedAt = null;
+        demoPausedClock = true;
+        saveGame();
+      }
+      demoActive = true;
+      setWatchButton(true);
+      setMessage('🐒 SaNa is showing one way to the finish...');
+      var duration = Math.max(4200, Math.min(12000, (demoRoute.length - 1) * 180));
+      var beganAt = performance.now();
+      drawDemo(0);
+      function animate(now) {
+        if (!demoActive) return;
+        var progress = Math.min(1, (now - beganAt) / duration);
+        drawDemo(progress);
+        if (progress >= 1) finishDemo();
+        else demoFrame = requestAnimationFrame(animate);
+      }
+      demoFrame = requestAnimationFrame(animate);
+    }
+    function alignSaNaWithStart() {
+      var startPerson = document.getElementById('startPerson');
+      if (!startPerson || !cols || !svg.getBoundingClientRect().width) return;
+      startPerson.style.transform = 'none';
+      var svgRect = svg.getBoundingClientRect();
+      var personRect = startPerson.getBoundingClientRect();
+      var targetCenter = svgRect.left + svgRect.width / (2 * cols);
+      var currentCenter = personRect.left + personRect.width / 2;
+      startPerson.style.transform = 'translateX(' + (targetCenter - currentCenter) + 'px)';
+    }
+    function fitMazeToViewport() {
+      if (!cols || !rows || !mazeCard || !mazeWrap || !finishTag) return;
+      var viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      var wrapTop = Math.max(0, mazeWrap.getBoundingClientRect().top);
+      var safeBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+      var appBottom = parseFloat(getComputedStyle(document.querySelector('.app')).paddingBottom) || 0;
+      var remaining = viewportHeight - wrapTop - 3 - 8 - finishTag.getBoundingClientRect().height - 10 - safeBottom - appBottom;
+      var cardChrome = 22;
+      var widthByHeight = Math.max(0, remaining - cardChrome) * cols / rows + cardChrome;
+      var widthByScreen = Math.max(220, mazeWrap.clientWidth - 20);
+      var cardWidth = Math.max(220, Math.min(500, widthByScreen, widthByHeight));
+      mazeCard.style.width = cardWidth + 'px';
+      if (startControls) startControls.style.width = cardWidth + 'px';
+      alignSaNaWithStart();
+    }
+    function updateSanaPosition() {
+      startSana.hidden = !!solved;
+      finishSana.hidden = !solved;
+    }
+    function currentElapsedMs() {
+      return elapsedMs + (timerStartedAt === null ? 0 : Math.max(0, Date.now() - timerStartedAt));
+    }
+    function formatElapsed(ms) {
+      var seconds = Math.round(ms / 1000);
+      return 'Solved in ' + Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0');
+    }
+    function syncSelections() {
+      document.querySelectorAll('.level-btn').forEach(function (button) {
+        var active = button.dataset.level === level;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+      document.querySelectorAll('.swatch').forEach(function (button) {
+        var active = button.dataset.color === pickedColor;
+        button.classList.toggle('picked', active);
+        button.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+    }
+    function saveGame() {
+      if (!cells || !path || !path.length) return;
+      var save = {
+        v: SAVE_VERSION,
+        level: level,
+        pickedColor: pickedColor,
+        cols: cols,
+        rows: rows,
+        cells: cells.map(function (row) {
+          return row.map(function (cell) {
+            return { x: cell.x, y: cell.y, walls: {
+              top: !!cell.walls.top, right: !!cell.walls.right,
+              bottom: !!cell.walls.bottom, left: !!cell.walls.left
+            } };
+          });
+        }),
+        path: path.map(function (point) { return { x: point.x, y: point.y }; }),
+        elapsedMs: currentElapsedMs(),
+        solved: !!solved
+      };
+      savedLevels[level] = save;
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify({
+          v: SAVE_STORE_VERSION,
+          activeLevel: level,
+          levels: savedLevels
+        }));
+      } catch (err) {}
+    }
+    function validSave(save) {
+      if (!save || save.v !== SAVE_VERSION || !LEVELS[save.level] || PATH_COLORS.indexOf(save.pickedColor) < 0) return false;
+      var settings = LEVELS[save.level];
+      if (save.cols !== settings.cols || save.rows !== settings.rows || !Array.isArray(save.cells) || save.cells.length !== save.rows) return false;
+      for (var y = 0; y < save.rows; y++) {
+        if (!Array.isArray(save.cells[y]) || save.cells[y].length !== save.cols) return false;
+        for (var x = 0; x < save.cols; x++) {
+          var cell = save.cells[y][x], walls = cell && cell.walls;
+          if (!walls || cell.x !== x || cell.y !== y ||
+              ['top', 'right', 'bottom', 'left'].some(function (side) { return typeof walls[side] !== 'boolean'; })) return false;
+          if ((y === 0 && !walls.top) || (x === 0 && !walls.left) ||
+              (y === save.rows - 1 && !walls.bottom) || (x === save.cols - 1 && !walls.right)) return false;
+          if (x < save.cols - 1 && walls.right !== save.cells[y][x + 1].walls.left) return false;
+          if (y < save.rows - 1 && walls.bottom !== save.cells[y + 1][x].walls.top) return false;
+        }
+      }
+      if (!Array.isArray(save.path) || !save.path.length || save.path.length > save.cols * save.rows ||
+          !Number.isFinite(save.elapsedMs) || save.elapsedMs < 0 || typeof save.solved !== 'boolean') return false;
+      var seen = Object.create(null);
+      for (var i = 0; i < save.path.length; i++) {
+        var point = save.path[i];
+        if (!point || !Number.isInteger(point.x) || !Number.isInteger(point.y) ||
+            point.x < 0 || point.y < 0 || point.x >= save.cols || point.y >= save.rows) return false;
+        var pointKey = key(point.x, point.y);
+        if (seen[pointKey]) return false;
+        seen[pointKey] = true;
+        if (i === 0) {
+          if (point.x !== 0 || point.y !== 0) return false;
+        } else {
+          var previous = save.path[i - 1], dx = point.x - previous.x, dy = point.y - previous.y;
+          if (Math.abs(dx) + Math.abs(dy) !== 1) return false;
+          var previousCell = save.cells[previous.y][previous.x], nextCell = save.cells[point.y][point.x];
+          if ((dx === 1 && (previousCell.walls.right || nextCell.walls.left)) ||
+              (dx === -1 && (previousCell.walls.left || nextCell.walls.right)) ||
+              (dy === 1 && (previousCell.walls.bottom || nextCell.walls.top)) ||
+              (dy === -1 && (previousCell.walls.top || nextCell.walls.bottom))) return false;
+        }
+      }
+      var last = save.path[save.path.length - 1];
+      var atFinish = last.x === save.cols - 1 && last.y === save.rows - 1;
+      return save.solved === atFinish;
+    }
+    function readSavedLevels() {
+      try {
+        var raw = localStorage.getItem(SAVE_KEY);
+        if (!raw) return null;
+        var save = JSON.parse(raw);
+        if (validSave(save)) {
+          savedLevels[save.level] = save;
+          return save.level;
+        }
+        if (save && save.v === SAVE_STORE_VERSION && save.levels && typeof save.levels === 'object') {
+          Object.keys(LEVELS).forEach(function (name) {
+            var levelSave = save.levels[name];
+            if (levelSave && levelSave.level === name && validSave(levelSave)) savedLevels[name] = levelSave;
+          });
+          if (LEVELS[save.activeLevel] && savedLevels[save.activeLevel]) return save.activeLevel;
+          var restoredLevels = Object.keys(savedLevels);
+          if (restoredLevels.length) return restoredLevels[0];
+        }
+        localStorage.removeItem(SAVE_KEY);
+      } catch (err) {}
+      return null;
+    }
+    function restoreGame(save) {
+      level = save.level;
+      pickedColor = save.pickedColor;
+      cols = save.cols;
+      rows = save.rows;
+      cells = save.cells.map(function (row) {
+        return row.map(function (cell) { return { x: cell.x, y: cell.y, visited: true, walls: cell.walls }; });
+      });
+      path = save.path.map(function (point) { return { x: point.x, y: point.y }; });
+      elapsedMs = save.elapsedMs;
+      solved = save.solved;
+      lastFinishApproach = finishApproachFromGrid(cells, cols, rows) || lastFinishApproach;
+      dragging = false;
+      previousPointerCell = null;
+      timerStartedAt = solved || document.hidden ? null : Date.now();
+      winOverlay.classList.toggle('show', solved);
+      if (solved) winTime.textContent = formatElapsed(elapsedMs);
+      else setMessage('🐒 Two tunnels leave Start. One reaches Finish. Drag to find it.');
+      syncSelections();
+      render();
+      updateSanaPosition();
+    }
+    function render() {
+      cellSize = 100 / cols;
+      viewHeight = cellSize * rows;
+      svg.setAttribute('viewBox', '0 0 100 ' + viewHeight);
+      var parts = ['<rect x="0" y="0" width="100" height="' + viewHeight + '" fill="#fff8ec"/>'];
+      for (var y = 0; y < rows; y++) {
+        for (var x = 0; x < cols; x++) {
+          var c = cells[y][x], x0 = x * cellSize, y0 = y * cellSize, x1 = x0 + cellSize, y1 = y0 + cellSize;
+          var wallWidth = cellSize * .085;
+          if (c.walls.top) parts.push(line(x0, y0, x1, y0, wallWidth));
+          if (c.walls.left) parts.push(line(x0, y0, x0, y1, wallWidth));
+          if (x === cols - 1 && c.walls.right) parts.push(line(x1, y0, x1, y1, wallWidth));
+          if (y === rows - 1 && c.walls.bottom) parts.push(line(x0, y1, x1, y1, wallWidth));
+        }
+      }
+      parts.push(circle(cellSize * .5, cellSize * .5, cellSize * .31, '#16a34a', .22, '#15803d', cellSize * .07));
+      parts.push(circle((cols - .5) * cellSize, (rows - .5) * cellSize, cellSize * .31, '#dc2626', .25, '#b91c1c', cellSize * .07));
+      svg.innerHTML = parts.join('') + '<g id="pathLayer" pointer-events="none"></g><g id="dotLayer" pointer-events="none"></g>' +
+        '<g id="demoPathLayer" pointer-events="none"></g><g id="demoDotLayer" pointer-events="none"></g>';
+      drawPath();
+      updateSanaPosition();
+      fitMazeToViewport();
+    }
+    function newMaze() {
+      stopDemo('', false);
+      var settings = LEVELS[level];
+      cols = settings.cols;
+      rows = settings.rows;
+      var requestedFinishApproach = nextFinishApproach(lastFinishApproach, Math.random);
+      var generatedMaze = generateMaze(level, Math.random, requestedFinishApproach);
+      cells = generatedMaze.cells;
+      lastFinishApproach = generatedMaze.finishApproach;
+      path = [{ x: 0, y: 0 }];
+      solved = false;
+      dragging = false;
+      previousPointerCell = null;
+      elapsedMs = 0;
+      timerStartedAt = Date.now();
+      winOverlay.classList.remove('show');
+      setMessage('🐒 Two tunnels leave Start. One reaches Finish. Drag to find it.');
+      syncSelections();
+      render();
+      saveGame();
+    }
+    function selectLevel(nextLevel) {
+      if (!LEVELS[nextLevel] || nextLevel === level) return;
+      stopDemo('', false);
+      saveGame();
+      level = nextLevel;
+      var saved = savedLevels[level];
+      if (saved && validSave(saved)) {
+        restoreGame(saved);
+        saveGame();
+      } else {
+        newMaze();
+      }
+    }
+    function cellAt(clientX, clientY) {
+      var rect = svg.getBoundingClientRect();
+      if (!rect.width || !rect.height) return null;
+      var localX = (clientX - rect.left) / rect.width * 100;
+      var localY = (clientY - rect.top) / rect.height * viewHeight;
+      var x = Math.floor(localX / cellSize), y = Math.floor(localY / cellSize);
+      if (x < 0 || y < 0 || x >= cols || y >= rows) return null;
+      return { x: x, y: y };
+    }
+    function tryMoveTo(target) {
+      if (!target || solved) return false;
+      var last = path[path.length - 1];
+      if (same(target, last)) return true;
+      if (path.length > 1 && same(target, path[path.length - 2])) {
+        path.pop();
+        drawPath();
+        saveGame();
+        mazeTone(390, .055, 'sine', 0, .035);
+        return true;
+      }
+      var dx = target.x - last.x, dy = target.y - last.y;
+      if (Math.abs(dx) + Math.abs(dy) !== 1) return false;
+      var c = cells[last.y][last.x];
+      var blocked = (dx === 1 && c.walls.right) || (dx === -1 && c.walls.left) ||
+        (dy === 1 && c.walls.bottom) || (dy === -1 && c.walls.top);
+      if (blocked) {
+        mazeTone(175, .075, 'triangle', 0, .04);
+        return false;
+      }
+      path.push(target);
+      if (target.x === cols - 1 && target.y === rows - 1) {
+        solved = true;
+        elapsedMs = currentElapsedMs();
+        timerStartedAt = null;
+        winTime.textContent = formatElapsed(elapsedMs);
+        winOverlay.classList.add('show');
+        updateSanaPosition();
+        mazeWinSound();
+        document.getElementById('winNewBtn').focus();
+      } else mazeTone(520 + Math.min(path.length, 12) * 16, .055, 'sine', 0, .04);
+      drawPath();
+      saveGame();
+      return true;
+    }
+    function followSegment(from, to) {
+      if (!from || !to) return;
+      var x = from.x, y = from.y, dx = to.x - x, dy = to.y - y;
+      var nx = Math.abs(dx), ny = Math.abs(dy), sx = dx < 0 ? -1 : 1, sy = dy < 0 ? -1 : 1;
+      var ix = 0, iy = 0;
+      while ((ix < nx || iy < ny) && !solved) {
+        var old = { x: x, y: y };
+        if (ix >= nx) { y += sy; iy++; }
+        else if (iy >= ny) { x += sx; ix++; }
+        else if ((1 + 2 * ix) * ny < (1 + 2 * iy) * nx) { x += sx; ix++; }
+        else { y += sy; iy++; }
+        if (!tryMoveTo({ x: x, y: y })) return;
+        old = null;
+      }
+    }
+    svg.addEventListener('pointerdown', function (event) {
+      if (solved) return;
+      var at = cellAt(event.clientX, event.clientY), last = path[path.length - 1];
+      if (!at || !same(at, last)) return;
+      if (demoActive || demoCleanupTimeout !== null) stopDemo('🐒 Your turn! Continue from your saved position.');
+      dragging = true;
+      previousPointerCell = at;
+      if (svg.setPointerCapture) svg.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    });
+    svg.addEventListener('pointermove', function (event) {
+      if (!dragging) return;
+      var at = cellAt(event.clientX, event.clientY);
+      if (!at) return;
+      followSegment(previousPointerCell, at);
+      previousPointerCell = at;
+      event.preventDefault();
+    });
+    function stopDragging() { dragging = false; previousPointerCell = null; }
+    window.addEventListener('pointerup', stopDragging);
+    window.addEventListener('pointercancel', stopDragging);
+
+    document.querySelectorAll('.level-btn').forEach(function (button) {
+      button.addEventListener('click', function () {
+        selectLevel(button.dataset.level);
+      });
+    });
+    document.querySelectorAll('.swatch').forEach(function (button) {
+      button.addEventListener('click', function () {
+        if (demoActive || demoCleanupTimeout !== null) stopDemo('🐒 Your turn! Continue from your saved position.');
+        pickedColor = button.dataset.color;
+        syncSelections();
+        drawPath();
+        saveGame();
+      });
+    });
+    watchBtn.addEventListener('click', startDemo);
+    logicBtn.addEventListener('click', function () {
+      if (logicDialog && typeof logicDialog.showModal === 'function') logicDialog.showModal();
+      else if (logicDialog) logicDialog.setAttribute('open', '');
+    });
+    logicClose.addEventListener('click', function () {
+      if (logicDialog && typeof logicDialog.close === 'function') logicDialog.close();
+      else if (logicDialog) logicDialog.removeAttribute('open');
+    });
+    soundBtn.addEventListener('click', function () {
+      syncSoundPreferences();
+      if (soundDialog && typeof soundDialog.showModal === 'function') soundDialog.showModal();
+      else if (soundDialog) soundDialog.setAttribute('open', '');
+    });
+    soundClose.addEventListener('click', function () {
+      if (soundDialog && typeof soundDialog.close === 'function') soundDialog.close();
+      else if (soundDialog) soundDialog.removeAttribute('open');
+    });
+    soundDialog.addEventListener('click', function (event) {
+      if (event.target === soundDialog && typeof soundDialog.close === 'function') soundDialog.close();
+    });
+    soundMaster.addEventListener('click', function () {
+      mazeSoundOn = !mazeSoundOn;
+      localStorage.setItem('mmSound', mazeSoundOn ? 'on' : 'off');
+      refreshSoundControls();
+      if (mazeSoundOn) {
+        ensureMazeAudio();
+        mazeTone(660, .1, 'sine', 0, .05);
+      } else if (audioContext && audioContext.state !== 'suspended') {
+        audioContext.suspend().catch(function () {});
+      }
+    });
+    musicToggle.addEventListener('click', function () {
+      if (!mazeSoundOn) return;
+      mazeMusicOn = !mazeMusicOn;
+      localStorage.setItem('mmMusic', mazeMusicOn ? 'on' : 'off');
+      refreshSoundControls();
+      if (mazeMusicOn) {
+        ensureMazeAudio();
+        startMazeMusic();
+      }
+    });
+    window.addEventListener('storage', function (event) {
+      if (event.key === 'mmSound' || event.key === 'mmMusic' || event.key === null) syncSoundPreferences();
+    });
+    document.addEventListener('pointerdown', function () {
+      if (!mazeSoundOn) return;
+      ensureMazeAudio();
+      startMazeMusic();
+    }, { capture: true, passive: true });
+    document.addEventListener('keydown', function () {
+      if (!mazeSoundOn) return;
+      ensureMazeAudio();
+      startMazeMusic();
+    }, { capture: true, passive: true });
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) bgmAudio.pause();
+      else if (audioUnlocked) startMazeMusic();
+    });
+    window.addEventListener('pagehide', function () { bgmAudio.pause(); });
+    refreshSoundControls();
+    document.getElementById('newBtn').addEventListener('click', newMaze);
+    document.getElementById('winNewBtn').addEventListener('click', newMaze);
+    function clearPath() {
+      stopDemo('', false);
+      path = [{ x: 0, y: 0 }];
+      solved = false;
+      elapsedMs = 0;
+      timerStartedAt = Date.now();
+      winOverlay.classList.remove('show');
+      updateSanaPosition();
+      drawPath();
+      saveGame();
+    }
+    document.getElementById('clearBtn').addEventListener('click', clearPath);
+    document.getElementById('winClearBtn').addEventListener('click', clearPath);
+    document.getElementById('backBtn').addEventListener('click', function () {
+      try {
+        if (document.referrer && document.referrer.indexOf(location.origin) === 0 && window.history.length > 1) {
+          window.history.back();
+          return;
+        }
+      } catch (err) {}
+      window.location.href = './KidsMathsMatrixPuzzle.html';
+    });
+    window.addEventListener('keydown', function (event) {
+      if (solved || winOverlay.classList.contains('show')) return;
+      var moves = {
+        ArrowUp: { x: 0, y: -1 }, ArrowRight: { x: 1, y: 0 },
+        ArrowDown: { x: 0, y: 1 }, ArrowLeft: { x: -1, y: 0 }
+      };
+      var move = moves[event.key];
+      if (!move) return;
+      event.preventDefault();
+      if (demoActive || demoCleanupTimeout !== null) stopDemo('🐒 Your turn! Continue from your saved position.');
+      var last = path[path.length - 1];
+      tryMoveTo({ x: last.x + move.x, y: last.y + move.y });
+    });
+    function pauseAndSave() {
+      stopDemo('', false);
+      if (timerStartedAt !== null) {
+        elapsedMs = currentElapsedMs();
+        timerStartedAt = null;
+      }
+      saveGame();
+    }
+    function resumeTimer() {
+      if (!solved && timerStartedAt === null) timerStartedAt = Date.now();
+    }
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) pauseAndSave(); else resumeTimer();
+    });
+    window.addEventListener('pagehide', pauseAndSave);
+    window.addEventListener('pageshow', resumeTimer);
+    window.addEventListener('resize', fitMazeToViewport);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', fitMazeToViewport);
+
+    var savedLevel = readSavedLevels();
+    if (savedLevel && savedLevels[savedLevel]) restoreGame(savedLevels[savedLevel]); else newMaze();
+  })();
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function () {});
+      });
+    }
+  </script>
+</body>
+</html>

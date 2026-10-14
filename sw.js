@@ -1,10 +1,11 @@
 // MathMatrix Pro++ Service Worker — full offline support
 // Bump CACHE_VERSION whenever you update the game HTML so kids get the new version.
-const CACHE_VERSION = 'mathmatrix-v173-tablet-v165-portrait-rotation';
+
+const CACHE_VERSION = 'mathmatrix-v140';
 
 const ASSETS = [
-  './index.html',
-  './criss-cross.html',
+  './KidsMathsMatrixPuzzle.html',
+  './tunnels-of-sana-maze.html',
   './MultiplyMagic3.html',
   './sound-lab.html',
   './bgm-monkeys.mp3',
@@ -35,7 +36,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
-        keys.filter((k) => k !== CACHE_VERSION).map((k) => caches.delete(k))
+      keys.filter((k) => k.startsWith('mathmatrix-v') && k !== CACHE_VERSION).map((k) => caches.delete(k))
       )
     )
   );
@@ -43,53 +44,28 @@ self.addEventListener('activate', (event) => {
 });
 
 // Fetch strategy:
-// • Pages (HTML / navigations): NETWORK-FIRST — always load the newest version
-//   when online, so a deploy shows on a single refresh (no double-refresh).
-//   A 2.5s timeout falls back to the cached page if the network stalls
-//   instead of hanging indefinitely on a slow/flaky connection — proven in
-//   the beta build first.
-// • Everything else (images, icons, manifest): CACHE-FIRST for instant, offline
-//   loads, with a quiet background refresh.
+//  • Pages (HTML / navigations): NETWORK-FIRST — always load the newest version
+//    when online, so a deploy shows on a single refresh (no double-refresh).
+//    Falls back to the cached page when offline.
+//  • Everything else (images, icons, manifest): CACHE-FIRST for instant, offline
+//    loads, with a quiet background refresh.
 self.addEventListener('fetch', (event) => {
   const req = event.request;
-  const isPage =
-    req.mode === 'navigate' ||
-    req.destination === 'document' ||
-    /\.html(\?|$)/.test(req.url);
+  const isPage = req.mode === 'navigate' || req.destination === 'document' || /\.html(\?|$)/.test(req.url);
 
   if (isPage) {
     event.respondWith(
-      (async () => {
-        const cached = await caches
-          .match(req)
-          .then((c) => c || caches.match('./index.html'));
-
-        const controller =
-          typeof AbortController !== 'undefined'
-            ? new AbortController()
-            : null;
-        const timer = setTimeout(() => {
-          try {
-            if (controller) controller.abort();
-          } catch (e) {}
-        }, 2500);
-
-        try {
-          const response = await fetch(
-            req,
-            controller ? { signal: controller.signal } : undefined
-          );
-          clearTimeout(timer);
+      fetch(req)
+        .then((response) => {
           if (response && response.ok) {
             const copy = response.clone();
             caches.open(CACHE_VERSION).then((cache) => cache.put(req, copy));
           }
           return response;
-        } catch (e) {
-          clearTimeout(timer);
-          return cached || Response.error();
-        }
-      })()
+        })
+        .catch(() => caches.match(req, { ignoreSearch: true }).then((c) =>
+          c || caches.match('./KidsMathsMatrixPuzzle.html', { ignoreSearch: true })
+        ))
     );
     return;
   }

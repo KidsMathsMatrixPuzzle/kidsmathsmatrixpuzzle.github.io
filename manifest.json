@@ -1,9 +1,8 @@
 {
   "name": "MathMatrix Pro++",
-  "short_name": "Kids Maths",
-  "description": "Magic square puzzle game for kids - 3x3, 4x4, 5x5 with progressive unlocks",
-  "id": "./",
-  "start_url": "./index.html",
+  "short_name": "MathMatrix",
+  "description": "Math puzzles for kids: magic squares, Tunnels Of SaNa Maze, Sudoku, logic games and more.",
+  "start_url": "./KidsMathsMatrixPuzzle.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
