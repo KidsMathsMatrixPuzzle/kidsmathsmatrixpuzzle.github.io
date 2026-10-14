@@ -1,11 +1,11 @@
-// MathMatrix Pro++ Service Worker — full offline support
-// Bump CACHE_VERSION whenever you update the game HTML so kids get the new version.
-
-const CACHE_VERSION = 'mathmatrix-v141';
+// MathMatrix Pro++ Main Service Worker — V173Plus unified offline package.
+// Main cache namespace is separate from Beta on the shared GitHub Pages origin.
+const CACHE_VERSION = 'mathmatrix-v142';
 
 const ASSETS = [
-  './KidsMathsMatrixPuzzle.html',
   './index.html',
+  './KidsMathsMatrixPuzzle.html',
+  './criss-cross.html',
   './tunnels-of-sana-maze.html',
   './MultiplyMagic3.html',
   './sound-lab.html',
@@ -24,7 +24,6 @@ const ASSETS = [
   './icon-512-maskable.png'
 ];
 
-// Install: cache everything the game needs
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_VERSION).then((cache) => cache.addAll(ASSETS))
@@ -32,57 +31,73 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate: clean up old cache versions
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
-      keys.filter((k) => k.startsWith('mathmatrix-v') && k !== CACHE_VERSION).map((k) => caches.delete(k))
+        keys
+          .filter((key) => key.startsWith('mathmatrix-v') && key !== CACHE_VERSION)
+          .map((key) => caches.delete(key))
       )
     )
   );
   self.clients.claim();
 });
 
-// Fetch strategy:
-//  • Pages (HTML / navigations): NETWORK-FIRST — always load the newest version
-//    when online, so a deploy shows on a single refresh (no double-refresh).
-//    Falls back to the cached page when offline.
-//  • Everything else (images, icons, manifest): CACHE-FIRST for instant, offline
-//    loads, with a quiet background refresh.
 self.addEventListener('fetch', (event) => {
   const req = event.request;
-  const isPage = req.mode === 'navigate' || req.destination === 'document' || /\.html(\?|$)/.test(req.url);
+  const isPage =
+    req.mode === 'navigate' ||
+    req.destination === 'document' ||
+    /\.html(\?|$)/.test(req.url);
 
   if (isPage) {
     event.respondWith(
-      fetch(req)
-        .then((response) => {
+      (async () => {
+        const cache = await caches.open(CACHE_VERSION);
+        const cached =
+          await cache.match(req) ||
+          await cache.match('./KidsMathsMatrixPuzzle.html') ||
+          await cache.match('./index.html');
+
+        const controller =
+          typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const timer = setTimeout(() => {
+          try { if (controller) controller.abort(); } catch (e) {}
+        }, 2500);
+
+        try {
+          const response = await fetch(
+            req,
+            controller ? { signal: controller.signal } : undefined
+          );
+          clearTimeout(timer);
           if (response && response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_VERSION).then((cache) => cache.put(req, copy));
+            cache.put(req, response.clone()).catch(() => {});
           }
           return response;
-        })
-        .catch(() => caches.match(req, { ignoreSearch: true }).then((c) =>
-          c || caches.match('./KidsMathsMatrixPuzzle.html', { ignoreSearch: true })
-        ))
+        } catch (e) {
+          clearTimeout(timer);
+          return cached || Response.error();
+        }
+      })()
     );
     return;
   }
 
   event.respondWith(
-    caches.match(req).then((cached) => {
+    (async () => {
+      const cache = await caches.open(CACHE_VERSION);
+      const cached = await cache.match(req);
       const networkFetch = fetch(req)
         .then((response) => {
           if (response && response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_VERSION).then((cache) => cache.put(req, copy));
+            cache.put(req, response.clone()).catch(() => {});
           }
           return response;
         })
-        .catch(() => cached); // offline: whatever we have
+        .catch(() => cached || Response.error());
       return cached || networkFetch;
-    })
+    })()
   );
 });
