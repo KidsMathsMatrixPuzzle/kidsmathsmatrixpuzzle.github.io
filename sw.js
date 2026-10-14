@@ -1,6 +1,6 @@
-// MathMatrix Pro++ Main Service Worker — V174 unified offline package.
+// MathMatrix Pro++ Main Service Worker — V175 unified offline package.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v174';
+const CACHE_VERSION = 'mathmatrix-v175';
 
 const ASSETS = [
   './index.html',

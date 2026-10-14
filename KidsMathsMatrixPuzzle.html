@@ -51,7 +51,7 @@ window.onerror = function(msg, src, line, col, err){
 <link rel="apple-touch-icon" href="icon-192.png">
 <!-- without this the browser asks for /favicon.ico, 404s, and the tab sits blank -->
 <link rel="icon" href="icon-192.png" type="image/png">
-<title>🐒🎲 MathMatrix Pro++ — Main - V.174 Unified</title>
+<title>🐒🎲 MathMatrix Pro++ — Main - V.175 Unified</title>
 
 <!-- Raja: the copy icon in Android's share sheet copies something that will
      not open in a fresh browser, while every other channel works.
@@ -4221,13 +4221,7 @@ body{ background:#C9A87C !important; }
 <section class="screen on" data-screen="scHome">
 <div class="titleCard">
   <h1>🐒🎲 MathMatrix Pro++</h1>
-  <div style="text-align:center; font-size:12px; font-weight:700; margin-top:4px; letter-spacing:.4px; line-height:1.5;">🐒 Kids Puzzle · for 5th grade &amp; up<br><span class="tagline">“Maths and monkeys — neither sits in one direction.”</span><br><span style="color:#4ade80;">Puzzles :</span><span id="nowPlaying" style="color:#8ab4f8;"><span class="np" data-np="3x3">3×3</span> · <span class="np" data-np="4x4">4×4</span> · <span class="np" data-np="5x5">5×5</span> · <span class="np" data-np="6x6">6×6</span> · <span class="np" data-np="8x8">8×8</span> · <span class="np" data-np="10x10">10×10</span> · <span class="np" data-np="3cube">3³</span> <span style="color:#fbbf24;">(🔄 rotate or mirror any solution — 8 twins — for endless new puzzles!)</span> · <span class="np" data-np="ramanujan">🎂 Sir Ramanujan MathMagic</span> · <!--
-  This list is live: np-active highlights whichever puzzle you are on. It still
-  had a single "Binary Guess" from before the game was split, so a child on
-  Advance saw nothing light up — there was no entry carrying data-np="binary2"
-  for the highlighter to find. Two entries now, numbered as Raja asked and
-  carrying the card names so the two agree.
---><span class="np" data-np="binary">🔢 Guess My Number L1 · Junior</span> · <span class="np" data-np="binary2">L2 · Advance</span> · 🧭 Tunnels Of SaNa Maze · ➕ Criss-Cross · ⚙️ 7 Logic Gates · 🔀 Slide 1-15 · A-Z · A-Z+1-9 · 🧩 Sudoku 3×3 · 4×4 · 9×9 · 🐚 Pallanguzhi · 🎲 Thayam 5×5 · 7×7 <span style="color:#9fb0d0; font-weight:600;">(each its own one puzzle)</span></span><br><!-- The "New here? Tap ▶ Watch Me Solve … then pick any level in the table
+  <div style="text-align:center; font-size:12px; font-weight:700; margin-top:4px; letter-spacing:.4px; line-height:1.5;">🐒 Kids Puzzle · for 5th grade &amp; up<br><span class="tagline">“Maths and monkeys — neither sits in one direction.”</span><br><span style="color:#4ade80;">Puzzles :</span><span id="nowPlaying" style="color:#8ab4f8;"><span class="np" data-np="3x3">3×3</span> · <span class="np" data-np="4x4">4×4</span> · <span class="np" data-np="5x5">5×5</span> · <span class="np" data-np="6x6">6×6</span> · <span class="np" data-np="8x8">8×8</span> · <span class="np" data-np="10x10">10×10</span> · <span class="np" data-np="3cube">3³</span> <span style="color:#fbbf24;">(🔄 rotate or mirror any solution — 8 twins — for endless new puzzles!)</span> · ➕ Criss-Cross · 🧭 Tunnels Of SaNa Maze · <span class="np" data-np="ramanujan">🎂 Sir Ramanujan MathMagic</span> · ⚙️ 7 Logic Gates · <span class="np" data-np="binary">🔢 Guess My Number L1 · Junior</span> · <span class="np" data-np="binary2">L2 · Advance</span> · 🔀 Slide 1-15 · A-Z · A-Z+1-9 · 🧩 Sudoku 3×3 · 4×4 · 9×9 · 🐚 Pallanguzhi · 🎲 Thayam 5×5 · 7×7 <span style="color:#9fb0d0; font-weight:600;">(each its own one puzzle)</span></span><br><!-- The "New here? Tap ▶ Watch Me Solve … then pick any level in the table
        below" line is gone. This card is only ever seen inside the About sheet
        now, where there is no level table to point at, and Watch has its own
        named button in the bar — so it was directing a child to something that
@@ -15568,9 +15562,9 @@ if (navigator.storage && navigator.storage.persist) {
 (function(){
   // Build baked into this HTML — always reflects the exact version being run,
   // independent of cache timing. Keep in sync with the SW CACHE_VERSION on deploy.
-  var BUILD_VER = 'Main - V.174 Unified';
+  var BUILD_VER = 'Main - V.175 Unified';
   /* Legacy update beacon: older installed versions scan for this literal.
-   window.BETA_VER = 'v174'
+   window.BETA_VER = 'v175'
    Runtime code below derives the same token from BUILD_VER. */
   /* DERIVED, not a second literal. This was its own hardcoded string and it sat
      at beta-147 through two releases, so the footer and the BETA flag told
