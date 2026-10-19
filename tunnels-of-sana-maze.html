@@ -437,10 +437,11 @@
     var mazeMusicOn = localStorage.getItem('mmMusic') !== 'off';
     var audioContext = null;
     var audioUnlocked = false;
-    var bgmAudio = new Audio('./bgm-monkeys.mp3');
-    bgmAudio.loop = true;
-    bgmAudio.preload = 'none';
-    bgmAudio.volume = .22;
+    // Use a decoded Web Audio buffer so the looping score does not expose OS media controls.
+    var mazeMusicBuffer = null;
+    var mazeMusicSource = null;
+    var mazeMusicGain = null;
+    var mazeMusicLoading = false;
     var mazeCard = document.querySelector('.maze-card');
     var mazeWrap = document.querySelector('.maze-wrap');
     var startControls = document.getElementById('startControls');
@@ -497,12 +498,63 @@
         mazeTone(frequency, .16, 'sine', index * .13, .055);
       });
     }
-    function startMazeMusic() {
-      if (!mazeSoundOn || !mazeMusicOn || !audioUnlocked) return;
+    function stopMazeMusic() {
+      var source = mazeMusicSource;
+      var gain = mazeMusicGain;
+      mazeMusicSource = null;
+      mazeMusicGain = null;
+      if (source) {
+        source.onended = null;
+        try { source.stop(); } catch (err) {}
+        try { source.disconnect(); } catch (err) {}
+      }
+      if (gain) {
+        try { gain.disconnect(); } catch (err) {}
+      }
+    }
+    async function startMazeMusic() {
+      if (!mazeSoundOn || !mazeMusicOn || !audioUnlocked || !audioContext) return;
+      var context = audioContext;
+      if (context.state === 'suspended') context.resume().catch(function () {});
+      if (mazeMusicSource) return;
+      if (!mazeMusicBuffer) {
+        if (mazeMusicLoading) return;
+        mazeMusicLoading = true;
+        try {
+          var response = await fetch('./bgm-monkeys.mp3');
+          if (!response.ok) throw new Error('Could not load background music.');
+          var encodedTrack = await response.arrayBuffer();
+          mazeMusicBuffer = await new Promise(function (resolve, reject) {
+            var decoded = context.decodeAudioData(encodedTrack, resolve, reject);
+            if (decoded && typeof decoded.then === 'function') decoded.then(resolve, reject);
+          });
+        } catch (err) {
+          mazeMusicBuffer = null;
+        } finally {
+          mazeMusicLoading = false;
+        }
+        if (context !== audioContext || !mazeSoundOn || !mazeMusicOn) return;
+      }
       try {
-        var play = bgmAudio.play();
-        if (play && typeof play.catch === 'function') play.catch(function () {});
-      } catch (err) {}
+        var source = context.createBufferSource();
+        var gain = context.createGain();
+        source.buffer = mazeMusicBuffer;
+        source.loop = true;
+        gain.gain.value = .22;
+        source.connect(gain);
+        gain.connect(context.destination);
+        mazeMusicSource = source;
+        mazeMusicGain = gain;
+        source.onended = function () {
+          if (mazeMusicSource === source) {
+            mazeMusicSource = null;
+            mazeMusicGain = null;
+          }
+        };
+        source.start(0);
+      } catch (err) {
+        stopMazeMusic();
+      }
     }
     function refreshSoundControls() {
       if (!soundBtn) return;
@@ -516,7 +568,7 @@
       musicToggle.classList.toggle('is-off', !mazeMusicOn);
       musicToggle.disabled = !mazeSoundOn;
       musicToggle.title = mazeSoundOn ? '' : 'Turn Sound ON first';
-      if (!mazeSoundOn || !mazeMusicOn) bgmAudio.pause();
+      if (!mazeSoundOn || !mazeMusicOn) stopMazeMusic();
       else startMazeMusic();
     }
     function syncSoundPreferences() {
@@ -1384,10 +1436,16 @@
       startMazeMusic();
     }, { capture: true, passive: true });
     document.addEventListener('visibilitychange', function () {
-      if (document.hidden) bgmAudio.pause();
-      else if (audioUnlocked) startMazeMusic();
+      if (document.hidden) {
+        if (audioContext && audioContext.state !== 'suspended') audioContext.suspend().catch(function () {});
+      } else if (audioUnlocked && mazeSoundOn) {
+        ensureMazeAudio();
+        startMazeMusic();
+      }
     });
-    window.addEventListener('pagehide', function () { bgmAudio.pause(); });
+    window.addEventListener('pagehide', function () {
+      if (audioContext && audioContext.state !== 'suspended') audioContext.suspend().catch(function () {});
+    });
     refreshSoundControls();
     document.getElementById('newBtn').addEventListener('click', newMaze);
     document.getElementById('winNewBtn').addEventListener('click', newMaze);
@@ -1441,7 +1499,13 @@
       if (document.hidden) pauseAndSave(); else resumeTimer();
     });
     window.addEventListener('pagehide', pauseAndSave);
-    window.addEventListener('pageshow', resumeTimer);
+    window.addEventListener('pageshow', function () {
+      resumeTimer();
+      if (!document.hidden && audioUnlocked && mazeSoundOn) {
+        ensureMazeAudio();
+        startMazeMusic();
+      }
+    });
     window.addEventListener('resize', fitMazeToViewport);
     if (window.visualViewport) window.visualViewport.addEventListener('resize', fitMazeToViewport);
 
