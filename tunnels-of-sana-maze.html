@@ -309,7 +309,7 @@
         <button class="top-btn watch-btn" id="watchBtn" type="button" aria-label="Watch a demonstration of this maze" aria-pressed="false">
           <span class="top-icon" aria-hidden="true">▶️</span><span class="top-label">Watch</span>
         </button>
-        <button class="top-btn sound-btn" id="soundBtn" type="button" aria-haspopup="dialog" aria-label="Sound and music settings">
+        <button class="top-btn sound-btn" id="soundBtn" type="button" aria-haspopup="dialog" aria-label="Sound settings">
           <span class="top-icon" id="soundIcon" aria-hidden="true">🔊</span><span class="top-label">Sound</span>
         </button>
       </div>
@@ -369,15 +369,14 @@
   <dialog class="sound-dialog" id="soundDialog" aria-labelledby="soundTitle">
     <div class="sound-content">
       <div class="logic-heading">
-        <h2 id="soundTitle">🔊 Sound &amp; Music</h2>
+        <h2 id="soundTitle">🔊 Sound</h2>
         <button class="logic-close" id="soundClose" type="button">Close</button>
       </div>
       <p>Choose how SaNa’s maze sounds.</p>
       <div class="sound-options">
         <button class="sound-choice" id="soundMaster" type="button">🔊 Sound: ON</button>
-        <button class="sound-choice" id="musicToggle" type="button">🎵 Music: ON</button>
       </div>
-      <p class="sound-note">Sound controls the maze taps and finish celebration. Music controls the MathMatrix background tune.</p>
+      <p class="sound-note">Sound controls the maze taps and finish celebration.</p>
     </div>
   </dialog>
 
@@ -430,16 +429,10 @@
     var soundDialog = document.getElementById('soundDialog');
     var soundClose = document.getElementById('soundClose');
     var soundMaster = document.getElementById('soundMaster');
-    var musicToggle = document.getElementById('musicToggle');
     var soundIcon = document.getElementById('soundIcon');
     var mazeSoundOn = localStorage.getItem('mmSound') !== 'off';
-    var mazeMusicOn = localStorage.getItem('mmMusic') !== 'off';
     var audioContext = null;
     var audioUnlocked = false;
-    var bgmAudio = new Audio('./bgm-monkeys.mp3');
-    bgmAudio.loop = true;
-    bgmAudio.preload = 'none';
-    bgmAudio.volume = .22;
     var mazeCard = document.querySelector('.maze-card');
     var mazeWrap = document.querySelector('.maze-wrap');
     var startControls = document.getElementById('startControls');
@@ -496,31 +489,17 @@
         mazeTone(frequency, .16, 'sine', index * .13, .055);
       });
     }
-    function startMazeMusic() {
-      if (!mazeSoundOn || !mazeMusicOn || !audioUnlocked) return;
-      try {
-        var play = bgmAudio.play();
-        if (play && typeof play.catch === 'function') play.catch(function () {});
-      } catch (err) {}
-    }
     function refreshSoundControls() {
       if (!soundBtn) return;
       soundIcon.textContent = mazeSoundOn ? '🔊' : '🔇';
       soundBtn.classList.toggle('off', !mazeSoundOn);
-      soundBtn.setAttribute('aria-label', mazeSoundOn ? 'Sound and music settings, sound on' : 'Sound and music settings, sound off');
+      soundBtn.setAttribute('aria-label', mazeSoundOn ? 'Sound settings, sound on' : 'Sound settings, sound off');
       soundBtn.setAttribute('aria-pressed', String(mazeSoundOn));
       soundMaster.textContent = mazeSoundOn ? '🔊 Sound: ON' : '🔇 Sound: OFF';
       soundMaster.classList.toggle('is-off', !mazeSoundOn);
-      musicToggle.textContent = mazeMusicOn ? '🎵 Music: ON' : '🎵 Music: OFF';
-      musicToggle.classList.toggle('is-off', !mazeMusicOn);
-      musicToggle.disabled = !mazeSoundOn;
-      musicToggle.title = mazeSoundOn ? '' : 'Turn Sound ON first';
-      if (!mazeSoundOn || !mazeMusicOn) bgmAudio.pause();
-      else startMazeMusic();
     }
     function syncSoundPreferences() {
       mazeSoundOn = localStorage.getItem('mmSound') !== 'off';
-      mazeMusicOn = localStorage.getItem('mmMusic') !== 'off';
       refreshSoundControls();
     }
     function setWatchButton(watching) {
@@ -1358,34 +1337,17 @@
         audioContext.suspend().catch(function () {});
       }
     });
-    musicToggle.addEventListener('click', function () {
-      if (!mazeSoundOn) return;
-      mazeMusicOn = !mazeMusicOn;
-      localStorage.setItem('mmMusic', mazeMusicOn ? 'on' : 'off');
-      refreshSoundControls();
-      if (mazeMusicOn) {
-        ensureMazeAudio();
-        startMazeMusic();
-      }
-    });
     window.addEventListener('storage', function (event) {
-      if (event.key === 'mmSound' || event.key === 'mmMusic' || event.key === null) syncSoundPreferences();
+      if (event.key === 'mmSound' || event.key === null) syncSoundPreferences();
     });
     document.addEventListener('pointerdown', function () {
       if (!mazeSoundOn) return;
       ensureMazeAudio();
-      startMazeMusic();
     }, { capture: true, passive: true });
     document.addEventListener('keydown', function () {
       if (!mazeSoundOn) return;
       ensureMazeAudio();
-      startMazeMusic();
     }, { capture: true, passive: true });
-    document.addEventListener('visibilitychange', function () {
-      if (document.hidden) bgmAudio.pause();
-      else if (audioUnlocked) startMazeMusic();
-    });
-    window.addEventListener('pagehide', function () { bgmAudio.pause(); });
     refreshSoundControls();
     document.getElementById('newBtn').addEventListener('click', newMaze);
     document.getElementById('winNewBtn').addEventListener('click', newMaze);
