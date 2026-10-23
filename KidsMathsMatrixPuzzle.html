@@ -51,7 +51,7 @@ window.onerror = function(msg, src, line, col, err){
 <link rel="apple-touch-icon" href="icon-192.png">
 <!-- without this the browser asks for /favicon.ico, 404s, and the tab sits blank -->
 <link rel="icon" href="icon-192.png" type="image/png">
-<title>🐒🎲 MathMatrix Pro++ — Main - V.176 Unified</title>
+<title>🐒🎲 MathMatrix Pro++ — Main - V.180 Unified</title>
 
 <!-- Raja: the copy icon in Android's share sheet copies something that will
      not open in a fresh browser, while every other channel works.
@@ -15597,9 +15597,9 @@ if (navigator.storage && navigator.storage.persist) {
 (function(){
   // Build baked into this HTML — always reflects the exact version being run,
   // independent of cache timing. Keep in sync with the SW CACHE_VERSION on deploy.
-  var BUILD_VER = 'Main - V.176 Unified';
+  var BUILD_VER = 'Main - V.180 Unified';
   /* Legacy update beacon: older installed versions scan for this literal.
-   window.BETA_VER = 'v176'
+   window.BETA_VER = 'v180'
    Runtime code below derives the same token from BUILD_VER. */
   /* DERIVED, not a second literal. This was its own hardcoded string and it sat
      at beta-147 through two releases, so the footer and the BETA flag told
@@ -15668,7 +15668,9 @@ if (navigator.storage && navigator.storage.persist) {
              read that and take its first word, the same way BETA_VER does. */
           var m = txt.match(/BUILD_VER\s*=\s*'([^']+)'/);
           if (!m || !m[1]) return;
-          var fresh = m[1].split(' ')[0];
+          var freshBuildNumber = m[1].match(/V\.(\d+)/i);
+          if (!freshBuildNumber) return;
+          var fresh = 'v' + freshBuildNumber[1];
           if (fresh === window.BETA_VER) return;
           location.replace(location.pathname + '?v=' + encodeURIComponent(fresh));
         })
