@@ -1,6 +1,6 @@
-// MathMatrix Pro++ Main Service Worker — V180 unified D-pad offline package.
+// MathMatrix Pro++ Main Service Worker — V181 unified D-pad offline package.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v180';
+const CACHE_VERSION = 'mathmatrix-v181';
 
 const ASSETS = [
   './index.html',
