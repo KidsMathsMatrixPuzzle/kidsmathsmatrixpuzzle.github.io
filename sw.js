@@ -1,12 +1,13 @@
-// MathMatrix Pro++ Main Service Worker — V181 unified D-pad offline package.
+// MathMatrix Pro++ Main Service Worker — V182 unified Cave Treasure Hunt offline package.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v181';
+const CACHE_VERSION = 'mathmatrix-v182-cave-watch-reset';
 
 const ASSETS = [
   './index.html',
   './KidsMathsMatrixPuzzle.html',
   './criss-cross.html',
   './tunnels-of-sana-maze.html',
+  './cave-treasure-hunt.html',
   './MultiplyMagic3.html',
   './sound-lab.html',
   './qrcode.min.js',

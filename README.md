@@ -21,6 +21,7 @@ MathMatrix Pro++ is a browser-based puzzle collection with number, logic, maze, 
 - **3³ Multiply Magic:** rotate or mirror solutions to explore eight puzzle twins
 - **Criss-Cross:** a guided math puzzle
 - **Tunnels of SaNa Maze:** trace the tunnel that reaches the finish
+- **Cave Treasure Hunt:** collect shields and treasure across ten checkpoints, then escape the cave
 - **Sir Ramanujan MathMagic:** birthday-number puzzle
 - **7 Logic Gates:** AND, OR, NOT, NAND, NOR, XOR, and XNOR
 - **Guess My Number:** Junior (1–99) and Advance (1–255)
