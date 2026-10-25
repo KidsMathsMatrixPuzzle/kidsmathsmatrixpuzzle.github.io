@@ -9,7 +9,7 @@ const {before, after, test} = require('node:test');
 const {chromium} = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const root = path.resolve(__dirname, '..');
 const output = process.env.MAIN_ARTIFACT_DIR;
-const cacheName = 'mathmatrix-v182-cave-watch-reset';
+const cacheName = 'mathmatrix-v183-visible-viewport';
 let browser, server, base = process.env.MAIN_APP_URL, oldMode = false;
 const mime = {'.html':'text/html; charset=utf-8','.js':'application/javascript',
   '.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.mp3':'audio/mpeg'};
@@ -107,7 +107,7 @@ for (const [entry,width,height] of [['index.html',390,844],['KidsMathsMatrixPuzz
     await list(page,entry);
     assert.equal(await page.locator('#caveTreasureHuntTab').count(),1, 'Cave must be available in Main');
     assert.equal(await page.locator('#tunnelsOfMetaTab').count(),1);
-    assert.equal(await page.evaluate(()=>window.BETA_VER),'v182');
+    assert.equal(await page.evaluate(()=>window.BETA_VER),'v183');
     await page.locator('#caveTreasureHuntTab').scrollIntoViewIfNeeded();
     const cave = await page.locator('#caveTreasureHuntTab').boundingBox();
     const tunnel = await page.locator('#tunnelsOfMetaTab').boundingBox();
@@ -148,14 +148,14 @@ test('Direct Main Cave entry rotates, returns to Main, and works offline', async
   await screenshot(page,'offline-cave');
 });
 
-test('Installed V181 updates to Main V182 and retains saved data and Beta cache', {
+test('Installed V182 updates to Main V183 and retains saved data and Beta cache', {
   skip: !!process.env.MAIN_APP_URL || !process.env.MAIN_BASELINE_DIR,
 }, async t => {
   oldMode = true;
   t.after(()=>{oldMode=false;});
   const {context,page} = await session(t);
   await list(page);
-  assert.equal(await page.evaluate(()=>window.BETA_VER),'v181');
+  assert.equal(await page.evaluate(()=>window.BETA_VER),'v182');
   await page.evaluate(async()=>{
     await navigator.serviceWorker.ready;
     const beta=await caches.open('mathmatrix-beta-preservation-probe');
@@ -164,7 +164,7 @@ test('Installed V181 updates to Main V182 and retains saved data and Beta cache'
   });
   await page.waitForFunction(async()=>{
     const r=await navigator.serviceWorker.getRegistration();
-    const c=await caches.open('mathmatrix-v181');
+    const c=await caches.open('mathmatrix-v182-cave-watch-reset');
     return navigator.serviceWorker.controller?.state==='activated' && !r.installing &&
       !!(await c.match(new URL('index.html',location.href).href)) &&
       !!(await c.match(new URL('tunnels-of-sana-maze.html',location.href).href));
@@ -172,9 +172,9 @@ test('Installed V181 updates to Main V182 and retains saved data and Beta cache'
   oldMode = false;
   await page.locator('#tab-scApp').click();
   await page.getByRole('button',{name:'Online Update',exact:false}).click();
-  await page.waitForFunction(()=>window.BETA_VER==='v182'); await ready(page);
+  await page.waitForFunction(()=>window.BETA_VER==='v183'); await ready(page);
   await page.waitForLoadState('load');
-  await page.waitForFunction(async()=>!(await caches.keys()).includes('mathmatrix-v181'));
+  await page.waitForFunction(async()=>!(await caches.keys()).includes('mathmatrix-v182-cave-watch-reset'));
   assert.equal(await page.evaluate(()=>localStorage.getItem('release-preservation')),'kept');
   assert.equal(await page.evaluate(async()=>{
     const c=await caches.open('mathmatrix-beta-preservation-probe');

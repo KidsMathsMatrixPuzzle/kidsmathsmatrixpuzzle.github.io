@@ -1,6 +1,6 @@
-// MathMatrix Pro++ Main Service Worker — V182 unified Cave Treasure Hunt offline package.
+// MathMatrix Pro++ Main Service Worker — V183 unified Cave Treasure Hunt visible-viewport package.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v182-cave-watch-reset';
+const CACHE_VERSION = 'mathmatrix-v183-visible-viewport';
 
 const ASSETS = [
   './index.html',
