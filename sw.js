@@ -1,6 +1,6 @@
-// MathMatrix Pro++ Main Service Worker — V198 SaNa Watch Rest Room.
+// MathMatrix Pro++ Main Service Worker — V199 SaNa Watch Rest Room.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v198-sana-watch-rest-room';
+const CACHE_VERSION = 'mathmatrix-v199-sana-watch-rest-room';
 
 const ASSETS = [
   './index.html',
