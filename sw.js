@@ -1,6 +1,6 @@
-// MathMatrix Pro++ Main Service Worker — V190 Thayam Medium Dividers.
+// MathMatrix Pro++ Main Service Worker — V191 Thayam X-Cell Tint.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v190-thayam-medium-grid';
+const CACHE_VERSION = 'mathmatrix-v191-thayam-x-cell-tint';
 
 const ASSETS = [
   './index.html',
