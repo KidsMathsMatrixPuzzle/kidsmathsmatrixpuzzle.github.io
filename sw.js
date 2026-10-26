@@ -1,6 +1,6 @@
-// MathMatrix Pro++ Main Service Worker — V188 Thayam Black Board.
+// MathMatrix Pro++ Main Service Worker — V189 Thayam White Cells.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v188-thayam-blue-frame';
+const CACHE_VERSION = 'mathmatrix-v189-thayam-white-cells';
 
 const ASSETS = [
   './index.html',
