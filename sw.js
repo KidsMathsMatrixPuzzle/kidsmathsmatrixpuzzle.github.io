@@ -1,6 +1,6 @@
-// MathMatrix Pro++ Main Service Worker — V185 SaNa Treasure Hunt Interactive.
+// MathMatrix Pro++ Main Service Worker — V186 SaNa Treasure Hunt Interactive Gradient.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v185-sana-treasure-interactive';
+const CACHE_VERSION = 'mathmatrix-v186-sana-treasure-interactive-gradient';
 
 const ASSETS = [
   './index.html',
