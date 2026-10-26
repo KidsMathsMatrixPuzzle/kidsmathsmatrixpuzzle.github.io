@@ -1,6 +1,6 @@
-// MathMatrix Pro++ Main Service Worker — V183 unified Cave Treasure Hunt visible-viewport package.
+// MathMatrix Pro++ Main Service Worker — V184 SaNa Treasure Hunt app entry.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v183-visible-viewport';
+const CACHE_VERSION = 'mathmatrix-v184-sana-treasure-hunt';
 
 const ASSETS = [
   './index.html',
@@ -8,6 +8,7 @@ const ASSETS = [
   './criss-cross.html',
   './tunnels-of-sana-maze.html',
   './cave-treasure-hunt.html',
+  './treasure-hunt-landscape-prototype/index.html',
   './MultiplyMagic3.html',
   './sound-lab.html',
   './qrcode.min.js',
