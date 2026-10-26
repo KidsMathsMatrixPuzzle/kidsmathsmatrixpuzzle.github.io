@@ -1,6 +1,6 @@
-// MathMatrix Pro++ Main Service Worker — V192 Pallanguzhi 4P Blue Frame.
+// MathMatrix Pro++ Main Service Worker — V193 Pallanguzhi 4P Player Cups.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v192-pallanguzhi4-white-board';
+const CACHE_VERSION = 'mathmatrix-v193-pallanguzhi4-player-cup-colors';
 
 const ASSETS = [
   './index.html',
