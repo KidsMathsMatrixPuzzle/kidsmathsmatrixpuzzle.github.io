@@ -1,6 +1,6 @@
 // MathMatrix Pro++ Main Service Worker — V201 SaNa Watch Rest Room.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v202-sana-rest-decoy-block';
+const CACHE_VERSION = 'mathmatrix-v203-sana-rest-decoy-gate';
 
 const ASSETS = [
   './index.html',
@@ -10,7 +10,7 @@ const ASSETS = [
   './cave-treasure-hunt.html',
   './treasure-hunt-landscape-prototype/index.html',
   './treasure-hunt-landscape-prototype/assets/interactive-treasure-hunt-maze-original/14-explorers-tired.webp',
-  './treasure-hunt-landscape-prototype/assets/interactive-treasure-hunt-maze-original/15-explorers-too-tired.png',
+  './treasure-hunt-landscape-prototype/assets/interactive-treasure-hunt-maze-original/16-explorers-tired-at-decoy.png',
   './MultiplyMagic3.html',
   './sound-lab.html',
   './qrcode.min.js',
