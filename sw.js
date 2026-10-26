@@ -1,6 +1,6 @@
-// MathMatrix Pro++ Main Service Worker — V195 SaNa popup images.
+// MathMatrix Pro++ Main Service Worker — V196 SaNa Watch Rest Room.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v195-sana-popup-images';
+const CACHE_VERSION = 'mathmatrix-v196-sana-watch-rest-room';
 
 const ASSETS = [
   './index.html',
@@ -9,6 +9,7 @@ const ASSETS = [
   './tunnels-of-sana-maze.html',
   './cave-treasure-hunt.html',
   './treasure-hunt-landscape-prototype/index.html',
+  './treasure-hunt-landscape-prototype/assets/interactive-treasure-hunt-maze-original/14-explorers-tired.webp',
   './MultiplyMagic3.html',
   './sound-lab.html',
   './qrcode.min.js',
