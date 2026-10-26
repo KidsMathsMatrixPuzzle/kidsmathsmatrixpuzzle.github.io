@@ -1,6 +1,6 @@
-// MathMatrix Pro++ Main Service Worker — V191 Thayam X-Cell Tint.
+// MathMatrix Pro++ Main Service Worker — V192 Pallanguzhi 4P Blue Frame.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v191-thayam-x-cell-tint';
+const CACHE_VERSION = 'mathmatrix-v192-pallanguzhi4-white-board';
 
 const ASSETS = [
   './index.html',
