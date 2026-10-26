@@ -1,6 +1,6 @@
-// MathMatrix Pro++ Main Service Worker — V194 Pallanguzhi 4P Larger Counts.
+// MathMatrix Pro++ Main Service Worker — V195 SaNa popup images.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v194-pallanguzhi4-larger-counts';
+const CACHE_VERSION = 'mathmatrix-v195-sana-popup-images';
 
 const ASSETS = [
   './index.html',
