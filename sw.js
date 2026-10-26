@@ -1,6 +1,6 @@
-// MathMatrix Pro++ Main Service Worker — V186 SaNa Treasure Hunt Interactive Gradient.
+// MathMatrix Pro++ Main Service Worker — V187 Thayam White Board.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v186-sana-treasure-interactive-gradient';
+const CACHE_VERSION = 'mathmatrix-v187-thayam-white-board';
 
 const ASSETS = [
   './index.html',
