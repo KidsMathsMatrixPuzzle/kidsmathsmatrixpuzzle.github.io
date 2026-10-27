@@ -1,6 +1,6 @@
 // MathMatrix Pro++ Main Service Worker — V201 SaNa Watch Rest Room.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v205-beyond-stone-gate';
+const CACHE_VERSION = 'mathmatrix-v206-beyond-stone-gate-puzzles';
 
 const ASSETS = [
   './index.html',
