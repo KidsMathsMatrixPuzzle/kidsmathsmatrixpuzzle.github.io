@@ -1,6 +1,6 @@
 // MathMatrix Pro++ Main Service Worker — V201 SaNa Watch Rest Room.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v209-tunnels-dpad-hold';
+const CACHE_VERSION = 'mathmatrix-v210-full-cell-dpad';
 
 const ASSETS = [
   './index.html',
