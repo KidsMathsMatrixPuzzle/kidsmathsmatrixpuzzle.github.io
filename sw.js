@@ -1,6 +1,6 @@
-// MathMatrix Pro++ Main Service Worker — V201 SaNa Watch Rest Room.
+// MathMatrix Pro++ Main Service Worker — V202 physical keyboard maze parity.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v210-full-cell-dpad';
+const CACHE_VERSION = 'mathmatrix-v211-physical-key-parity';
 
 const ASSETS = [
   './index.html',
