@@ -1,6 +1,6 @@
-// MathMatrix Pro++ Main Service Worker — V204 Treasure Hunt SaNa bob.
+// MathMatrix Pro++ Main Service Worker — V205 Tic-Tac-Toe level colors.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v213-sana-bob';
+const CACHE_VERSION = 'mathmatrix-v214-tic-tac-toe-level-colors';
 
 const ASSETS = [
   './index.html',
