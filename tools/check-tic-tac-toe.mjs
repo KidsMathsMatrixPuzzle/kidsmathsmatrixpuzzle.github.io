@@ -1,0 +1,248 @@
+import assert from 'node:assert/strict';
+import { createServer } from 'node:http';
+import { readFile, mkdir } from 'node:fs/promises';
+import { resolve, dirname, extname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+import { Script } from 'node:vm';
+
+const require = createRequire(import.meta.url);
+const { chromium, expect } = require(process.env.MM_PLAYWRIGHT || '@playwright/test');
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+let useBaseline = false;
+const server = createServer(async (request, response) => {
+  const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
+  const file = resolve(root, pathname === '/' ? './index.html' : '.' + pathname);
+  if (!file.startsWith(root + '/'.replace('/', process.platform === 'win32' ? '\\' : '/'))) {
+    response.writeHead(403).end(); return;
+  }
+  try {
+    const baselineFile = process.env.MM_BASELINE_DIR && useBaseline && ['index.html','KidsMathsMatrixPuzzle.html','sw.js'].includes(file.slice(root.length+1));
+    const data = await readFile(baselineFile ? resolve(process.env.MM_BASELINE_DIR,file.slice(root.length+1)) : file);
+    const mime = { '.html': 'text/html', '.js': 'text/javascript', '.mp3': 'audio/mpeg', '.json': 'application/json', '.png': 'image/png' };
+    response.writeHead(200, { 'Content-Type': mime[extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-store' }).end(data);
+  } catch { response.writeHead(404).end(); }
+});
+await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+const base = process.env.MM_BASE_URL || `http://127.0.0.1:${server.address().port}/`;
+const browser = await chromium.launch({ headless: true, ...(process.env.MM_CHROME ? { executablePath: process.env.MM_CHROME } : {}) });
+const shots = process.env.MM_SHOTS || resolve(root, 'artifacts', 'tic-tac-toe');
+await mkdir(shots, { recursive: true });
+const errors = [];
+let checks = 0;
+try {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
+  const page = await context.newPage();
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto(base + 'KidsMathsMatrixPuzzle.html');
+  for (const source of await page.locator('script:not([src])').allTextContents()) new Script(source);
+  assert.equal(await page.locator('button[data-size="tic-tac-toe"]').count(), 1, 'One Tic-Tac-Toe menu card'); checks++;
+  await page.getByRole('button', { name: 'Tap to play' }).click();
+  await page.locator('.splash').waitFor({ state: 'detached' });
+  await page.getByRole('button', { name: 'Puzzles', exact: false }).click();
+  const menuCard = page.locator('button[data-size="tic-tac-toe"]');
+  await menuCard.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: resolve(shots, 'single-menu-card.png'), animations: 'disabled' });
+  await menuCard.click();
+  await expect(page).toHaveURL(/tic-tac-toe\.html$/); checks++;
+  for (const source of await page.locator('script:not([src])').allTextContents()) new Script(source);
+  const now = new Date();
+  await page.clock.install({ time: now });
+  await page.clock.pauseAt(now);
+  const notifications = page.getByRole('status', { name: 'SaNa notifications' });
+  await expect(notifications).toBeVisible();
+  await expect(notifications).toContainText('Hello! I’m SaNa'); checks++;
+  await expect(page.getByText('SaNa', { exact: true })).toBeVisible(); checks++;
+  await expect(page.getByRole('button', { name: 'Logic', exact: true })).toBeVisible(); checks++;
+  await page.getByRole('button', { name: 'Logic', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: /Logic/ })).toContainText('3 in a row');
+  await page.getByRole('button', { name: 'Close logic' }).click(); checks++;
+  const cell = (row, column) => page.getByRole('button', { name: new RegExp(`^Row ${row}, column ${column}(?:,| )`) });
+  const marks = () => page.locator('#board [data-mark]').count();
+  await cell(1,1).click();
+  await expect(notifications).toContainText('O, tap an empty square');
+  await cell(1,1).click();
+  await expect(notifications).toContainText('already taken');
+  assert.equal(await marks(), 1);
+  await expect(page.locator('#status')).toContainText('O’s turn'); checks++;
+  await page.getByRole('button', { name: 'Clear', exact: true }).click();
+  await expect(notifications).toContainText('Board and scores reset'); checks++;
+  for (const size of [3, 4, 5]) {
+    await page.getByRole('button', { name: `${size}×${size}`, exact: true }).click();
+    await expect(page.getByRole('group', { name: `${size} by ${size} Tic-Tac-Toe board` }).getByRole('button')).toHaveCount(size * size);
+    for (let column = 1; column <= size; column++) {
+      await cell(1, column).click();
+      if (column < size) await cell(2, column).click();
+    }
+    await expect(page.locator('#status')).toHaveText('X wins!');
+    await expect(notifications).toContainText('Well played'); checks++;
+    assert.equal(await page.locator('.winner').count(), size); checks++;
+    await cell(size, size).click();
+    assert.equal(await marks(), 2 * size - 1, 'Finished game rejects moves'); checks++;
+    await page.getByRole('button', { name: 'New', exact: true }).click();
+    assert.equal(await marks(), 0);
+    await expect(page.locator('#scoreX')).toHaveText('1'); checks++;
+    await expect(notifications).toContainText('scores are kept'); checks++;
+    await page.getByRole('button', { name: 'Watch', exact: true }).click();
+    await expect(page.locator('#status')).toContainText('Watch');
+    await expect(notifications).toContainText('showing X and O'); checks++;
+    await page.getByRole('button', { name: 'Clear', exact: true }).click();
+    await page.clock.runFor(10000);
+    assert.equal(await marks(), 0, 'Clear cancels pending Watch moves');
+    await expect(page.locator('#scoreX')).toHaveText('0'); checks++;
+    await page.getByRole('button', { name: 'Watch', exact: true }).click();
+    await page.clock.runFor(10000);
+    await expect(page.locator('#status')).toContainText('X wins');
+    await expect(notifications).toContainText('green line'); checks++;
+    await expect(page.locator('#scoreX')).toHaveText('0'); checks++;
+    if (size === 5) {
+      await page.setViewportSize({width:768,height:1024});
+      await page.screenshot({path:resolve(shots,'watch-with-sana.png'),fullPage:true});
+      await page.setViewportSize({width:390,height:844});
+    }
+    await page.getByRole('button', { name: 'New', exact: true }).click();
+  }
+  // A fixed seed makes variety checks reproducible without depending on luck.
+  await page.evaluate(() => {
+    let seed = 2048;
+    Math.random = () => { seed = (Math.imul(seed,1664525)+1013904223) >>> 0; return seed / 4294967296; };
+  });
+  for (const size of [3,4,5]) {
+    await page.getByRole('button', { name: `${size}×${size}`, exact: true }).click();
+    await page.getByRole('button', { name: 'Clear', exact: true }).click();
+    const lines = new Set(), orders = new Set(), kinds = new Set();
+    let previous = '';
+    for (let round=0;round<16;round++) {
+      await page.getByRole('button', { name: 'Watch', exact: true }).click();
+      let before = [];
+      const order = [];
+      for (let step=0;step<2*size-1;step++) {
+        await page.clock.runFor(700);
+        const after = await page.locator('#board button').evaluateAll(cells => cells.map(cell => cell.dataset.mark || ''));
+        const changed = after.flatMap((mark,index) => mark && !before[index] ? [index] : []);
+        assert.equal(changed.length,1,'Each Watch step adds exactly one mark');
+        assert.equal(after[changed[0]],step%2 === 0 ? 'X' : 'O','Watch alternates players');
+        order.push(changed[0]); before = after;
+        if (step<2*size-2) await expect(page.getByRole('button', { name: 'Stop Watch', exact: true })).toBeVisible();
+      }
+      const winner = await page.locator('#board .winner').evaluateAll(cells => cells.map(cell => Number(cell.dataset.index)));
+      assert.equal(winner.length,size,'Watch finishes with a full winning line');
+      const rows = winner.map(index => Math.floor(index/size)), columns = winner.map(index => index%size);
+      let kind;
+      if (rows.every(row => row===rows[0])) kind = 'row';
+      else if (columns.every(column => column===columns[0])) kind = 'column';
+      else { assert(winner.every(index => Math.floor(index/size)===index%size) || winner.every(index => Math.floor(index/size)+index%size===size-1)); kind = 'diagonal'; }
+      if (size===5 && !kinds.has(kind)) {
+        await page.setViewportSize({width:768,height:1024});
+        await page.screenshot({path:resolve(shots,`watch-${kind}.png`),fullPage:true});
+        await page.setViewportSize({width:390,height:844});
+      }
+      kinds.add(kind);
+      const key = winner.join(',');
+      assert.notEqual(key,previous,'Consecutive demonstrations use different winning lines');
+      previous = key; lines.add(key); orders.add(order.join(','));
+      await expect(page.locator('#scoreX')).toHaveText('0');
+    }
+    assert(lines.size>3,'Watch varies the winning line');
+    assert(orders.size>3,'Watch varies placement order');
+    assert.deepEqual([...kinds].sort(),['column','diagonal','row'],'Watch covers rows, columns, and diagonals');
+    checks++;
+    await page.getByRole('button', { name: 'New', exact: true }).click();
+  }
+  await page.getByRole('button', { name: '3×3', exact: true }).click();
+  await cell(3,3).click();
+  await page.getByRole('button', { name: 'Watch', exact: true }).click();
+  await page.clock.runFor(1500);
+  await page.getByRole('button', { name: 'Stop Watch', exact: true }).click();
+  await expect(cell(3,3)).toHaveText('X');
+  await expect(page.locator('#status')).toContainText('O’s turn');
+  await page.clock.runFor(10000);
+  assert.equal(await marks(), 1, 'Stop restores the interrupted round'); checks++;
+  await page.getByRole('button', { name: 'Watch', exact: true }).click();
+  await page.getByRole('button', { name: 'New', exact: true }).click();
+  await page.clock.runFor(10000);
+  assert.equal(await marks(), 0, 'New cancels Watch'); checks++;
+  // A full board without a line is a draw.
+  for (const [row, column] of [[1,1],[1,2],[1,3],[2,2],[2,1],[2,3],[3,2],[3,1],[3,3]]) await cell(row, column).click();
+  await expect(page.locator('#status')).toHaveText('It’s a draw!'); checks++;
+  await expect(notifications).toContainText('Every square is filled'); checks++;
+  await page.getByRole('button', { name: 'Sound & Music settings' }).click();
+  const musicLoaded = page.waitForResponse(response => response.url().endsWith('bgm-beyond-stone-gate.mp3') && response.ok());
+  await page.getByRole('button', { name: 'Sound: OFF', exact: true }).click();
+  await musicLoaded; checks++;
+  assert.equal(await page.evaluate(() => localStorage.getItem('mmSound')), 'on');
+  await page.getByRole('button', { name: 'Music: ON', exact: true }).click();
+  assert.equal(await page.evaluate(() => localStorage.getItem('mmMusic')), 'off');
+  await page.getByRole('button', { name: 'Sound: ON', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Music: OFF', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: 'Close sound settings' }).click(); checks++;
+  const shared = await context.newPage();
+  await shared.goto(base + 'tic-tac-toe.html');
+  await shared.getByRole('button', { name: 'Sound & Music settings' }).click();
+  await expect(shared.getByRole('button', { name: 'Sound: OFF', exact: true })).toBeVisible();
+  await expect(shared.getByRole('button', { name: 'Music: OFF', exact: true })).toBeDisabled();
+  await shared.close(); checks++;
+  await page.getByRole('button', { name: 'Clear', exact: true }).click();
+  await cell(1,1).focus();
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('ArrowRight');
+  await expect(cell(1,2)).toBeFocused(); checks++;
+  await page.getByRole('button', { name: 'Watch', exact: true }).click();
+  await page.getByRole('button', { name: '5×5', exact: true }).click();
+  await page.clock.fastForward(10000);
+  assert.equal(await marks(), 0, 'Size change cancels Watch'); checks++;
+  for (const [width,height] of [[360,740],[768,1024],[1440,900]]) {
+    await page.setViewportSize({width,height});
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `No overflow at ${width}`);
+    await expect(notifications).toBeInViewport();
+    await expect(page.getByRole('button', { name: 'Clear', exact: true })).toBeInViewport();
+    await page.screenshot({ path: resolve(shots, `game-${width}.png`), fullPage: true }); checks++;
+  }
+  const rootPage = await context.newPage();
+  await rootPage.goto(base);
+  assert.equal(await rootPage.locator('button[data-size="tic-tac-toe"]').count(),1,'Main root entry includes the game');
+  await expect(rootPage).toHaveTitle(/Main - V\.203 Unified/); checks++;
+  await rootPage.close();
+  const backLink = page.getByRole('link', {name:'Back to puzzles'});
+  await expect(backLink).toHaveAttribute('href','KidsMathsMatrixPuzzle.html'); checks++;
+  const offline = await browser.newContext();
+  const installed = await offline.newPage();
+  await installed.goto(base + 'KidsMathsMatrixPuzzle.html');
+  await installed.evaluate(async () => { await navigator.serviceWorker.ready; });
+  await installed.waitForFunction(() => !!navigator.serviceWorker.controller);
+  await offline.setOffline(true);
+  await installed.goto(base + 'tic-tac-toe.html?size=4');
+  await expect(installed.getByRole('group', { name: '4 by 4 Tic-Tac-Toe board' }).getByRole('button')).toHaveCount(16); checks++;
+  await offline.close();
+  if (process.env.MM_BASELINE_DIR && !process.env.MM_BASE_URL) {
+    useBaseline = true;
+    const upgrade = await browser.newContext();
+    const existing = await upgrade.newPage();
+    await existing.goto(base+'KidsMathsMatrixPuzzle.html');
+    await expect(existing).toHaveTitle(/Main - V\.202 Unified/);
+    await existing.waitForFunction(async () => {
+      const registration = await navigator.serviceWorker.getRegistration();
+      return !!registration?.active && !!navigator.serviceWorker.controller;
+    });
+    await existing.evaluate(async () => {
+      if (!await caches.has('mathmatrix-v211-physical-key-parity')) throw new Error('Old cache not installed');
+      await caches.open('mathmatrix-beta-preserve-test');
+    });
+    useBaseline = false;
+    await existing.evaluate(async () => { const registration = await navigator.serviceWorker.getRegistration(); await registration.update(); });
+    await existing.waitForFunction(async () => await caches.has('mathmatrix-v212-tic-tac-toe') && !await caches.has('mathmatrix-v211-physical-key-parity'));
+    await existing.reload();
+    await expect(existing).toHaveTitle(/Main - V\.203 Unified/);
+    assert.equal(await existing.locator('button[data-size="tic-tac-toe"]').count(),1,'Upgraded app includes the game');
+    assert(await existing.evaluate(() => caches.has('mathmatrix-beta-preserve-test')),'Main upgrade preserves Beta caches');
+    await upgrade.setOffline(true);
+    await existing.goto(base+'tic-tac-toe.html?size=5');
+    await expect(existing.getByRole('group',{name:'5 by 5 Tic-Tac-Toe board'}).getByRole('button')).toHaveCount(25);
+    await upgrade.close(); checks++;
+  }
+  assert.deepEqual(errors, [], 'No browser JavaScript errors'); checks++;
+  console.log(`PASS: ${checks} checks; screenshots: ${shots}`);
+} finally {
+  await browser.close();
+  await new Promise(resolve => server.close(resolve));
+}
