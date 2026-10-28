@@ -1,11 +1,12 @@
-// MathMatrix Pro++ Main Service Worker — V202 physical keyboard maze parity.
+// MathMatrix Pro++ Main Service Worker — V203 Tic-Tac-Toe with SaNa and varied Watch.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v211-physical-key-parity';
+const CACHE_VERSION = 'mathmatrix-v212-tic-tac-toe';
 
 const ASSETS = [
   './index.html',
   './KidsMathsMatrixPuzzle.html',
   './criss-cross.html',
+  './tic-tac-toe.html',
   './tunnels-of-sana-maze.html',
   './cave-treasure-hunt.html',
   './treasure-hunt-landscape-prototype/index.html',
@@ -60,8 +61,11 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       (async () => {
         const cache = await caches.open(CACHE_VERSION);
+        // Board size lives in the query string; the cached game handles every size.
+        const boardPage = new URL(req.url).pathname === new URL('./tic-tac-toe.html', self.location).pathname;
         const cached =
           await cache.match(req) ||
+          (boardPage ? await cache.match('./tic-tac-toe.html') : null) ||
           await cache.match('./KidsMathsMatrixPuzzle.html') ||
           await cache.match('./index.html');
 
