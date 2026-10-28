@@ -1,6 +1,6 @@
-// MathMatrix Pro++ Main Service Worker — V203 Tic-Tac-Toe with SaNa and varied Watch.
+// MathMatrix Pro++ Main Service Worker — V204 Treasure Hunt SaNa bob.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v212-tic-tac-toe';
+const CACHE_VERSION = 'mathmatrix-v213-sana-bob';
 
 const ASSETS = [
   './index.html',

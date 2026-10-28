@@ -201,7 +201,7 @@ try {
   const rootPage = await context.newPage();
   await rootPage.goto(base);
   assert.equal(await rootPage.locator('button[data-size="tic-tac-toe"]').count(),1,'Main root entry includes the game');
-  await expect(rootPage).toHaveTitle(/Main - V\.203 Unified/); checks++;
+  await expect(rootPage).toHaveTitle(/Main - V\.204 Unified/); checks++;
   await rootPage.close();
   const backLink = page.getByRole('link', {name:'Back to puzzles'});
   await expect(backLink).toHaveAttribute('href','KidsMathsMatrixPuzzle.html'); checks++;
@@ -230,9 +230,9 @@ try {
     });
     useBaseline = false;
     await existing.evaluate(async () => { const registration = await navigator.serviceWorker.getRegistration(); await registration.update(); });
-    await existing.waitForFunction(async () => await caches.has('mathmatrix-v212-tic-tac-toe') && !await caches.has('mathmatrix-v211-physical-key-parity'));
+    await existing.waitForFunction(async () => await caches.has('mathmatrix-v213-sana-bob') && !await caches.has('mathmatrix-v211-physical-key-parity'));
     await existing.reload();
-    await expect(existing).toHaveTitle(/Main - V\.203 Unified/);
+    await expect(existing).toHaveTitle(/Main - V\.204 Unified/);
     assert.equal(await existing.locator('button[data-size="tic-tac-toe"]').count(),1,'Upgraded app includes the game');
     assert(await existing.evaluate(() => caches.has('mathmatrix-beta-preserve-test')),'Main upgrade preserves Beta caches');
     await upgrade.setOffline(true);
