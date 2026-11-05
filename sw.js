@@ -1,6 +1,6 @@
 // MathMatrix Pro++ Main Service Worker — V216 direct puzzle books and fitted choices.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v216-book-layout';
+const CACHE_VERSION = 'mathmatrix-v216-book-layout-r3';
 
 const ASSETS = [
   './index.html',
