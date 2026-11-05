@@ -1,6 +1,6 @@
-// MathMatrix Pro++ Main Service Worker — V217 fitted Gate Logic and shared portrait games.
+// MathMatrix Pro++ Main Service Worker — V218 portrait desktop frame for Tic-Tac-Toe.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v217-game-fit';
+const CACHE_VERSION = 'mathmatrix-v218-desktop-frame';
 
 const ASSETS = [
   './index.html',
