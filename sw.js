@@ -1,12 +1,14 @@
-// MathMatrix Pro++ Main Service Worker — V216 direct puzzle books and fitted choices.
+// MathMatrix Pro++ Main Service Worker — V217 fitted Gate Logic and shared portrait games.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v216-book-layout-r3';
+const CACHE_VERSION = 'mathmatrix-v217-game-fit';
 
 const ASSETS = [
   './index.html',
   './KidsMathsMatrixPuzzle.html',
   './category-chooser.css',
   './category-chooser.js',
+  './game-layout.css',
+  './game-layout.js',
   './criss-cross.html',
   './tic-tac-toe.html',
   './tunnels-of-sana-maze.html',
