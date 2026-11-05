@@ -1,6 +1,6 @@
-// MathMatrix Pro++ Main Service Worker — V215 category chooser and centered Sound-only menus.
+// MathMatrix Pro++ Main Service Worker — V216 direct puzzle books and fitted choices.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v215-category-chooser';
+const CACHE_VERSION = 'mathmatrix-v216-book-layout';
 
 const ASSETS = [
   './index.html',
