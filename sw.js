@@ -1,10 +1,12 @@
-// MathMatrix Pro++ Main Service Worker — V205 Tic-Tac-Toe level colors.
+// MathMatrix Pro++ Main Service Worker — V215 category chooser and centered Sound-only menus.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v214-tic-tac-toe-level-colors';
+const CACHE_VERSION = 'mathmatrix-v215-category-chooser';
 
 const ASSETS = [
   './index.html',
   './KidsMathsMatrixPuzzle.html',
+  './category-chooser.css',
+  './category-chooser.js',
   './criss-cross.html',
   './tic-tac-toe.html',
   './tunnels-of-sana-maze.html',
