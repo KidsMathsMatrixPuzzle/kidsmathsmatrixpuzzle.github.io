@@ -1,6 +1,6 @@
 {
-  "name": "MathMatrix Pro++",
-  "short_name": "MathMatrix",
+  "name": "MathMatrix Main",
+  "short_name": "MathMatrix Main",
   "description": "Math puzzles for kids: magic squares, Tunnels Of SaNa Maze, Sudoku, logic games and more.",
   "start_url": "./KidsMathsMatrixPuzzle.html",
   "scope": "./",
