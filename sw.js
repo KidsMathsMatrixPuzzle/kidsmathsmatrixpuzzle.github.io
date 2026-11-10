@@ -1,6 +1,6 @@
-// MathMatrix Pro++ Main Service Worker — V218 portrait desktop frame for Tic-Tac-Toe.
+// MathMatrix Pro++ Main Service Worker — V218 stable Main installation name.
 // Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v218-desktop-frame';
+const CACHE_VERSION = 'mathmatrix-v218-main-install-name';
 
 const ASSETS = [
   './index.html',
