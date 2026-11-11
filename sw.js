@@ -1,17 +1,16 @@
-// MathMatrix Pro++ Main Service Worker — V218 stable Main installation name.
-// Main cache namespace is separate from Beta on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-v218-main-install-name';
+// MathMatrix Pro++ Live Service Worker — V219.
+// This worker and cache stay inside beta-app on the shared GitHub Pages origin.
+const CACHE_VERSION = 'mathmatrix-live-v219-publish-1';
 
 const ASSETS = [
   './index.html',
-  './KidsMathsMatrixPuzzle.html',
   './category-chooser.css',
   './category-chooser.js',
   './game-layout.css',
   './game-layout.js',
   './criss-cross.html',
   './tic-tac-toe.html',
-  './tunnels-of-sana-maze.html',
+  './tunnels-of-meta.html',
   './cave-treasure-hunt.html',
   './treasure-hunt-landscape-prototype/index.html',
   './treasure-hunt-landscape-prototype/assets/interactive-treasure-hunt-maze-original/14-explorers-tired.webp',
@@ -46,7 +45,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter((key) => key.startsWith('mathmatrix-v') && key !== CACHE_VERSION)
+          .filter((key) => key.startsWith('mathmatrix-live-') && key !== CACHE_VERSION)
           .map((key) => caches.delete(key))
       )
     )
@@ -70,8 +69,7 @@ self.addEventListener('fetch', (event) => {
         const cached =
           await cache.match(req) ||
           (boardPage ? await cache.match('./tic-tac-toe.html') : null) ||
-          await cache.match('./KidsMathsMatrixPuzzle.html') ||
-          await cache.match('./index.html');
+          await await cache.match('./index.html');
 
         const controller =
           typeof AbortController !== 'undefined' ? new AbortController() : null;
@@ -92,6 +90,28 @@ self.addEventListener('fetch', (event) => {
         } catch (e) {
           clearTimeout(timer);
           return cached || Response.error();
+        }
+      })()
+    );
+    return;
+  }
+
+  // v219: scripts, styles and the manifest are CODE. Serve them network-first (like pages) so a
+  // phone never runs new HTML with old cached scripts. Pictures and sound stay cache-first below.
+  if (/\.(js|css|json)(\?|$)/.test(req.url)) {
+    event.respondWith(
+      (async () => {
+        const cache = await caches.open(CACHE_VERSION);
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const timer = setTimeout(() => { try { if (controller) controller.abort(); } catch (e) {} }, 2500);
+        try {
+          const response = await fetch(req, controller ? { signal: controller.signal } : undefined);
+          clearTimeout(timer);
+          if (response && response.ok) cache.put(req, response.clone()).catch(() => {});
+          return response;
+        } catch (e) {
+          clearTimeout(timer);
+          return (await cache.match(req)) || Response.error();
         }
       })()
     );

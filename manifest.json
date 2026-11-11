@@ -1,13 +1,14 @@
 {
-  "name": "MathMatrix Main",
-  "short_name": "MathMatrix Main",
-  "description": "Math puzzles for kids: magic squares, Tunnels Of SaNa Maze, Sudoku, logic games and more.",
-  "start_url": "./KidsMathsMatrixPuzzle.html",
+  "id": "./",
+  "name": "MathMatrix Pro++ V219 Unified",
+  "short_name": "MathMatrix",
+  "description": "MathMatrix Pro++ maths, logic and puzzle books.",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#0a0a1a",
-  "theme_color": "#101838",
+  "orientation": "any",
+  "background_color": "#1B1442",
+  "theme_color": "#8b5cf6",
   "icons": [
     {
       "src": "icon-192.png",
@@ -27,12 +28,5 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ],
-  "related_applications": [
-    {
-      "platform": "webapp",
-      "url": "https://kidsmathsmatrixpuzzle.github.io/manifest.json"
-    }
-  ],
-  "prefer_related_applications": false
+  ]
 }

@@ -51,11 +51,11 @@ window.onerror = function(msg, src, line, col, err){
 };
 </script>
 <!-- Beta keeps its install identity in beta-manifest.json. -->
-<link rel="manifest" href="beta-manifest.json">
+<link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <!-- without this the browser asks for /favicon.ico, 404s, and the tab sits blank -->
 <link rel="icon" href="icon-192.png" type="image/png">
-<title>🐒🎲 MathMatrix Pro++ — Beta - V.219 Unified</title>
+<title>🐒🎲 MathMatrix Pro++ — V.219 Unified</title>
 
 <!-- Raja: the copy icon in Android's share sheet copies something that will
      not open in a fresh browser, while every other channel works.
@@ -15849,7 +15849,8 @@ function closeCheat(){ document.getElementById('cheatModal').style.display='none
   // On manual update, keep the guard until the saved screen has been restored.
   var pendingResume = false;
   try { pendingResume = !!sessionStorage.getItem('mm.resume'); } catch(e) {}
-  if (!pendingResume) requestAnimationFrame(function(){ document.documentElement.classList.remove('mmBooting'); });})();
+  if (!pendingResume) requestAnimationFrame(function(){ document.documentElement.classList.remove('mmBooting'); });
+})();
 
 // Beta registers its own worker at this subfolder scope for offline play.
 // The Beta cache namespace is separate from the public app on this origin.
@@ -15863,7 +15864,7 @@ if ('serviceWorker' in navigator) {
     try { location.reload(); } catch (e) {}
   });
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('beta-sw.js').catch(function(){});
+    navigator.serviceWorker.register('sw.js').catch(function(){});
   });
 }
 
@@ -15887,7 +15888,7 @@ if (navigator.storage && navigator.storage.persist) {
 (function(){
   // Build baked into this HTML — always reflects the exact version being run,
   // independent of cache timing. Keep in sync with the SW CACHE_VERSION on deploy.
-  var BUILD_VER = 'Beta - V.219 Unified';
+  var BUILD_VER = 'V.219 Unified';
   /* Legacy update beacon: older installed versions scan for this literal.
    window.BETA_VER = 'v185'
    Runtime code below derives the same token from BUILD_VER. */
@@ -16098,8 +16099,9 @@ if (navigator.storage && navigator.storage.persist) {
     var tab = document.getElementById('tab-' + (st.s || 'scHome'))
            || document.getElementById('tab-scHome');
     if (tab) tab.click();
-    // Update-resume path: reveal the fully restored screen, never the old list.
-  requestAnimationFrame(function(){ document.documentElement.classList.remove('mmBooting'); });})();
+  })();
+  // Update-resume path: reveal the fully restored screen, never the old list.
+  requestAnimationFrame(function(){ document.documentElement.classList.remove('mmBooting'); });
 })();
 </script>
 </body>
