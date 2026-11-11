@@ -1,9 +1,10 @@
 // MathMatrix Pro++ Live Service Worker — V219.
 // This worker and cache stay inside beta-app on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-live-v219-free-orientation-2';
+const CACHE_VERSION = 'mathmatrix-live-v219-orientation-unified-3';
 
 const ASSETS = [
   './index.html',
+  './KidsMathsMatrixPuzzle.html',
   './category-chooser.css',
   './category-chooser.js',
   './game-layout.css',
