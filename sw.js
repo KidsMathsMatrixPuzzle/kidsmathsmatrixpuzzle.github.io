@@ -1,6 +1,6 @@
 // MathMatrix Pro++ Live Service Worker — V219.
 // This worker and cache stay inside beta-app on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-live-v219-publish-1';
+const CACHE_VERSION = 'mathmatrix-live-v219-free-orientation-2';
 
 const ASSETS = [
   './index.html',
