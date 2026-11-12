@@ -1,6 +1,6 @@
 // MathMatrix Pro++ Live Service Worker — V219.
 // This worker and cache stay inside beta-app on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-live-v219-label-fix-4';
+const CACHE_VERSION = 'mathmatrix-live-v219-v7-approved-layouts-5';
 
 const ASSETS = [
   './index.html',
@@ -70,7 +70,7 @@ self.addEventListener('fetch', (event) => {
         const cached =
           await cache.match(req) ||
           (boardPage ? await cache.match('./tic-tac-toe.html') : null) ||
-          await await cache.match('./index.html');
+          await cache.match('./index.html');
 
         const controller =
           typeof AbortController !== 'undefined' ? new AbortController() : null;
