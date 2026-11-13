@@ -8,7 +8,12 @@
 (function(){
   var root=document.documentElement;
   var touch=('ontouchstart' in window)||(navigator.maxTouchPoints>0);
-  if(!touch)return;
+  if(!touch){
+    var desktop=window.innerWidth>=900 && window.innerWidth>window.innerHeight;
+    root.classList.toggle('desktopViewport',desktop);
+    root.classList.toggle('lsLayout',desktop);
+    return;
+  }
   root.classList.add('touchViewport');
   var landscape=window.innerWidth>window.innerHeight;
   if(!landscape)return;
@@ -246,6 +251,31 @@ html.lockRotateCW body, html.lockRotateCCW body{
   .ccmDock.hiddenDock{transform:translate(-50%,110%);}
   .ccmShowKeyBtn{right:max(14px,calc((100vw - 480px)/2 + 14px));}
 }
+/* Validated Beta landscape layout, scoped to laptop windows only. */
+html.desktopViewport body{width:100% !important;max-width:none !important;margin:0 !important;height:100dvh;min-height:0;overflow:hidden;padding-bottom:0 !important;
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,42%);grid-template-rows:auto auto auto auto minmax(0,1fr);column-gap:12px;background:var(--bg) !important}
+html.desktopViewport .ccmBar{grid-column:1 / -1;grid-row:1;max-width:none !important;margin:0 !important;min-height:calc(46px + var(--safeTop,0px))}
+html.desktopViewport .sanaRow{grid-column:2;grid-row:2;max-width:none !important;margin:6px calc(10px + var(--safeRight,0px)) 4px 0 !important}
+html.desktopViewport .ccmLevels{grid-column:2;grid-row:3;margin:2px calc(10px + var(--safeRight,0px)) 4px 0 !important;gap:5px}
+html.desktopViewport .ccTimerRow{grid-column:2;grid-row:4;margin:0 calc(10px + var(--safeRight,0px)) 4px 0 !important}
+html.desktopViewport .ccmWrap{grid-column:1;grid-row:2 / -1;max-width:none !important;margin:0 !important;padding:0 8px calc(6px + var(--safeLeft,0px)) calc(8px + var(--safeLeft,0px)) !important;justify-content:center;min-height:0}
+html.desktopViewport .ccmGrid{--u:clamp(28px,calc((100dvh - 144px) / 6.5),68px);
+  grid-template-columns:var(--u) calc(var(--u)*.46) var(--u) calc(var(--u)*.46) var(--u) calc(var(--u)*.95) !important;
+  grid-auto-rows:var(--u) !important;gap:calc(var(--u)*.09) !important;margin:2px auto 8px !important}
+html.desktopViewport .ccmDock{position:static !important;grid-column:2;grid-row:5;align-self:start;transform:none !important;width:auto !important;left:auto;right:auto;
+  margin:0 calc(10px + var(--safeRight,0px)) 0 0;border:3px solid rgba(0,0,0,.12);border-radius:14px;box-shadow:none;padding:5px 5px 6px}
+html.desktopViewport .ccmDock.hiddenDock{display:none}
+html.desktopViewport .ccmDockHead,html.desktopViewport .ccmKeysRow{max-width:none}
+html.desktopViewport .ccmKeysRow .key{height:clamp(28px,7.4vh,50px) !important;font-size:clamp(15px,3.8vh,22px) !important}
+html.desktopViewport .ccmKeysRow.third .key{height:clamp(26px,6.6vh,44px) !important;font-size:13px !important}
+html.desktopViewport .ccmBackdrop,html.desktopViewport .ccmShowKeyBtn{display:none !important}
+html.desktopViewport .ccmLevels{flex-wrap:nowrap !important}
+html.desktopViewport .ccmLevelBtn{font-size:clamp(11px,3.3vh,14px) !important;padding:5px 8px !important;white-space:nowrap}
+html.desktopViewport .sanaBubble{font-size:clamp(11.5px,3.4vh,14px) !important;padding:6px 10px !important;line-height:1.25 !important}
+html.desktopViewport .sanaAvatar{width:34px !important;height:34px !important;font-size:20px !important}
+html.desktopViewport .ccmDockHead .ccmToggle{padding:3px 6px !important;font-size:12px !important}
+html.desktopViewport .ccmKeysRow{gap:4px !important}
+html.desktopViewport .ccmKeysRow.second,html.desktopViewport .ccmKeysRow.third{margin-top:4px !important}
 </style></head><body>
 <div id="portraitLock" role="alert">
   <div class="rotIcon">📱</div>
@@ -849,6 +879,9 @@ function checkPortraitLock(){
   if (isRotatable()) root.classList.add('touchViewport');
   else root.classList.remove('touchViewport');
   root.classList.remove('lockRotateCW', 'lockRotateCCW');
+  var desktop = !isRotatable() && window.innerWidth >= 900 && window.innerWidth > window.innerHeight;
+  root.classList.toggle('desktopViewport', desktop);
+  root.classList.toggle('lsLayout', desktop);
   if (!isRotatable()) return;
   var landscape = window.innerWidth > window.innerHeight;
   if (!landscape) return;
