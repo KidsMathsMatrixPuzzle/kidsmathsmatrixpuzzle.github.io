@@ -1,12 +1,14 @@
-// MathMatrix Pro++ Live Service Worker — V223 update resume.
+// MathMatrix Pro++ Live Service Worker — V227 approved UI and screen fit.
 // Main keeps its own cache prefix and preserves the separate Beta cache.
-const CACHE_VERSION = 'mathmatrix-live-v223-update-resume';
+const CACHE_VERSION = 'mathmatrix-live-v227-screen-fit';
 
 const ASSETS = [
   './index.html',
   './KidsMathsMatrixPuzzle.html',
   './category-chooser.css',
   './category-chooser.js',
+  './navigation-shell.css',
+  './navigation-shell.js',
   './game-layout.css',
   './ui-tuning.css',
   './game-layout.js',
@@ -71,7 +73,8 @@ self.addEventListener('fetch', (event) => {
         const cached =
           await cache.match(req) ||
           (boardPage ? await cache.match('./tic-tac-toe.html') : null) ||
-          await cache.match('./index.html');
+          await cache.match('./index.html') ||
+          await cache.match('./KidsMathsMatrixPuzzle.html');
 
         const controller =
           typeof AbortController !== 'undefined' ? new AbortController() : null;

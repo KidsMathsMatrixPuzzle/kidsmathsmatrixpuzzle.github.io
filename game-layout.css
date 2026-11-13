@@ -66,18 +66,18 @@ html.portraitGame.lockRotateCW dialog{transform:rotate(90deg) translate(-50%,-50
 html.portraitGame.lockRotateCCW dialog{transform:rotate(-90deg) translate(-50%,-50%)}
 
 /* v219 · free orientation: Tic-Tac-Toe sideways = controls on the left, board on the right */
-html.desktopViewport.tttViewport{background:var(--bg,#d8b98c)}
-html.desktopViewport.tttViewport body{width:100% !important;max-width:none !important;margin:0 !important}
-html.desktopViewport.tttViewport main{width:100% !important;max-width:none !important;margin:0 !important;display:grid;
+html.lsLayout.tttViewport{background:var(--bg,#d8b98c)}
+html.lsLayout.tttViewport body{width:100% !important;max-width:none !important;margin:0 !important}
+html.lsLayout.tttViewport main{width:100% !important;max-width:none !important;margin:0 !important;display:grid;
   grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto auto auto auto;column-gap:18px;row-gap:6px;
   align-content:center;align-items:center;justify-items:center;padding:6px max(14px,env(safe-area-inset-right)) 8px max(14px,env(safe-area-inset-left))}
-html.desktopViewport.tttViewport main>.sanaRow{grid-column:1;grid-row:1}
-html.desktopViewport.tttViewport main>.sizebar{grid-column:1;grid-row:2}
-html.desktopViewport.tttViewport main>.scorebar{grid-column:1;grid-row:3}
-html.desktopViewport.tttViewport main>.actions{grid-column:1;grid-row:4}
-html.desktopViewport.tttViewport main>.hint{grid-column:1;grid-row:5}
-html.desktopViewport.tttViewport main>.board-wrap{grid-column:2;grid-row:1 / -1}
-html.desktopViewport.tttViewport header{padding-top:max(4px,env(safe-area-inset-top));padding-bottom:4px}
+html.lsLayout.tttViewport main>.sanaRow{grid-column:1;grid-row:1}
+html.lsLayout.tttViewport main>.sizebar{grid-column:1;grid-row:2}
+html.lsLayout.tttViewport main>.scorebar{grid-column:1;grid-row:3}
+html.lsLayout.tttViewport main>.actions{grid-column:1;grid-row:4}
+html.lsLayout.tttViewport main>.hint{grid-column:1;grid-row:5}
+html.lsLayout.tttViewport main>.board-wrap{grid-column:2;grid-row:1 / -1}
+html.lsLayout.tttViewport header{padding-top:max(4px,env(safe-area-inset-top));padding-bottom:4px}
 
 /* Laptop windows use the same canvas and landscape controls as touch devices. */
 html.desktopViewport body{width:100% !important;max-width:none !important;margin:0 !important;background:#d8b98c !important}

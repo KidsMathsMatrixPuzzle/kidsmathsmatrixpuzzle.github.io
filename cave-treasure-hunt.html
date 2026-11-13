@@ -23,20 +23,15 @@
   const before=root.classList.contains('lockRotateCW')?'cw':root.classList.contains('lockRotateCCW')?'ccw':'';
   const touch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
   const landscape=visible.width>visible.height;
-  const desktop=!touch&&visible.width>=900&&landscape;
-  root.classList.toggle('desktopViewport',desktop);
-  root.classList.toggle('lsLayout',desktop);
-  let direction='';
-  if(touch&&landscape){
-   let angle=typeof screen.orientation?.angle==='number'?screen.orientation.angle:typeof window.orientation==='number'?window.orientation:90;
-   angle=((angle%360)+360)%360;direction=angle===90?'ccw':'cw';
-  }
-  root.classList.toggle('lockRotateCW',direction==='cw');
-  root.classList.toggle('lockRotateCCW',direction==='ccw');
+  /* v219: free orientation - no page rotation; just flag a sideways screen. */
+  const direction='';
+  root.classList.remove('lockRotateCW','lockRotateCCW');
+  root.classList.toggle('lsLayout',(touch||visible.width>=900)&&landscape);
+  root.classList.toggle('desktopViewport',!touch&&visible.width>=900&&landscape);
   // Layout breakpoints follow the visible portrait height, including browser
   // chrome and insets that can make it shorter than the layout viewport.
-  root.classList.toggle('sanaCompact',(direction?visible.width:visible.height)<=700);
-  if(before!==direction)window.dispatchEvent(new Event('sanaorientationchange'));
+  root.classList.toggle('sanaCompact',visible.height<=700);
+  if(before!==direction||root.__lsPrev!==landscape){root.__lsPrev=landscape;window.dispatchEvent(new Event('sanaorientationchange'));}
  }
  applyPortraitLock();
  window.addEventListener('resize',applyPortraitLock);
@@ -115,22 +110,23 @@ html.lockRotateCCW #soundDialog[open]{left:100vw;left:100dvw;transform:rotate(-9
 html.lockRotateCW .sound-body{padding-bottom:max(20px,env(safe-area-inset-left))}
 html.lockRotateCCW .sound-body{padding-bottom:max(20px,env(safe-area-inset-right))}
 @media(prefers-reduced-motion:reduce){.banner.pop,.player-face{animation:none}}
-/* Validated Beta landscape layout, scoped to laptop windows only. */
-html.desktopViewport{--lsAvail:calc(var(--sana-visible-height,100dvh) - 45px - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 8px)}
-html.desktopViewport .app{width:100% !important;max-width:none !important;margin:0 !important;display:grid;
+
+/* v219 · free orientation: sideways = text, controls and D-pad on the left; the maze keeps its true 593:802 shape on the right */
+html.lsLayout{--lsAvail:calc(var(--sana-visible-height,100dvh) - 45px - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 8px)}
+html.lsLayout .app{width:100% !important;max-width:none !important;margin:0 !important;display:grid;
   grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto auto auto minmax(0,1fr);column-gap:10px;align-content:start;
   padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right))}
-html.desktopViewport .app > .bar{grid-column:1 / -1;grid-row:1}
-html.desktopViewport .app > #banner{grid-column:1;grid-row:2}
-html.desktopViewport .app > .run-toolbar{grid-column:1;grid-row:3}
-html.desktopViewport .app > .player-row{grid-column:1;grid-row:4}
-html.desktopViewport .app > .bottom{grid-column:1;grid-row:5;align-self:center;height:auto;min-height:0}
-html.desktopViewport .app > .direction-row{grid-row:5}
-html.desktopViewport .app > .board-wrap{grid-column:2;grid-row:2 / 6;flex:none;height:var(--lsAvail);
+html.lsLayout .app > .bar{grid-column:1 / -1;grid-row:1}
+html.lsLayout .app > #banner{grid-column:1;grid-row:2}
+html.lsLayout .app > .run-toolbar{grid-column:1;grid-row:3}
+html.lsLayout .app > .player-row{grid-column:1;grid-row:4}
+html.lsLayout .app > .bottom{grid-column:1;grid-row:5;align-self:center;height:auto;min-height:0}
+html.lsLayout .app > .direction-row{grid-row:5}
+html.lsLayout .app > .board-wrap{grid-column:2;grid-row:2 / 6;flex:none;height:var(--lsAvail);
   width:calc((var(--lsAvail) - 10px - 18px) * .7394 + 10px)}
-html.desktopViewport .direction-row{grid-template-rows:clamp(38px,11vh,54px)}
-html.desktopViewport .maze-labels{font-size:clamp(9px,calc(var(--lsAvail) * .034),18px) !important}
-html.desktopViewport #stageTracker text{font-size:13px}
+html.lsLayout .direction-row{grid-template-rows:clamp(38px,11vh,54px)}
+html.lsLayout .maze-labels{font-size:clamp(9px,calc(var(--lsAvail) * .034),18px) !important}
+#stageTracker text{font-size:13px}
 </style>
 <link rel="stylesheet" href="ui-tuning.css">
 </head>
@@ -756,7 +752,7 @@ document.getElementById('backToMain').addEventListener('click', function () {
   if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) {
     history.back();
   } else {
-    location.href = './KidsMathsMatrixPuzzle.html';
+    location.href = './KidsMathsMatrixPuzzle.html?mm-return=puzzles';
   }
 });
 if ('serviceWorker' in navigator) {

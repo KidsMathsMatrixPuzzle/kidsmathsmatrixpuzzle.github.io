@@ -14,23 +14,23 @@
     const width = viewport ? viewport.width : innerWidth;
     const height = viewport ? viewport.height : innerHeight;
     const touch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-    const desktop = !touch && width >= 900 && width > height;
-    root.classList.toggle('desktopViewport', desktop);
-    if (!root.classList.contains('portraitGame')) {
-      if (!touch) root.classList.toggle('lsLayout', desktop);
-      return;
-    }
-    root.classList.toggle('lsLayout', desktop);
-    const rotated = touch && width > height;
-    const angle = ((screen.orientation ? screen.orientation.angle : window.orientation || 0) + 360) % 360;
-    const logicalWidth = rotated ? height : width;
-    const logicalHeight = rotated ? width : height;
+    /* v219: free orientation - the page is never rotated; the real width/height are used. */
+    const logicalWidth = width;
+    const logicalHeight = height;
     root.style.setProperty('--game-physical-width', width + 'px');
     root.style.setProperty('--game-physical-height', height + 'px');
     root.style.setProperty('--game-logical-width', logicalWidth + 'px');
     root.style.setProperty('--game-logical-height', logicalHeight + 'px');
-    root.classList.toggle('lockRotateCCW', rotated && angle === 90);
-    root.classList.toggle('lockRotateCW', rotated && angle !== 90);
+    // svh can retain the browser-toolbar reserve after that space becomes visible.
+    // Bound both viewport reports to avoid putting the tabs behind browser UI.
+    const visibleHeight = Math.min(height, innerHeight || height);
+    if (Number.isFinite(visibleHeight) && visibleHeight > 0) {
+      root.style.setProperty('--app-visible-height', visibleHeight + 'px');
+    }
+    root.classList.remove('lockRotateCCW', 'lockRotateCW');
+    const desktop = !touch && width >= 900 && width > height;
+    root.classList.toggle('desktopViewport', desktop);
+    root.classList.toggle('lsLayout', (touch || desktop) && width > height);
     root.classList.toggle('gameCompact', logicalHeight < 700);
     window.dispatchEvent(new Event('mathmatrixviewportchange'));
     schedule();
@@ -41,7 +41,8 @@
     const board = document.querySelector('.board-wrap');
     if (!main || !board) return;
     const style = getComputedStyle(main);
-    if (root.classList.contains('desktopViewport')) {
+    if (root.classList.contains('lsLayout')) {
+      /* v219 landscape: the board sits beside the controls, so only its own box limits it */
       const padY = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
       const padX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
       const side = Math.min(main.clientHeight - padY, (main.clientWidth - padX) * .52, 560);
@@ -151,6 +152,8 @@
   window.addEventListener('resize', portrait);
   window.addEventListener('resize', schedule);
   window.addEventListener('orientationchange', portrait);
+  window.addEventListener('pageshow', portrait);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) portrait(); });
   if (screen.orientation) screen.orientation.addEventListener('change', portrait);
   if (window.visualViewport) window.visualViewport.addEventListener('resize', portrait);
   portrait();

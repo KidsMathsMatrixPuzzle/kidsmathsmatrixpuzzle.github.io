@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#d8b98c">
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" href="icon-192.png" type="image/png">
-  <title>Tic-Tac-Toe · MathMatrix Main</title>
+  <title>Tic-Tac-Toe · MathMatrix Beta</title>
   <style>
     :root{color-scheme:light;--ink:#3a2415;--brown:#8a5e31;--cream:#fff8eb;--blue:#2563eb;--pink:#db2777}
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -51,7 +51,7 @@
 </head>
 <body>
   <header>
-    <a class="back" href="KidsMathsMatrixPuzzle.html" aria-label="Back to puzzles">←</a>
+    <a class="back" href="index.html?mm-return=puzzles" aria-label="Back to puzzles">←</a>
     <div class="title"><h1>Tic-Tac-Toe</h1><div class="sub">2 players · one screen</div></div>
     <div class="top-actions">
       <button class="top logic" id="logicBtn" type="button" aria-label="Logic"><i aria-hidden="true">💡</i><span>Logic</span></button>
@@ -109,6 +109,20 @@
   <script>
   (() => {
     'use strict';
+    // Reuse the existing chooser when this game was opened from the app.
+    // Direct/shared game links retain the explicit cold-return fallback.
+    const back = document.querySelector('a.back');
+    back.addEventListener('click', event => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      try {
+        const from = new URL(document.referrer);
+        const fromChooser = from.origin === location.origin && ['./','index.html','KidsMathsMatrixPuzzle.html'].some(file => from.pathname === new URL(file, location.href).pathname);
+        if (fromChooser && history.length > 1) {
+          event.preventDefault();
+          try { history.back(); } catch { location.href = back.href; }
+        }
+      } catch { /* No referring app: follow the ordinary Back link. */ }
+    });
     const get = id => document.getElementById(id);
     const allowed = [3,4,5];
     const requested = Number(new URLSearchParams(location.search).get('size'));
