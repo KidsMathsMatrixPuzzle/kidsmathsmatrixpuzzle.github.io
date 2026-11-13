@@ -1,6 +1,6 @@
-// MathMatrix Pro++ Live Service Worker — V221 UI tuning.
+// MathMatrix Pro++ Live Service Worker — V222 tablet chooser fit.
 // Main keeps its own cache prefix and preserves the separate Beta cache.
-const CACHE_VERSION = 'mathmatrix-live-v221-ui-tuning';
+const CACHE_VERSION = 'mathmatrix-live-v222-tablet-fit';
 
 const ASSETS = [
   './index.html',
