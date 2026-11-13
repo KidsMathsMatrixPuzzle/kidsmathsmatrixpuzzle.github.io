@@ -10,11 +10,17 @@
     requestAnimationFrame(() => { queued = false; fitGate(); fitTic(); });
   }
   function portrait() {
-    if (!root.classList.contains('portraitGame')) return;
     const viewport = window.visualViewport;
     const width = viewport ? viewport.width : innerWidth;
     const height = viewport ? viewport.height : innerHeight;
     const touch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    const desktop = !touch && width >= 900 && width > height;
+    root.classList.toggle('desktopViewport', desktop);
+    if (!root.classList.contains('portraitGame')) {
+      if (!touch) root.classList.toggle('lsLayout', desktop);
+      return;
+    }
+    root.classList.toggle('lsLayout', desktop);
     const rotated = touch && width > height;
     const angle = ((screen.orientation ? screen.orientation.angle : window.orientation || 0) + 360) % 360;
     const logicalWidth = rotated ? height : width;
@@ -35,6 +41,13 @@
     const board = document.querySelector('.board-wrap');
     if (!main || !board) return;
     const style = getComputedStyle(main);
+    if (root.classList.contains('desktopViewport')) {
+      const padY = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+      const padX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+      const side = Math.min(main.clientHeight - padY, (main.clientWidth - padX) * .52, 560);
+      root.style.setProperty('--ttt-board-size', Math.floor(Math.max(120, side)) + 'px');
+      return;
+    }
     const children = Array.from(main.children);
     const occupied = children.filter(el => el !== board).reduce((sum, el) => {
       const css = getComputedStyle(el);

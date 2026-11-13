@@ -1,6 +1,6 @@
 // MathMatrix Pro++ Live Service Worker — V219.
-// This worker and cache stay inside beta-app on the shared GitHub Pages origin.
-const CACHE_VERSION = 'mathmatrix-live-v219-v7-approved-layouts-5';
+// Main keeps its own cache prefix and preserves the separate Beta cache.
+const CACHE_VERSION = 'mathmatrix-live-v219-v8-laptop-layout';
 
 const ASSETS = [
   './index.html',
@@ -11,7 +11,7 @@ const ASSETS = [
   './game-layout.js',
   './criss-cross.html',
   './tic-tac-toe.html',
-  './tunnels-of-meta.html',
+  './tunnels-of-sana-maze.html',
   './cave-treasure-hunt.html',
   './treasure-hunt-landscape-prototype/index.html',
   './treasure-hunt-landscape-prototype/assets/interactive-treasure-hunt-maze-original/14-explorers-tired.webp',
