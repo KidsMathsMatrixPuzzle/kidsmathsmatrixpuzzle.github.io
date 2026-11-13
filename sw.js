@@ -1,6 +1,6 @@
-// MathMatrix Pro++ Live Service Worker — V219.
+// MathMatrix Pro++ Live Service Worker — V221 UI tuning.
 // Main keeps its own cache prefix and preserves the separate Beta cache.
-const CACHE_VERSION = 'mathmatrix-live-v219-v8-laptop-layout';
+const CACHE_VERSION = 'mathmatrix-live-v221-ui-tuning';
 
 const ASSETS = [
   './index.html',
@@ -8,6 +8,7 @@ const ASSETS = [
   './category-chooser.css',
   './category-chooser.js',
   './game-layout.css',
+  './ui-tuning.css',
   './game-layout.js',
   './criss-cross.html',
   './tic-tac-toe.html',
