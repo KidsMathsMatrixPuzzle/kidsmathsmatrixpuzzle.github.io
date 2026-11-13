@@ -1,6 +1,6 @@
-// MathMatrix Pro++ Live Service Worker — V222 tablet chooser fit.
+// MathMatrix Pro++ Live Service Worker — V223 update resume.
 // Main keeps its own cache prefix and preserves the separate Beta cache.
-const CACHE_VERSION = 'mathmatrix-live-v222-tablet-fit';
+const CACHE_VERSION = 'mathmatrix-live-v223-update-resume';
 
 const ASSETS = [
   './index.html',
