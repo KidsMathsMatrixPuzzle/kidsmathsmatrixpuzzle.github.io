@@ -1,11 +1,11 @@
-// MathMatrix Pro++ Live Service Worker — V227 approved UI and screen fit.
+// MathMatrix Pro++ Live Service Worker — V228 update for the home picker.
 // Main keeps its own cache prefix and preserves the separate Beta cache.
-const CACHE_VERSION = 'mathmatrix-live-v227-screen-fit';
+const CACHE_VERSION = 'mathmatrix-live-v228-home-picker-update';
 
 const ASSETS = [
   './index.html',
   './KidsMathsMatrixPuzzle.html',
-  './category-chooser.css',
+  './category-chooser.css?v=228',
   './category-chooser.js',
   './navigation-shell.css',
   './navigation-shell.js',
