@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<title>Restore MathMatrix</title>
+<style>body{margin:0;background:#fff5dc;color:#173e35;font:18px/1.5 system-ui,sans-serif}main{max-width:32rem;margin:24px auto;padding:24px}h1{font-size:28px}button,a{display:inline-block;margin:8px 8px 0 0;padding:12px 16px;border:2px solid #739985;border-radius:12px;background:#ffe17a;color:#173e35;font:700 17px system-ui;text-decoration:none}button[hidden]{display:none}</style>
+<main>
+<h1>MathMatrix</h1>
+<p id="progress" role="status" aria-live="polite">Checking the saved MathMatrix app...</p>
+<button id="retry" type="button" hidden>Try again</button>
+<a href="index.html">Open MathMatrix</a>
+<p><small>Your saved puzzles and settings stay on this device.</small></p>
+</main>
+<script>
+(()=>{
+ const target='mathmatrix-live-v228-isolated-toddler';
+ const progress=document.getElementById('progress'),retry=document.getElementById('retry');
+ const timed=(promise,ms=15000)=>new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('The connection took too long. Please try again.')),ms);Promise.resolve(promise).then(value=>{clearTimeout(timer);resolve(value);},error=>{clearTimeout(timer);reject(error);});});
+ async function prepared(){
+  if(!(await caches.keys()).includes(target))return false;
+  const cache=await caches.open(target),page=await cache.match('./index.html'),chooser=await cache.match('./category-chooser.js');
+  return Boolean(page&&chooser&&(await chooser.text()).includes('createMathMatrixCategoryChooser'));
+ }
+ const activated=worker=>new Promise((resolve,reject)=>{
+  const done=error=>{clearTimeout(timer);worker.removeEventListener('statechange',check);error?reject(error):resolve();};
+  const check=()=>{if(worker.state==='activated')done();else if(worker.state==='redundant')done(Error('The download did not finish. Please try again.'));};
+  const timer=setTimeout(()=>done(Error('The files are still downloading. Keep this page open and try again.')),120000);worker.addEventListener('statechange',check);check();
+ });
+ const controlling=registration=>new Promise((resolve,reject)=>{
+  const done=error=>{clearTimeout(timer);navigator.serviceWorker.removeEventListener('controllerchange',check);error?reject(error):resolve();};
+  const check=()=>{if(registration.active===navigator.serviceWorker.controller)done();};
+  const timer=setTimeout(()=>done(Error('MathMatrix is ready. Please try once more to open it.')),5000);navigator.serviceWorker.addEventListener('controllerchange',check);check();
+ });
+ async function run(){
+  retry.hidden=true;retry.disabled=true;
+  try{
+   if(!window.isSecureContext||!('serviceWorker'in navigator))throw Error('Open this HTTPS link in Chrome to restore MathMatrix.');
+   const registration=await timed(navigator.serviceWorker.register('sw.js',{scope:'./',updateViaCache:'none'}));
+   if(!registration.installing&&!registration.waiting&&!await prepared())await timed(new Promise((resolve,reject)=>{const found=()=>{registration.removeEventListener('updatefound',found);resolve();};registration.addEventListener('updatefound',found,{once:true});registration.update().then(()=>{registration.removeEventListener('updatefound',found);resolve();},error=>{registration.removeEventListener('updatefound',found);reject(error);});}));
+   const worker=registration.installing||registration.waiting;
+   if(worker){progress.textContent='Downloading the MathMatrix files. Please keep this page open...';await activated(worker);}
+   if(!await prepared())throw Error('MathMatrix is not ready yet. Connect to the internet and try again.');
+   await controlling(registration);progress.textContent='MathMatrix is ready. Opening...';location.replace('index.html');
+  }catch(error){progress.textContent=error.message||'The restore did not finish. Please try again.';retry.hidden=false;retry.disabled=false;}
+ }
+ retry.addEventListener('click',run);void run();
+})();
+</script>
+</html>
