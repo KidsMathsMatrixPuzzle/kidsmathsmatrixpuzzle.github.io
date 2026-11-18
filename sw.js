@@ -1,9 +1,10 @@
 // MathMatrix Pro++ Live Service Worker — V228 update for the home picker.
 // Main keeps its own cache prefix and preserves the separate Beta cache.
-const CACHE_VERSION = 'mathmatrix-live-v228-home-picker-update';
+const CACHE_VERSION = 'mathmatrix-live-v228-isolated-toddler';
 
 const ASSETS = [
   './index.html',
+  './mathmatrix-recover.html',
   './KidsMathsMatrixPuzzle.html',
   './category-chooser.css?v=228',
   './category-chooser.js',
@@ -59,6 +60,10 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const req = event.request;
+  const url = new URL(req.url);
+  // SaNa is a separate app: never cache or substitute MathMatrix at its URLs.
+  if (url.origin === self.location.origin &&
+      (url.pathname === '/toddler-games-' || url.pathname.startsWith('/toddler-games-/'))) return;
   const isPage =
     req.mode === 'navigate' ||
     req.destination === 'document' ||
