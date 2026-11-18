@@ -1,12 +1,12 @@
-// MathMatrix Pro++ Live Service Worker — V228 update for the home picker.
+// MathMatrix Pro++ Live Service Worker — V229 sound and music status.
 // Main keeps its own cache prefix and preserves the separate Beta cache.
-const CACHE_VERSION = 'mathmatrix-live-v228-isolated-toddler';
+const CACHE_VERSION = 'mathmatrix-live-v229-audio-status';
 
 const ASSETS = [
   './index.html',
   './mathmatrix-recover.html',
   './KidsMathsMatrixPuzzle.html',
-  './category-chooser.css?v=228',
+  './category-chooser.css?v=229',
   './category-chooser.js',
   './navigation-shell.css',
   './navigation-shell.js',

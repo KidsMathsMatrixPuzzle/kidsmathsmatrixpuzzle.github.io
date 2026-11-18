@@ -14,7 +14,7 @@
 </main>
 <script>
 (()=>{
- const target='mathmatrix-live-v228-isolated-toddler';
+ const target='mathmatrix-live-v229-audio-status';
  const progress=document.getElementById('progress'),retry=document.getElementById('retry');
  const timed=(promise,ms=15000)=>new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('The connection took too long. Please try again.')),ms);Promise.resolve(promise).then(value=>{clearTimeout(timer);resolve(value);},error=>{clearTimeout(timer);reject(error);});});
  async function prepared(){
